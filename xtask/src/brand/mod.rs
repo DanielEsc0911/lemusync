@@ -27,7 +27,9 @@ pub fn run(root: &Path, check: bool) -> Result<(), Vec<String>> {
         .into_iter()
         .map(|p| format!("{}: out of date, run `cargo xtask brand`", p.display()))
         .collect();
-    errors.extend(literals::scan(root).into_iter().map(|hit| {
+    let scan = literals::scan(root);
+    errors.extend(scan.errors);
+    errors.extend(scan.hits.into_iter().map(|hit| {
         format!("{hit}: hard-coded design literal (use a token, or end the line with `// brand-literal-ok: <reason>`)")
     }));
     if errors.is_empty() {

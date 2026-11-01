@@ -4,8 +4,8 @@ import 'package:flutter/painting.dart';
 
 /// Type families and the text scale.
 abstract final class LsType {
-  static const String fontBody = 'Inter';
   static const String fontDisplay = 'Space Grotesk';
+  static const String fontBody = 'Inter';
   static const String fontMono = 'JetBrains Mono';
 
   static const TextStyle display = TextStyle(

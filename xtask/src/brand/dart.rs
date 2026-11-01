@@ -5,7 +5,8 @@ use std::path::PathBuf;
 
 use super::output::Output;
 use super::tokens::{
-    OPACITY_KEYS, ROLES, Rgb, SHAPE_KEYS, SIZE_KEYS, SPACE_KEYS, THEMES, TYPE_STEPS, Tokens,
+    CURVE_KEYS, DURATION_KEYS, FAMILIES, OPACITY_KEYS, ROLES, Rgb, SHAPE_KEYS, SIZE_KEYS,
+    SPACE_KEYS, THEMES, TYPE_STEPS, Tokens,
 };
 
 const HEADER: &str =
@@ -93,8 +94,13 @@ fn text(t: &Tokens) -> String {
     let mut s = String::from(
         "import 'package:flutter/painting.dart';\n\n/// Type families and the text scale.\nabstract final class LsType {\n",
     );
-    for (k, v) in &t.families {
-        let _ = writeln!(s, "  static const String font{} = '{v}';", cap(k));
+    for k in FAMILIES.iter().filter(|k| t.families.contains_key(**k)) {
+        let _ = writeln!(
+            s,
+            "  static const String font{} = '{}';",
+            cap(k),
+            t.families[*k]
+        );
     }
     for name in TYPE_STEPS.iter().filter(|n| t.scale.contains_key(**n)) {
         let st = &t.scale[*name];
@@ -130,13 +136,18 @@ fn motion(t: &Tokens) -> String {
     let mut s = String::from(
         "import 'package:flutter/animation.dart';\n\n/// Durations and curves.\nabstract final class LsMotion {\n",
     );
-    for (k, v) in &t.durations {
+    for k in DURATION_KEYS
+        .iter()
+        .filter(|k| t.durations.contains_key(**k))
+    {
+        let v = t.durations[*k];
         let _ = writeln!(
             s,
             "  static const Duration {k} = Duration(milliseconds: {v});"
         );
     }
-    for (k, c) in &t.curves {
+    for k in CURVE_KEYS.iter().filter(|k| t.curves.contains_key(**k)) {
+        let c = t.curves[*k];
         let _ = writeln!(
             s,
             "  static const Cubic {k} = Cubic({}, {}, {}, {});",
@@ -228,8 +239,11 @@ mod tests {
             size: n(&[("target", 48.0)]),
             shape: n(&[("radiusSm", 6.0)]),
             opacity: n(&[("pressed", 0.12)]),
-            durations: BTreeMap::from([("fast".to_owned(), 100)]),
-            curves: BTreeMap::from([("standard".to_owned(), [0.2, 0.0, 0.0, 1.0])]),
+            durations: BTreeMap::from([("fast".to_owned(), 100), ("medium".to_owned(), 200)]),
+            curves: BTreeMap::from([
+                ("standard".to_owned(), [0.2, 0.0, 0.0, 1.0]),
+                ("emphasized".to_owned(), [0.3, 0.0, 0.0, 1.0]),
+            ]),
         }
     }
 
@@ -317,6 +331,18 @@ class LsColors extends ThemeExtension<LsColors> {
         let s = file(&emit(&tokens()), "motion.g.dart");
         assert!(s.contains("Duration(milliseconds: 100)"), "{s}");
         assert!(s.contains("Cubic(0.2, 0.0, 0.0, 1.0)"), "{s}");
+    }
+
+    #[test]
+    fn families_and_curves_use_fixed_order() {
+        let outs = emit(&tokens());
+        let t = file(&outs, "type.g.dart");
+        let at = |s: &str, n: &str| s.find(n).unwrap_or_else(|| panic!("{n} missing"));
+        assert!(at(&t, "fontDisplay =") < at(&t, "fontBody ="));
+        assert!(at(&t, "fontBody =") < at(&t, "fontMono ="));
+        let m = file(&outs, "motion.g.dart");
+        assert!(at(&m, "fast =") < at(&m, "medium ="));
+        assert!(at(&m, "Cubic standard") < at(&m, "Cubic emphasized"));
     }
 
     #[test]

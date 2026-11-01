@@ -7,6 +7,6 @@ abstract final class LsMotion {
   static const Duration fast = Duration(milliseconds: 100);
   static const Duration medium = Duration(milliseconds: 200);
   static const Duration slow = Duration(milliseconds: 300);
-  static const Cubic emphasized = Cubic(0.3, 0.0, 0.0, 1.0);
   static const Cubic standard = Cubic(0.2, 0.0, 0.0, 1.0);
+  static const Cubic emphasized = Cubic(0.3, 0.0, 0.0, 1.0);
 }

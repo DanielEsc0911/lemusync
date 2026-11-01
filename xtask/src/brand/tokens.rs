@@ -44,7 +44,7 @@ pub const THEMES: [&str; 4] = ["light", "dark", "lightHighContrast", "darkHighCo
 pub const TYPE_STEPS: [&str; 7] = [
     "display", "headline", "title", "body", "label", "caption", "mono",
 ];
-const FAMILIES: [&str; 3] = ["display", "body", "mono"];
+pub const FAMILIES: [&str; 3] = ["display", "body", "mono"];
 pub const SPACE_KEYS: [&str; 7] = ["xs", "sm", "md", "lg", "xl", "xxl", "xxxl"];
 pub const SIZE_KEYS: [&str; 8] = [
     "target",
@@ -57,6 +57,8 @@ pub const SIZE_KEYS: [&str; 8] = [
     "mark",
 ];
 pub const SHAPE_KEYS: [&str; 4] = ["radiusSm", "radiusMd", "radiusLg", "radiusPill"];
+pub const DURATION_KEYS: [&str; 3] = ["fast", "medium", "slow"];
+pub const CURVE_KEYS: [&str; 2] = ["standard", "emphasized"];
 pub const OPACITY_KEYS: [&str; 3] = ["pressed", "hover", "disabled"];
 
 /// One text style of the scale.
@@ -237,6 +239,7 @@ impl Tokens {
         check_keys("size", &raw.size, &SIZE_KEYS, &mut errors);
         check_keys("shape", &raw.shape, &SHAPE_KEYS, &mut errors);
         check_keys("opacity", &raw.opacity, &OPACITY_KEYS, &mut errors);
+        check_values(&raw, &mut errors);
         if errors.is_empty() {
             check_contrast(&raw.contrast, &themes, &mut errors);
         }
@@ -276,12 +279,79 @@ impl Tokens {
     }
 }
 
+/// Number rules, so no data can produce broken or injected Dart.
+fn check_values(raw: &Raw, errors: &mut Vec<String>) {
+    let finite = |place: &str, v: f64, errors: &mut Vec<String>| {
+        let ok = v.is_finite();
+        if !ok {
+            errors.push(format!("{place}: {v} is not finite"));
+        }
+        ok
+    };
+    let positive = |place: &str, v: f64, errors: &mut Vec<String>| {
+        if finite(place, v, errors) && v <= 0.0 {
+            errors.push(format!("{place}: {v} must be greater than 0"));
+        }
+    };
+    for (name, f) in &raw.ty.families {
+        if f.is_empty() || !f.chars().all(|c| c.is_ascii_alphanumeric() || c == ' ') {
+            errors.push(format!(
+                "type.families.{name}: `{f}` must be letters, digits and spaces only"
+            ));
+        }
+    }
+    for (name, st) in &raw.ty.scale {
+        let at = format!("type.scale.{name}");
+        if !(100..=900).contains(&st.weight) || st.weight % 100 != 0 {
+            errors.push(format!(
+                "{at}.weight: {} is not a multiple of 100 in 100..900",
+                st.weight
+            ));
+        }
+        positive(&format!("{at}.size"), st.size, errors);
+        positive(&format!("{at}.height"), st.height, errors);
+        finite(&format!("{at}.tracking"), st.tracking, errors);
+    }
+    for (section, map) in [
+        ("space", &raw.space),
+        ("size", &raw.size),
+        ("shape", &raw.shape),
+    ] {
+        for (k, v) in map {
+            positive(&format!("{section}.{k}"), *v, errors);
+        }
+    }
+    for (k, v) in &raw.opacity {
+        let place = format!("opacity.{k}");
+        if finite(&place, *v, errors) && !(0.0..=1.0).contains(v) {
+            errors.push(format!("{place}: {v} must be in 0..1"));
+        }
+    }
+    let m = &raw.motion;
+    for (k, v) in [("fast", m.fast), ("medium", m.medium), ("slow", m.slow)] {
+        if v == 0 {
+            errors.push(format!("motion.{k}: 0 must be greater than 0"));
+        }
+    }
+    for (k, c) in [("standard", m.standard), ("emphasized", m.emphasized)] {
+        for (i, v) in c.iter().enumerate() {
+            let place = format!("motion.{k}[{i}]");
+            if finite(&place, *v, errors) && (i == 0 || i == 2) && !(0.0..=1.0).contains(v) {
+                errors.push(format!("{place}: {v} must be in 0..1 (cubic x)"));
+            }
+        }
+    }
+}
+
 fn check_contrast(
     pairs: &[RawPair],
     themes: &BTreeMap<String, BTreeMap<String, Rgb>>,
     errors: &mut Vec<String>,
 ) {
-    for pair in pairs {
+    for (i, pair) in pairs.iter().enumerate() {
+        if pair.fg.items().is_empty() || pair.bg.items().is_empty() {
+            errors.push(format!("contrast[{i}]: fg/bg must not be empty"));
+        }
         for r in pair.fg.items().into_iter().chain(pair.bg.items()) {
             if !ROLES.contains(&r) {
                 errors.push(format!("contrast: unknown role `{r}`"));
@@ -304,7 +374,7 @@ fn check_contrast(
                     let ratio = contrast(roles[fg], roles[bg]);
                     if ratio < min {
                         errors.push(format!(
-                            "contrast: {theme}: {fg} on {bg} is {ratio:.2}:1, minimum {min:.2}"
+                            "contrast: {theme}: {fg} on {bg} is {ratio:.3}:1, minimum {min:.2}"
                         ));
                     }
                 }
@@ -405,5 +475,220 @@ mod tests {
             e.contains("lightHighContrast") && e.contains("minimum 7.00"),
             "{e}"
         );
+    }
+
+    fn fails(from: &str, to: &str, want: &str) {
+        assert!(REAL.contains(from), "fixture missing {from}");
+        let e = err_of(&REAL.replacen(from, to, 1));
+        assert!(e.contains(want), "want `{want}` in:\n{e}");
+    }
+
+    #[test]
+    fn weight_must_be_hundreds_in_range() {
+        fails(
+            "family = \"display\", size = 40, weight = 700",
+            "family = \"display\", size = 40, weight = 450",
+            "type.scale.display.weight: 450 is not a multiple of 100 in 100..900",
+        );
+        fails(
+            "family = \"display\", size = 40, weight = 700",
+            "family = \"display\", size = 40, weight = 1000",
+            "type.scale.display.weight: 1000 is not a multiple of 100 in 100..900",
+        );
+    }
+
+    #[test]
+    fn floats_must_be_finite() {
+        fails(
+            "tracking = -0.5",
+            "tracking = inf",
+            "type.scale.display.tracking: inf is not finite",
+        );
+        fails(
+            "pressed = 0.12",
+            "pressed = nan",
+            "opacity.pressed: NaN is not finite",
+        );
+    }
+
+    #[test]
+    fn type_size_and_height_must_be_positive() {
+        fails(
+            "size = 40,",
+            "size = 0,",
+            "type.scale.display.size: 0 must be greater than 0",
+        );
+        fails(
+            "height = 48,",
+            "height = -1,",
+            "type.scale.display.height: -1 must be greater than 0",
+        );
+    }
+
+    #[test]
+    fn space_size_shape_must_be_positive() {
+        fails(
+            "[space]\nxs = 4",
+            "[space]\nxs = 0",
+            "space.xs: 0 must be greater than 0",
+        );
+        fails(
+            "[size]\ntarget = 48",
+            "[size]\ntarget = -2",
+            "size.target: -2 must be greater than 0",
+        );
+        fails(
+            "[shape]\nradiusSm = 6",
+            "[shape]\nradiusSm = 0",
+            "shape.radiusSm: 0 must be greater than 0",
+        );
+    }
+
+    #[test]
+    fn opacity_stays_in_unit_range() {
+        fails(
+            "pressed = 0.12",
+            "pressed = 1.5",
+            "opacity.pressed: 1.5 must be in 0..1",
+        );
+        fails(
+            "pressed = 0.12",
+            "pressed = -0.1",
+            "opacity.pressed: -0.1 must be in 0..1",
+        );
+    }
+
+    #[test]
+    fn durations_must_be_positive() {
+        fails(
+            "\nfast = 100\n",
+            "\nfast = 0\n",
+            "motion.fast: 0 must be greater than 0",
+        );
+    }
+
+    #[test]
+    fn cubic_x_stays_in_unit_range() {
+        fails(
+            "standard = [0.2, 0.0, 0.0, 1.0]",
+            "standard = [1.5, 0.0, 0.0, 1.0]",
+            "motion.standard[0]: 1.5 must be in 0..1",
+        );
+        fails(
+            "standard = [0.2, 0.0, 0.0, 1.0]",
+            "standard = [0.2, 0.0, -2.0, 1.0]",
+            "motion.standard[2]: -2 must be in 0..1",
+        );
+        fails(
+            "emphasized = [0.3, 0.0, 0.0, 1.0]",
+            "emphasized = [0.3, inf, 0.0, 1.0]",
+            "motion.emphasized[1]: inf is not finite",
+        );
+    }
+
+    #[test]
+    fn family_names_are_plain() {
+        fails(
+            "display = \"Space Grotesk\"",
+            "display = \"Space';Grotesk\"",
+            "type.families.display",
+        );
+    }
+
+    #[test]
+    fn empty_contrast_lists_fail() {
+        fails(
+            "bg = [\"surface\", \"surfaceSunken\", \"surfaceRaised\"]",
+            "bg = []",
+            "contrast[0]: fg/bg must not be empty",
+        );
+        fails(
+            "fg = \"onSurface\"",
+            "fg = []",
+            "contrast[0]: fg/bg must not be empty",
+        );
+    }
+
+    #[test]
+    fn contrast_message_is_exact() {
+        let e = err_of(&REAL.replacen(
+            "onSurface = \"charcoal-900\"",
+            "onSurface = \"stone-200\"",
+            1,
+        ));
+        let r = contrast(Rgb(0xDE, 0xDA, 0xD3), Rgb(0xEC, 0xE9, 0xE3));
+        let want = format!("contrast: light: onSurface on surface is {r:.3}:1, minimum 4.50");
+        assert!(e.lines().any(|l| l == want), "{e}");
+    }
+
+    #[test]
+    fn high_contrast_pair_passes_in_light() {
+        let e = err_of(&REAL.replacen(
+            "onSurfaceMuted = \"charcoal-700\"",
+            "onSurfaceMuted = \"stone-600\"",
+            1,
+        ));
+        assert!(
+            e.contains("contrast: lightHighContrast: onSurfaceMuted on surface is"),
+            "{e}"
+        );
+        assert!(!e.contains("contrast: light:"), "{e}");
+    }
+
+    #[test]
+    fn high_contrast_ui_pair_needs_four_and_a_half() {
+        let e = err_of(&REAL.replacen("outline = \"charcoal-700\"", "outline = \"stone-550\"", 1));
+        assert!(
+            e.contains("contrast: lightHighContrast: outline on surface is"),
+            "{e}"
+        );
+        assert!(e.contains("minimum 4.50"), "{e}");
+        assert!(!e.contains("contrast: light:"), "{e}");
+    }
+
+    #[test]
+    fn unknown_theme_fails() {
+        let e = err_of(&REAL.replacen("[themes.dark]", "[themes.sepia]", 1));
+        assert!(e.contains("themes: unknown key `sepia`"), "{e}");
+        assert!(e.contains("themes: missing `dark`"), "{e}");
+    }
+
+    #[test]
+    fn missing_theme_fails() {
+        let a = REAL.find("[themes.darkHighContrast]").unwrap();
+        let end = REAL[a + 1..]
+            .find("\n[")
+            .map_or(REAL.len(), |n| a + 1 + n + 1);
+        let src = format!("{}{}", &REAL[..a], &REAL[end..]);
+        let e = err_of(&src);
+        assert!(e.contains("themes: missing `darkHighContrast`"), "{e}");
+    }
+
+    #[test]
+    fn unknown_contrast_role_fails() {
+        fails(
+            "fg = \"onAccent\"",
+            "fg = \"onNothing\"",
+            "contrast: unknown role `onNothing`",
+        );
+    }
+
+    #[test]
+    fn extra_motion_key_fails() {
+        fails("[motion]\n", "[motion]\nbounce = 1\n", "bounce");
+    }
+
+    #[test]
+    fn extra_key_in_contrast_pair_fails() {
+        fails(
+            "fg = \"onAccent\"\n",
+            "fg = \"onAccent\"\nextra = 1\n",
+            "extra",
+        );
+    }
+
+    #[test]
+    fn unknown_kind_fails() {
+        fails("kind = \"ui\"\n", "kind = \"banner\"\n", "banner");
     }
 }

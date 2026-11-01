@@ -4,7 +4,7 @@ use super::tokens::Rgb;
 
 fn channel(c: u8) -> f64 {
     let v = f64::from(c) / 255.0;
-    if v <= 0.039_28 {
+    if v <= 0.040_45 {
         v / 12.92
     } else {
         ((v + 0.055) / 1.055).powf(2.4)

@@ -76,9 +76,9 @@ Sources: `brand/tokens.toml`, `brand/mark/parts/*.svg` and `brand/mark/marks.tom
 | `app/assets/brand/mark.png` (+ `2.0x`, `3.0x`) | In-app mark | `glyph` | 64, 128, 192 | PNG |
 | `crates/daemon/assets/tray/<state>-<px>.argb` | Tray pixmaps | `tray-<state>` | 24, 32, 48 | ARGB32 |
 
-`cargo xtask brand --check` regenerates in memory and fails on any difference or failed check. It also fails on any hard-coded design literal (color, duration, radius, size, spacing, opacity, font family) in `app/lib` outside the generated tokens. It runs in `just check` and in CI.
+`cargo xtask brand --check` regenerates in memory and fails on any difference or failed check. It also fails on any hard-coded design literal in `app/lib` outside the generated tokens, and on any Dart file it cannot read. It runs in `just check` and in CI.
 
-As built (Task 2): `cargo xtask brand` writes the seven token files; `--check` also runs the literal scan (`xtask/src/brand/literals.rs`). A line ending in `// brand-literal-ok: <reason>` is exempt. The mark outputs arrive with Task 4.
+Today `cargo xtask brand` writes the seven token files; the mark outputs come later. The literal scan (`xtask/src/brand/literals.rs`) reads whole files, so wrapped arguments are caught, and flags four groups: numbers inside `EdgeInsets`, `BorderRadius`, `Radius`, `Size`, `SizedBox`, `BoxConstraints` and `BorderSide` arguments; named design arguments with a number (`fontSize`, `width`, `elevation`, `spacing`, `size` and similar); color literals and `Colors.*` (except `Colors.transparent`), `Curves.*`, `Cubic(`, `Duration(` and alpha/opacity calls; font family strings and `FontWeight.wNNN`. A bare `0` is not a design value. A match whose first line ends in `// brand-literal-ok: <reason>` is exempt.
 
 To iterate: edit the sources, run `cargo xtask brand`, open the PNGs and the gallery, review the goldens, and commit sources and outputs together. Never hand-edit a generated file.
 
