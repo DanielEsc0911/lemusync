@@ -37,6 +37,8 @@ url = "2.5.8"
 base64 = "0.23.1"
 sha2 = "0.11.1"
 keyring = { version = "3.6.3", default-features = false }
+# Linux Secret Service client (crates/engine/src/secret_service.rs); already in the tree via `keyring`.
+dbus = { version = "0.9.12", features = ["vendored"] }
 rusqlite = { version = "0.41.0", features = ["bundled"] }
 directories = "6.0.0"
 sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }

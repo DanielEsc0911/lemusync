@@ -26,6 +26,9 @@ pub enum EngineError {
     NotSetUp(&'static str),
     #[error("keystore: {0}")]
     Secrets(String),
+    /// The keystore isn't there yet (no owner on the bus, still locked): retried with backoff.
+    #[error("keystore not available yet: {0}")]
+    SecretsUnavailable(String),
     #[error("invalid data in the repo: {0}")]
     Data(String),
     #[error("the first sync on this device needs confirmation")]
@@ -66,6 +69,7 @@ impl EngineError {
             Self::NotGranted(_) => "not_granted",
             Self::NotSetUp(_) => "not_set_up",
             Self::Secrets(_) => "secrets",
+            Self::SecretsUnavailable(_) => "secrets_unavailable",
             Self::Data(_) => "data",
             Self::NeedsConfirmation => "needs_confirmation",
             Self::Busy(_) => "busy",
@@ -113,6 +117,7 @@ impl EngineError {
             | Self::EmulatorRunning(d)
             | Self::NotGranted(d)
             | Self::Secrets(d)
+            | Self::SecretsUnavailable(d)
             | Self::Data(d)
             | Self::Busy(d)
             | Self::NeedsDecision(d)
@@ -156,6 +161,7 @@ impl EngineError {
             // leak is a few bytes once.
             "not_set_up" => Self::NotSetUp(Box::leak(p.into_boxed_str())),
             "secrets" => Self::Secrets(p),
+            "secrets_unavailable" => Self::SecretsUnavailable(p),
             "data" => Self::Data(p),
             "needs_confirmation" => Self::NeedsConfirmation,
             "busy" => Self::Busy(p),
@@ -200,6 +206,7 @@ mod tests {
             EngineError::NotGranted("/y".into()),
             EngineError::NotSetUp("repo"),
             EngineError::Secrets("s".into()),
+            EngineError::SecretsUnavailable("no_owner".into()),
             EngineError::Data("d".into()),
             EngineError::NeedsConfirmation,
             EngineError::Busy("b".into()),

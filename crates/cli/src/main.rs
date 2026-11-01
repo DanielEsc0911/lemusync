@@ -20,8 +20,8 @@ use std::process::ExitCode;
 use clap::{CommandFactory as _, FromArgMatches as _, Parser, Subcommand};
 use lemusync_api::StreamAction;
 use lemusync_engine::{
-    BackendConfig, Engine, EngineEnv, EngineError, JoinSecret, Locations, MapChoice, MapOutcome,
-    S3Backend, SyncOptions, VersionId,
+    BackendConfig, DisabledSecrets, Engine, EngineEnv, EngineError, JoinSecret, Locations,
+    MapChoice, MapOutcome, S3Backend, SyncOptions, VersionId,
 };
 
 use crate::daemon_client::Api;
@@ -261,6 +261,8 @@ fn env() -> Result<EngineEnv, EngineError> {
     let mut env = EngineEnv::system()?;
     if let Some(root) = std::env::var_os("LEMUSYNC_TEST_ROOT") {
         env.locations = Locations::under(Path::new(&root));
+        // Tests never reach the user's real keystore (security §Credentials).
+        env.secrets = std::sync::Arc::new(DisabledSecrets);
     }
     Ok(env)
 }

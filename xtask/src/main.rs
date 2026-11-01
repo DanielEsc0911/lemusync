@@ -1,5 +1,6 @@
 //! Repository checks, run as `cargo xtask <task>`.
 
+mod budgets;
 mod docs;
 mod i18n;
 mod layers;
@@ -16,9 +17,11 @@ fn main() -> ExitCode {
         "docs-check" => docs::check(&root),
         "layers" => layers::check(&root),
         "i18n-check" => i18n::check(&root),
+        "budgets" => budgets::measure(&root, &std::env::args().nth(2).unwrap_or_default()),
+        "budgets-check" => budgets::check(&root),
         "version-check" => version::check(&root, &std::env::args().nth(2).unwrap_or_default()),
         _ => Err(vec![format!(
-            "unknown task `{task}`; available: docs-check, layers, i18n-check, version-check <tag>"
+            "unknown task `{task}`; available: docs-check, layers, i18n-check, version-check <tag>, budgets [idle-secs], budgets-check"
         )]),
     };
     match result {

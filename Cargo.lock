@@ -2078,10 +2078,15 @@ dependencies = [
 name = "lemusync-crypto"
 version = "0.0.1-alpha.1"
 dependencies = [
+ "aes",
  "argon2",
  "blake3",
+ "cbc",
  "chacha20poly1305",
  "getrandom 0.4.3",
+ "hkdf",
+ "num-bigint",
+ "sha2 0.10.9",
  "thiserror",
  "zeroize",
 ]
@@ -2110,6 +2115,7 @@ name = "lemusync-engine"
 version = "0.0.1-alpha.1"
 dependencies = [
  "criterion",
+ "dbus",
  "directories",
  "futures-util",
  "keyring",

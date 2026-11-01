@@ -645,7 +645,9 @@ async fn run_sync(
             core.scheduler.on_sync_done(outcome, now, jitter);
             let kind = events::error_kind(e);
             core.model.update(|f| {
-                f.offline = outcome == SyncOutcome::Transient;
+                // A keystore that isn't open yet is a wait, not a lost connection.
+                f.offline = outcome == SyncOutcome::Transient
+                    && !matches!(e, EngineError::SecretsUnavailable(_));
                 f.error = kind;
             });
             tracing::warn!("sync failed ({}): {}", e.code(), redact(&e.to_string()));

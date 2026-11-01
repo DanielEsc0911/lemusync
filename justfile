@@ -26,11 +26,19 @@ test:
     cargo test --workspace
     cd app && flutter test
 
+# The Linux Secret Service client on a throwaway D-Bus session (never yours); cleans up after
+# itself and after any earlier crashed run. Needs dbus-run-session and gnome-keyring-daemon.
+secret-service-test dir="target":
+    scripts/isolated-secret-service.sh {{dir}}
+
 # Everything CI runs; must pass before every commit
 check: lint test
 
-# Engine budget benches (release) and the release CLI size (reliability §Budgets)
-bench:
+# Budgets (reliability §Budgets): engine benches, release sizes, the isolated daemon over
+# `idle` seconds (Linux), then the CI regression check
+bench idle="600":
     cargo bench -p lemusync-engine --bench budgets
-    cargo build --release -p lemusync-cli
-    ls -l target/release/lemusync
+    cargo build --release -p lemusync-cli -p lemusync-daemon
+    ls -l target/release/lemusync target/release/lemusyncd
+    cargo xtask budgets {{idle}}
+    cargo xtask budgets-check

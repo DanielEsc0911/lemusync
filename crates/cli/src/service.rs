@@ -105,17 +105,29 @@ fn exec_quote(path: &Path) -> Result<String, EngineError> {
     Ok(q)
 }
 
-/// The unit file text. `daemon` must be absolute.
+/// The unit file text. `daemon` must be absolute. The desktop unit belongs to the graphical
+/// session: it starts after login and stops at logout, so lingering never starts it at boot,
+/// before the desktop's keystore is up (desktop §Secret Service activation race). Only
+/// `--headless`, which turns on linger on purpose, starts with `default.target`.
 ///
 /// # Errors
 /// A path systemd can't take (not UTF-8, control characters).
 pub fn unit_text(daemon: &Path, headless: bool) -> Result<String, EngineError> {
     let exec = exec_quote(daemon)?;
-    let extra = if headless { " --headless" } else { "" };
+    let (extra, session, target) = if headless {
+        (" --headless", "", "default.target")
+    } else {
+        (
+            "",
+            "After=graphical-session.target\nPartOf=graphical-session.target\n",
+            "graphical-session.target",
+        )
+    };
     Ok(format!(
         "# Written by `lemusync service install`. Remove with `lemusync service uninstall`.\n\
          [Unit]\n\
          Description=LemuSync save sync daemon\n\
+         {session}\
          StartLimitIntervalSec=600\n\
          StartLimitBurst=5\n\
          \n\
@@ -126,7 +138,7 @@ pub fn unit_text(daemon: &Path, headless: bool) -> Result<String, EngineError> {
          RestartSec=2\n\
          \n\
          [Install]\n\
-         WantedBy=default.target\n"
+         WantedBy={target}\n"
     ))
 }
 
@@ -220,7 +232,41 @@ fn systemctl(r: &mut dyn Runner, args: &[&str]) -> Result<String, EngineError> {
     r.run(&full)
 }
 
-/// Write the unit, reload, enable and start it; `headless` also turns on linger.
+/// Removes every `<dir>/*.wants/lemusyncd.service` (and `*.requires/`) symlink next to the unit.
+/// `systemctl disable` only removes the links the unit's *current* `[Install]` names, so a
+/// unit rewritten with a new target would leave the old link (e.g. `default.target.wants`)
+/// and keep starting at boot. Returns whether any link was removed.
+///
+/// # Errors
+/// A link that can't be removed.
+pub fn remove_links(unit: &Path) -> Result<bool, EngineError> {
+    let Some(dir) = unit.parent() else {
+        return Ok(false);
+    };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Ok(false);
+    };
+    let mut removed = false;
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if !(name.ends_with(".wants") || name.ends_with(".requires")) {
+            continue;
+        }
+        let link = entry.path().join(UNIT);
+        if link
+            .symlink_metadata()
+            .is_ok_and(|m| m.file_type().is_symlink())
+        {
+            std::fs::remove_file(&link)?;
+            removed = true;
+        }
+    }
+    Ok(removed)
+}
+
+/// Write the unit, reload, enable and start it; `headless` also turns on linger. Links left
+/// by an earlier install go first, so only the new target starts it.
 ///
 /// # Errors
 /// Write or process failures.
@@ -231,6 +277,7 @@ pub fn install(
     headless: bool,
 ) -> Result<(), EngineError> {
     let text = unit_text(daemon, headless)?;
+    remove_links(unit)?;
     lemusync_engine::fsx::write_atomic(unit, text.as_bytes())?;
     systemctl(r, &["daemon-reload"])?;
     systemctl(r, &["enable", "--now", UNIT])?;
@@ -240,15 +287,21 @@ pub fn install(
     Ok(())
 }
 
-/// Disable and stop, remove the file, reload. `false` when nothing was installed.
+/// Everything `install` added: disable and stop, remove every `.wants` link and the file,
+/// reload. Linger is never changed. `false` when nothing was installed.
 ///
 /// # Errors
 /// Remove or process failures.
 pub fn uninstall(r: &mut dyn Runner, unit: &Path) -> Result<bool, EngineError> {
     if !unit.exists() {
+        if remove_links(unit)? {
+            systemctl(r, &["daemon-reload"])?;
+            return Ok(true);
+        }
         return Ok(false);
     }
     systemctl(r, &["disable", "--now", UNIT])?;
+    remove_links(unit)?;
     std::fs::remove_file(unit)?;
     systemctl(r, &["daemon-reload"])?;
     Ok(true)
@@ -391,6 +444,8 @@ mod tests {
         "# Written by `lemusync service install`. Remove with `lemusync service uninstall`.
 [Unit]
 Description=LemuSync save sync daemon
+After=graphical-session.target
+PartOf=graphical-session.target
 StartLimitIntervalSec=600
 StartLimitBurst=5
 
@@ -401,16 +456,26 @@ Restart=on-failure
 RestartSec=2
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
 ";
 
     #[test]
     fn golden_unit_normal_and_headless() {
         let p = Path::new("/opt/lemu sync/lemusyncd");
         assert_eq!(unit_text(p, false).unwrap(), GOLDEN);
+        // Headless lingers on purpose, so it alone starts with `default.target`.
         assert_eq!(
             unit_text(p, true).unwrap(),
-            GOLDEN.replace("lemusyncd\"\n", "lemusyncd\" --headless\n")
+            GOLDEN
+                .replace("lemusyncd\"\n", "lemusyncd\" --headless\n")
+                .replace(
+                    "After=graphical-session.target\nPartOf=graphical-session.target\n",
+                    ""
+                )
+                .replace(
+                    "WantedBy=graphical-session.target",
+                    "WantedBy=default.target"
+                )
         );
     }
 
@@ -429,7 +494,9 @@ WantedBy=default.target
         assert!(check_daemon(Path::new("/no/such/lemusyncd")).is_err());
     }
 
+    #[cfg(unix)]
     struct Rec(Vec<String>);
+    #[cfg(unix)]
     impl Runner for Rec {
         fn run(&mut self, argv: &[&str]) -> Result<String, EngineError> {
             self.0.push(argv.join(" "));
@@ -437,16 +504,41 @@ WantedBy=default.target
         }
     }
 
+    // Symlinks need Unix; the unit and its links only exist on Linux.
+    #[cfg(unix)]
     #[test]
     fn install_then_uninstall_order() {
         let dir = tempfile::tempdir().unwrap();
-        let unit = dir.path().join("systemd/user").join(UNIT);
+        let user = dir.path().join("systemd/user");
+        let unit = user.join(UNIT);
+        let link = |target: &str| {
+            let d = user.join(format!("{target}.wants"));
+            std::fs::create_dir_all(&d).unwrap();
+            std::os::unix::fs::symlink(&unit, d.join(UNIT)).unwrap();
+            d.join(UNIT)
+        };
+        // An older install's `default.target` link would keep starting it at boot.
+        let old = link("default.target");
+        let other = user.join("default.target.wants/other.service");
+        std::os::unix::fs::symlink("/x", &other).unwrap();
         let mut r = Rec(Vec::new());
         install(&mut r, &unit, Path::new("/usr/bin/lemusyncd"), true).unwrap();
         assert!(unit.is_file());
+        assert!(old.symlink_metadata().is_err(), "stale link kept");
+        // `enable` made this one (the recording runner doesn't).
+        let new = link("graphical-session.target");
         assert!(uninstall(&mut r, &unit).unwrap());
         assert!(!unit.exists());
+        assert!(new.symlink_metadata().is_err(), "link left after uninstall");
+        assert!(
+            other.symlink_metadata().is_ok(),
+            "another unit's link removed"
+        );
         assert!(!uninstall(&mut r, &unit).unwrap());
+        // A link with no unit file is still cleaned up.
+        let orphan = link("graphical-session.target");
+        assert!(uninstall(&mut r, &unit).unwrap());
+        assert!(orphan.symlink_metadata().is_err());
         assert_eq!(
             r.0,
             [
@@ -454,6 +546,7 @@ WantedBy=default.target
                 "systemctl --user enable --now lemusyncd.service",
                 "loginctl enable-linger",
                 "systemctl --user disable --now lemusyncd.service",
+                "systemctl --user daemon-reload",
                 "systemctl --user daemon-reload",
             ]
         );

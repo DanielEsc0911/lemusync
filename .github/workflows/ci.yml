@@ -38,6 +38,19 @@ jobs:
       - run: cargo xtask i18n-check
       - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
 
+  # Non-blocking report first (phase-2-daemon Task 10): fails on a >20 % regression of the
+  # lemusyncd size or the warm 10k-file rescan against docs/specs/reliability.md §Budgets, but
+  # `continue-on-error` keeps the run green until the references are calibrated for CI runners.
+  budgets:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install
+      - run: cargo build --release -p lemusync-daemon
+      - run: cargo bench -p lemusync-engine --bench budgets -- rescan_10k_files_warm
+      - run: cargo xtask budgets-check
+
   flutter:
     runs-on: ubuntu-latest
     defaults:
