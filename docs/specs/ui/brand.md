@@ -1,6 +1,6 @@
 # Brand
 
-> **Status:** Decided · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** `brand/`, `xtask/src/brand/`, `app/lib/design/`, `app/assets/fonts/`
+> **Status:** Decided · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** `brand/`, `xtask/src/brand/`, `app/lib/design/`, `app/assets/fonts/`, `app/assets/licenses/`
 
 ## Purpose
 One brand, one source: `brand/` holds the only hand-edited brand values. `cargo xtask brand` regenerates every derived file (Dart tokens, icons, tray pixmaps) from it.
@@ -29,7 +29,7 @@ Roles (21, every theme defines all of them):
 | `bevelDark` | Bevel shade | Decorative bevel, dividers |
 | `accent` | Brand accent | Primary actions, selection |
 | `onAccent` | On accent | Text and icons on `accent` |
-| `focus` | Focus ring | Drawn outside the control with a gap |
+| `focus` | Focus ring | Focus ring, drawn outside the control; same primitive as `onSurface` |
 | `synced`, `onSynced` | All in sync | Synced status and its content |
 | `syncing`, `onSyncing` | Work in progress | Scanning and syncing status |
 | `attention`, `onAttention` | Needs the user | Conflicts, foreign leases |
@@ -76,7 +76,7 @@ Sources: `brand/tokens.toml`, `brand/mark/parts/*.svg` and `brand/mark/marks.tom
 | `app/assets/brand/mark.png` (+ `2.0x`, `3.0x`) | In-app mark | `glyph` | 64, 128, 192 | PNG |
 | `crates/daemon/assets/tray/<state>-<px>.argb` | Tray pixmaps | `tray-<state>` | 24, 32, 48 | ARGB32 |
 
-Fonts and icons (vendored, not generated): three variable fonts (Space Grotesk, Inter, JetBrains Mono; OFL 1.1) in `app/assets/fonts/`, with source URLs and SHA-256 in `SOURCES.md`, and `lucide_icons_flutter` 4.0.1 (Lucide 1.60.0, ISC). Licenses ship as assets and are registered in `app/lib/design/licenses.dart`. Measured 2026-11-01: the Linux release bundle grew from 23 MB to 28 MB; the icon package also ships `lucide.ttf` (0.9 MB) and its `build_font` weight fonts, which the app does not use. A later trim is allowed; the package is not patched.
+Fonts and icons (vendored, not generated): three variable fonts (Space Grotesk, Inter, JetBrains Mono; OFL 1.1) in `app/assets/fonts/`, with source URLs and SHA-256 in `SOURCES.md`, and `lucide_icons_flutter` 4.0.1 (Lucide 1.60.0; ISC, plus MIT for Feather-derived icons). Licenses ship as assets and are registered in `app/lib/design/licenses.dart`. Measured 2026-11-01: the Linux release bundle grew from 23 MB to 28 MB; `lucide.ttf` (Lucide family, used) is tree-shaken once `LsIcons` is referenced; the package's unused `Lucide100`–`Lucide600` weight fonts (≈ 2.9 MB) always ship; a later trim can vendor `lucide.ttf` from lucide 1.60.0 and drop the package. `app/assets/fonts/SOURCES.md` hashes are verified by `cargo xtask brand --check`.
 
 `cargo xtask brand --check` regenerates in memory and fails on any difference or failed check. It also fails on any hard-coded design literal in `app/lib` outside the generated tokens, and on any Dart file it cannot read. It runs in `just check` and in CI.
 

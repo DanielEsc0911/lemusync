@@ -59,7 +59,7 @@ pub const SIZE_KEYS: [&str; 8] = [
 pub const SHAPE_KEYS: [&str; 4] = ["radiusSm", "radiusMd", "radiusLg", "radiusPill"];
 pub const DURATION_KEYS: [&str; 3] = ["fast", "medium", "slow"];
 pub const CURVE_KEYS: [&str; 2] = ["standard", "emphasized"];
-pub const OPACITY_KEYS: [&str; 3] = ["pressed", "hover", "disabled"];
+pub const OPACITY_KEYS: [&str; 4] = ["pressed", "hover", "disabled", "focus"];
 
 /// One text style of the scale.
 #[derive(Clone, Debug, Deserialize)]
@@ -403,7 +403,7 @@ mod tests {
 
     #[test]
     fn missing_role_names_theme_and_role() {
-        let e = err_of(&REAL.replacen("focus = \"lavender-700\"\n", "", 1));
+        let e = err_of(&REAL.replacen("focus = \"charcoal-900\"\n", "", 1));
         assert!(e.contains("themes.light") && e.contains("focus"), "{e}");
     }
 

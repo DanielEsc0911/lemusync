@@ -4,6 +4,7 @@ mod contrast;
 mod dart;
 mod literals;
 mod output;
+mod sources;
 mod tokens;
 
 use std::path::Path;
@@ -27,6 +28,7 @@ pub fn run(root: &Path, check: bool) -> Result<(), Vec<String>> {
         .into_iter()
         .map(|p| format!("{}: out of date, run `cargo xtask brand`", p.display()))
         .collect();
+    errors.extend(sources::check(root));
     let scan = literals::scan(root);
     errors.extend(scan.errors);
     errors.extend(scan.hits.into_iter().map(|hit| {

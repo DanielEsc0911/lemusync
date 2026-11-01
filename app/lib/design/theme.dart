@@ -15,6 +15,8 @@ ThemeData lsTheme(LsColors c) {
     onPrimary: c.onAccent,
     secondary: c.accent,
     onSecondary: c.onAccent,
+    secondaryContainer: c.accent,
+    onSecondaryContainer: c.onAccent,
     error: c.danger,
     onError: c.onDanger,
     surface: c.surface,
@@ -53,10 +55,20 @@ ThemeData lsTheme(LsColors c) {
     vertical: LsSpace.sm,
   );
   const minSize = Size.square(LsSize.target);
-  final focusSide = BorderSide(color: c.focus, width: LsSize.focusRing);
+  final focusSide = BorderSide(
+    color: c.focus,
+    width: LsSize.focusRing,
+    strokeAlign: BorderSide.strokeAlignOutside,
+  );
+  final shape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(LsShape.radiusMd),
+  );
 
   WidgetStateProperty<Color?> overlay(Color base) =>
       WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.focused)) {
+          return base.withValues(alpha: LsOpacity.focus);
+        }
         if (states.contains(WidgetState.pressed)) {
           return base.withValues(alpha: LsOpacity.pressed);
         }
@@ -66,12 +78,16 @@ ThemeData lsTheme(LsColors c) {
         return null;
       });
 
-  WidgetStateProperty<OutlinedBorder?> shapeWithFocus(BorderSide idle) =>
+  WidgetStateProperty<BorderSide?> sideWithFocus(BorderSide idle) =>
       WidgetStateProperty.resolveWith(
-        (states) => RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(LsShape.radiusMd),
-          side: states.contains(WidgetState.focused) ? focusSide : idle,
-        ),
+        (states) => states.contains(WidgetState.focused) ? focusSide : idle,
+      );
+
+  final disabledFg = c.onSurface.withValues(alpha: LsOpacity.disabled);
+  WidgetStateProperty<Color?> foreground(Color enabled) =>
+      WidgetStateProperty.resolveWith(
+        (states) =>
+            states.contains(WidgetState.disabled) ? disabledFg : enabled,
       );
 
   ButtonStyle button(Color overlayBase, BorderSide idle) => ButtonStyle(
@@ -80,7 +96,8 @@ ThemeData lsTheme(LsColors c) {
     elevation: const WidgetStatePropertyAll(0),
     shadowColor: const WidgetStatePropertyAll(Colors.transparent),
     overlayColor: overlay(overlayBase),
-    shape: shapeWithFocus(idle),
+    shape: WidgetStatePropertyAll(shape),
+    side: sideWithFocus(idle),
   );
 
   OutlineInputBorder inputBorder(Color color, double width) =>
@@ -95,11 +112,16 @@ ThemeData lsTheme(LsColors c) {
     colorScheme: scheme,
     scaffoldBackgroundColor: c.surface,
     canvasColor: c.surface,
-    focusColor: c.focus,
+    focusColor: c.focus.withValues(alpha: LsOpacity.focus),
+    hoverColor: c.onSurface.withValues(alpha: LsOpacity.hover),
+    visualDensity: VisualDensity.standard,
     splashFactory: NoSplash.splashFactory,
     materialTapTargetSize: MaterialTapTargetSize.padded,
     textTheme: text,
-    primaryTextTheme: text,
+    primaryTextTheme: text.apply(
+      bodyColor: c.onAccent,
+      displayColor: c.onAccent,
+    ),
     extensions: [c],
     pageTransitionsTheme: PageTransitionsTheme(
       builders: {
@@ -109,27 +131,30 @@ ThemeData lsTheme(LsColors c) {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: button(c.onAccent, BorderSide.none).copyWith(
-        backgroundColor: WidgetStatePropertyAll(c.accent),
-        foregroundColor: WidgetStatePropertyAll(c.onAccent),
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? c.onSurface.withValues(alpha: LsOpacity.pressed)
+              : c.accent,
+        ),
+        foregroundColor: foreground(c.onAccent),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: button(
         c.onSurface,
         BorderSide(color: c.outline, width: LsSize.bevel),
-      ).copyWith(foregroundColor: WidgetStatePropertyAll(c.onSurface)),
+      ).copyWith(foregroundColor: foreground(c.onSurface)),
     ),
     textButtonTheme: TextButtonThemeData(
       style: button(
         c.accent,
         BorderSide.none,
-      ).copyWith(foregroundColor: WidgetStatePropertyAll(c.accent)),
+      ).copyWith(foregroundColor: foreground(c.accent)),
     ),
     iconButtonTheme: IconButtonThemeData(
-      style: button(
-        c.onSurface,
-        BorderSide.none,
-      ).copyWith(foregroundColor: WidgetStatePropertyAll(c.onSurface)),
+      style: button(c.onSurface, BorderSide.none).copyWith(
+        padding: const WidgetStatePropertyAll(EdgeInsets.all(LsSpace.md)),
+      ),
     ),
     cardTheme: CardThemeData(
       color: c.surfaceRaised,
@@ -149,7 +174,11 @@ ThemeData lsTheme(LsColors c) {
       enabledBorder: inputBorder(c.outline, LsSize.bevel),
       focusedBorder: inputBorder(c.focus, LsSize.focusRing),
       errorBorder: inputBorder(c.danger, LsSize.bevel),
-      focusedErrorBorder: inputBorder(c.focus, LsSize.focusRing),
+      focusedErrorBorder: inputBorder(c.danger, LsSize.focusRing),
+      disabledBorder: inputBorder(
+        c.outline.withValues(alpha: LsOpacity.disabled),
+        LsSize.bevel,
+      ),
     ),
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
