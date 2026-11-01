@@ -43,35 +43,34 @@ class LsBanner extends StatelessWidget {
               child: ColoredBox(color: color),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: LsSpace.xs),
-              child: Padding(
-                padding: const EdgeInsets.all(LsSpace.md),
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: LsSpace.md,
-                  runSpacing: LsSpace.xs,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(tone.icon, size: LsSize.iconMd, color: color),
-                        const SizedBox(width: LsSpace.sm),
-                        Flexible(
-                          child: Text(
-                            message,
-                            style: LsType.body.copyWith(color: c.onSurface),
-                          ),
+              padding: const EdgeInsets.fromLTRB(
+                LsSpace.xs + LsSpace.md,
+                LsSpace.md,
+                LsSpace.md,
+                LsSpace.md,
+              ),
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: LsSpace.md,
+                runSpacing: LsSpace.xs,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(tone.icon, size: LsSize.iconMd, color: color),
+                      const SizedBox(width: LsSpace.sm),
+                      Flexible(
+                        child: Text(
+                          message,
+                          style: LsType.body.copyWith(color: c.onSurface),
                         ),
-                      ],
-                    ),
-                    if (actionLabel != null)
-                      TextButton(
-                        onPressed: onAction,
-                        child: Text(actionLabel!),
                       ),
-                  ],
-                ),
+                    ],
+                  ),
+                  if (actionLabel != null)
+                    TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                ],
               ),
             ),
           ],

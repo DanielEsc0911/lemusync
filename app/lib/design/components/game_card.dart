@@ -42,21 +42,30 @@ class GameCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).extension<LsColors>()!;
     final l = AppLocalizations.of(context);
-    const outer = CartridgeBorder();
-    const inner = CartridgeBorder(radius: LsShape.radiusLg - LsSize.bevel);
-    final label = [title, emulator, status.label(l), ?lease].join(', ');
+    // Edge line (outline) outside, then the bevel gradient, then the fill.
+    const edge = LsSize.bevel * 2;
+    final outer = CartridgeBorder(side: BorderSide(color: c.outline));
+    const inner = CartridgeBorder(
+      radius: LsShape.radiusLg - edge,
+      topRadius: LsShape.radiusSm - edge,
+    );
+    final label = [
+      title,
+      emulator,
+      status.label(l),
+      ?lease,
+      if (lastSynced != null) l.gameLastSynced(lastSynced!),
+    ].join(', ');
 
-    final info = Semantics(
-      label: label,
-      container: true,
-      excludeSemantics: true,
+    final info = ExcludeSemantics(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: LsSpace.sm,
         children: [
           LsSurface(
             level: LsSurfaceLevel.sunken,
-            radius: LsShape.radiusMd,
+            radius: LsShape.radiusSm,
             padding: const EdgeInsets.all(LsSpace.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,54 +109,114 @@ class GameCard extends StatelessWidget {
     );
 
     return ClipPath(
-      clipper: const ShapeBorderClipper(shape: outer),
+      clipper: ShapeBorderClipper(shape: outer),
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [c.bevelLight, c.bevelDark],
+        position: DecorationPosition.foreground,
+        decoration: ShapeDecoration(shape: outer),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [c.bevelLight, c.bevelDark],
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(LsSize.bevel),
-          child: ClipPath(
-            clipper: const ShapeBorderClipper(shape: inner),
-            child: ColoredBox(
-              color: c.surfaceRaised,
-              child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                  onTap: onTap,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      LsSpace.md,
-                      CartridgeBorder.notchDepth + LsSpace.sm,
-                      LsSpace.md,
-                      LsSpace.md,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: LsSpace.sm,
-                      children: [
-                        info,
-                        Row(
+          child: Padding(
+            padding: const EdgeInsets.all(edge),
+            child: ClipPath(
+              clipper: const ShapeBorderClipper(shape: inner),
+              child: ColoredBox(
+                color: c.surfaceRaised,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Semantics(
+                    container: true,
+                    label: label,
+                    button: onTap != null,
+                    child: InkWell(
+                      onTap: onTap,
+                      child: Padding(
+                        // The label recess sits right under the notch.
+                        padding: const EdgeInsets.fromLTRB(
+                          LsSpace.md,
+                          CartridgeBorder.notchDepth + LsSpace.xs,
+                          LsSpace.md,
+                          LsSpace.md,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          spacing: LsSpace.sm,
                           children: [
-                            StatusBadge(status: status, compact: true),
-                            const Spacer(),
-                            IconButton.filledTonal(
-                              onPressed: onPlay,
-                              tooltip: l.gamePlay,
-                              icon: const Icon(LsIcons.play),
+                            info,
+                            Row(
+                              children: [
+                                ExcludeSemantics(
+                                  child: StatusBadge(
+                                    status: status,
+                                    compact: true,
+                                  ),
+                                ),
+                                const Spacer(),
+                                IconButton.outlined(
+                                  onPressed: onPlay,
+                                  tooltip: l.gamePlay,
+                                  icon: const Icon(LsIcons.play),
+                                  color: c.accent,
+                                  style: IconButton.styleFrom(
+                                    side: BorderSide(color: c.outline),
+                                  ),
+                                ),
+                              ],
                             ),
+                            const _GripRidges(),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Three moulded ridges at the bottom centre, like the grip of a cartridge.
+class _GripRidges extends StatelessWidget {
+  const _GripRidges();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).extension<LsColors>()!;
+    return ExcludeSemantics(
+      child: Align(
+        child: FractionallySizedBox(
+          widthFactor: 0.3,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: LsSpace.xs,
+            children: [
+              for (var i = 0; i < 3; i++)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: LsSize.bevel,
+                      width: double.infinity,
+                      child: ColoredBox(color: c.bevelDark),
+                    ),
+                    SizedBox(
+                      height: LsSize.bevel,
+                      width: double.infinity,
+                      child: ColoredBox(color: c.bevelLight),
+                    ),
+                  ],
+                ),
+            ],
           ),
         ),
       ),

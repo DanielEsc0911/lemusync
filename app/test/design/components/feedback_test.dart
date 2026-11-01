@@ -101,7 +101,14 @@ void main() {
 
     testWidgets('indeterminate repaints without rebuilding', (t) async {
       await t.pumpWidget(_app(LsColors.light, const ProgressRing()));
-      expect(painterOf(t).turns, isNotNull);
+      final first = painterOf(t);
+      expect(first.turns, isNotNull);
+      final before = first.turns!.value;
+      for (var i = 0; i < 10; i++) {
+        await t.pump(const Duration(milliseconds: 16));
+        expect(identical(painterOf(t), first), isTrue, reason: 'pump $i');
+      }
+      expect(first.turns!.value, isNot(before));
       expect(
         find.descendant(
           of: find.byType(ProgressRing),

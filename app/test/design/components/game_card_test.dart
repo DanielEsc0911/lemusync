@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemusync/design/components/cartridge_border.dart';
@@ -63,6 +64,27 @@ void main() {
       expect(b.copyWith(), b);
       expect(b.scale(2), isA<CartridgeBorder>());
     });
+
+    test('lerps radius and side', () {
+      const a = CartridgeBorder(radius: 10, side: BorderSide(width: 2));
+      const b = CartridgeBorder(radius: 30, side: BorderSide(width: 4));
+      final m = a.lerpTo(b, 0.5)! as CartridgeBorder;
+      expect(m.radius, 20);
+      expect(m.side.width, 3);
+      final n = b.lerpFrom(a, 0.5)! as CartridgeBorder;
+      expect(n.radius, 20);
+      expect(ShapeBorder.lerp(a, b, 0.5), m);
+    });
+
+    test('a very narrow card still has a valid path', () {
+      const narrow = Rect.fromLTWH(0, 0, 60, 120);
+      final p = const CartridgeBorder().getOuterPath(narrow);
+      expect(p.getBounds().width, closeTo(60, 0.01));
+      expect(p.contains(narrow.center), isTrue);
+      const tiny = Rect.fromLTWH(0, 0, 20, 120);
+      final q = const CartridgeBorder().getOuterPath(tiny);
+      expect(q.contains(tiny.center), isTrue);
+    });
   });
 
   testWidgets('semantics label merges title, emulator, status and lease', (
@@ -86,6 +108,56 @@ void main() {
       ),
       findsOneWidget,
     );
+    h.dispose();
+  });
+
+  testWidgets('height is intrinsic in a bounded parent', (t) async {
+    await t.pumpWidget(
+      MaterialApp(
+        theme: lsTheme(LsColors.light),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 320,
+            height: 600,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: GameCard(title: 'Zelda', emulator: 'Cemu'),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(t.takeException(), isNull);
+    expect(t.getSize(find.byType(GameCard)).height, lessThan(300));
+  });
+
+  testWidgets('label adds last synced; badge and info are not extra nodes', (
+    t,
+  ) async {
+    final h = t.ensureSemantics();
+    await t.pumpWidget(
+      _app(
+        LsColors.light,
+        GameCard(
+          title: 'Zelda',
+          emulator: 'Cemu',
+          lastSynced: '2 min ago',
+          onTap: () {},
+          onPlay: () {},
+        ),
+      ),
+    );
+    expect(
+      find.bySemanticsLabel('Zelda, Cemu, All saves synced, Synced 2 min ago'),
+      findsOneWidget,
+    );
+    expect(find.bySemanticsLabel('Zelda'), findsNothing);
+    final play = t.getSemantics(find.byTooltip('Play'));
+    expect(play.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    expect(play.label, isNot(contains('Zelda')));
     h.dispose();
   });
 
@@ -137,6 +209,7 @@ void main() {
         expect(t.takeException(), isNull);
         await expectLater(t, meetsGuideline(textContrastGuideline));
         await expectLater(t, meetsGuideline(androidTapTargetGuideline));
+        await expectLater(t, meetsGuideline(labeledTapTargetGuideline));
       }
       h.dispose();
     });
