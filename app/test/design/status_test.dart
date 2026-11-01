@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemusync/design/icons.dart';
@@ -11,12 +13,17 @@ import '../support/fonts.dart';
 void main() {
   setUpAll(loadBrandFonts);
 
-  const themes = [
-    LsColors.light,
-    LsColors.dark,
-    LsColors.lightHighContrast,
-    LsColors.darkHighContrast,
-  ];
+  const themes = {
+    'light': LsColors.light,
+    'dark': LsColors.dark,
+    'lightHighContrast': LsColors.lightHighContrast,
+    'darkHighContrast': LsColors.darkHighContrast,
+  };
+
+  double contrast(Color a, Color b) {
+    final la = a.computeLuminance(), lb = b.computeLuminance();
+    return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+  }
 
   test('order matches api::StatusState', () {
     expect(LsStatus.values.map((s) => s.name), [
@@ -30,8 +37,19 @@ void main() {
     ]);
   });
 
-  for (final c in themes) {
-    test('roles per brand palette (${c.brightness})', () {
+  for (final MapEntry(key: name, value: c) in themes.entries) {
+    test('onColor contrast over color ($name)', () {
+      final min = name.endsWith('HighContrast') ? 7.0 : 4.5;
+      for (final s in LsStatus.values) {
+        expect(
+          contrast(s.onColor(c), s.color(c)),
+          greaterThanOrEqualTo(min),
+          reason: s.name,
+        );
+      }
+    });
+
+    test('roles per brand palette ($name)', () {
       final expected = <LsStatus, (Color, Color)>{
         LsStatus.synced: (c.synced, c.onSynced),
         LsStatus.scanning: (c.syncing, c.onSyncing),

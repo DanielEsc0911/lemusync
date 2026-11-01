@@ -50,14 +50,14 @@ The inventory grows with the code. Each component gets a widget test and goldens
 | `PathField` | Power-user path input: shows the resolved path, grant state and validation |
 | `BackendCard` | Storage provider, health, capabilities |
 | `ProgressRing` | Lemur-ring progress, determinate and indeterminate |
+| `LsBanner`, `Toast`, `EmptyState`, `ErrorState` | Feedback |
+| `WizardStep` | Setup and join flows |
 
 ### Code paths
 - `app/lib/design/status.dart`: `LsStatus` (same order as `api::StatusState`) with its color role, icon and label.
-- `app/lib/design/components/ls_surface.dart`: `LsSurface`, the plastic panel (bevel gradient behind a flat fill; never a non-uniform border with a radius, never a shadow).
+- `app/lib/design/components/ls_surface.dart`: `LsSurface`, the plastic panel (bevel gradient behind a flat fill, inverted on `sunken` so it reads pressed in; never a non-uniform border with a radius, never a shadow).
 - `app/lib/design/components/status_badge.dart`: `StatusBadge`, a face-button dot plus label; `compact` keeps the label for screen readers.
 - `app/lib/design/design.dart`: barrel export. Test harness: `app/test/support/golden.dart` (`goldenMatrix`).
-| `LsBanner`, `Toast`, `EmptyState`, `ErrorState` | Feedback |
-| `WizardStep` | Setup and join flows |
 
 ## Accessibility
 Screen-reader semantics on every interactive element. Full keyboard navigation and visible focus on desktop. Touch targets ≥ 48 dp. Text scaling to 200% without clipping. Color is never the only signal (status also uses icon and text).

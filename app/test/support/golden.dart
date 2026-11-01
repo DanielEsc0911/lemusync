@@ -15,16 +15,17 @@ Future<void> goldenMatrix(
   List<ImageProvider> precache = const [],
 }) async {
   const themes = {'light': LsColors.light, 'dark': LsColors.dark};
+  addTearDown(tester.view.reset);
   for (final MapEntry(key: theme, value: colors) in themes.entries) {
     for (final locale in const ['en', 'es']) {
       for (final size in sizes) {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
         await tester.pumpWidget(
           MaterialApp(
             key: ValueKey('$theme.$locale.$size'),
             debugShowCheckedModeBanner: false,
+            themeAnimationDuration: Duration.zero,
             theme: lsTheme(colors),
             locale: Locale(locale),
             localizationsDelegates: const [

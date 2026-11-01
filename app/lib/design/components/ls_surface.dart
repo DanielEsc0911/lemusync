@@ -9,6 +9,7 @@ enum LsSurfaceLevel { sunken, base, raised }
 
 /// A plastic panel: flat fill inside a one-pixel two-tone bevel.
 /// The bevel is a gradient behind the fill, so rounded corners are safe.
+/// `sunken` inverts the bevel so it reads pressed in.
 class LsSurface extends StatelessWidget {
   const LsSurface({
     super.key,
@@ -33,12 +34,16 @@ class LsSurface extends StatelessWidget {
       LsSurfaceLevel.base => c.surface,
       LsSurfaceLevel.raised => c.surfaceRaised,
     };
+    // Sunken reads pressed in: the light and shade swap.
+    final bevel = level == LsSurfaceLevel.sunken
+        ? [c.bevelDark, c.bevelLight]
+        : [c.bevelLight, c.bevelDark];
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [c.bevelLight, c.bevelDark],
+          colors: bevel,
         ),
         borderRadius: BorderRadius.circular(outerRadius),
       ),

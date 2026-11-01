@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemusync/design/components/ls_surface.dart';
 import 'package:lemusync/design/tokens/colors.g.dart';
 import 'package:lemusync/design/tokens/shape.g.dart';
+import 'package:lemusync/design/tokens/size.g.dart';
+import 'package:lemusync/design/tokens/space.g.dart';
 
 import '../../support/fonts.dart';
 
@@ -41,14 +45,48 @@ void main() {
             )
             .map((b) => b.decoration as BoxDecoration)
             .toList();
-        final outer = boxes.first.gradient! as LinearGradient;
-        expect(outer.colors, [c.bevelLight, c.bevelDark]);
+        expect(boxes, hasLength(2));
+        final outer = boxes[0];
+        final inner = boxes[1];
+        final grad = outer.gradient! as LinearGradient;
+        expect(
+          grad.colors,
+          level == LsSurfaceLevel.sunken
+              ? [c.bevelDark, c.bevelLight]
+              : [c.bevelLight, c.bevelDark],
+        );
         final fill = switch (level) {
           LsSurfaceLevel.sunken => c.surfaceSunken,
           LsSurfaceLevel.base => c.surface,
           LsSurfaceLevel.raised => c.surfaceRaised,
         };
-        expect(boxes.any((b) => b.color == fill), isTrue);
+        expect(inner.color, fill);
+        expect(outer.color, isNull);
+        expect(outer.borderRadius, BorderRadius.circular(radius));
+        expect(
+          inner.borderRadius,
+          BorderRadius.circular(math.max(0, radius - LsSize.bevel)),
+        );
+        for (final b in boxes) {
+          expect(b.boxShadow, isNull);
+          expect(b.border, isNull);
+        }
+        final pads = t
+            .widgetList<Padding>(
+              find.descendant(
+                of: find.byType(LsSurface),
+                matching: find.byType(Padding),
+              ),
+            )
+            .map((p) => p.padding)
+            .toList();
+        expect(
+          pads,
+          containsAllInOrder(const [
+            EdgeInsets.all(LsSize.bevel),
+            EdgeInsets.all(LsSpace.lg),
+          ]),
+        );
       });
     }
   }
