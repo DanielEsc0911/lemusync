@@ -209,8 +209,12 @@ Decided 2026-11-01: the user grants each emulator folder through the FileChooser
 
 Improve first, then set expectations (maintainer, 2026-11-01): the budgets stay as they are until the daemon's core loops have been inspected and, where it pays, changed (for example a cheaper way to notice emulator starts than walking every process).
 
-- [ ] **Step 1:** find what wakes the idle daemon and what peaks its memory (the 3 s process poll walks every process with `sysinfo`; the tray and D-Bus clients; the engine's caches). Measure each change with `cargo xtask budgets` and `scripts/soak.sh`.
+- [x] **Step 1:** find what wakes the idle daemon and what peaks its memory (the 3 s process poll walks every process with `sysinfo`; the tray and D-Bus clients; the engine's caches). Measure each change with `cargo xtask budgets` and `scripts/soak.sh`.
 - [ ] **Step 2:** fix within the budgets, or record why one can't be met and propose a budget change as a decision for the maintainer; specs; `just check`; commit `perf(daemon): bring idle CPU, memory and size under budget`.
+
+**As built (Step 1, 2026-11-01):** per-thread `/proc/<pid>/task/*/stat` on the real daemon showed every idle tick in the poll (≈ 35 ms per 3 s poll). `SysinfoProbe` became `OsProbe`: on Linux a cached `/proc` probe (list pids; `exe` file name + `comm` only for new pids; `comm` re-read each poll, `exe` re-read when it changed; vanished pids dropped; unreadable `exe` → `comm`, a full 15-byte `comm` also matching a longer name it starts). Other OSes reuse one `sysinfo::System` and refresh only `exe` (`OnlyIfNotSet`). One `running_set` over ≈ 550 processes: 23.1 → 0.83 ms median (20 runs, release, ignored test `running_set_timing`). `cargo xtask budgets 300`: idle CPU 0.71 → **0.09 %** (27 ticks / 300 s), RSS 11.3 MiB idle, peak 11.6 MiB, `lemusyncd` 17 995 968 bytes (−0.23 MB). Remaining candidates for Step 2:
+- **RSS (real daemon 22.9 MiB, peak 31.1 MiB; 13 MiB of it file-backed binary pages):** the runtime has 2 workers but 18 more `tokio-rt-worker` blocking-pool threads linger; each can hold a glibc malloc arena. `max_blocking_threads(4)` + a short `thread_keep_alive` (est. −3…6 MiB peak). The old per-poll `sysinfo` walk (cmdline/environ of every process) was a likely peak source and is gone on Linux.
+- **Size (18.0 vs 15 MB):** `lto = "fat"` (est. −0.5…1 MB), `opt-level = "s"` for non-hot crates (est. −1…2 MB, needs the rescan bench), dropping `crc_fast` via `opendal-service-s3` features (≈ −0.7 MB), `panic = "abort"` (≈ −1 MB unwind tables, only if nothing relies on `catch_unwind`).
 
 ### Task 14: friendly, localized `doctor` failures
 
@@ -247,7 +251,7 @@ Improve first, then set expectations (maintainer, 2026-11-01): the budgets stay 
 ## Verify
 
 - **V-DAEMON-1** (new, Task 8) Narrowing a daemon-triggered sync to the changed streams is cheap enough to bother; otherwise a full sync each time.
-- **V-DAEMON-2** (new, Task 5, measured in Task 10) A 3 s process poll costs ≈ 0 % idle CPU on the Fedora PC. **Refuted 2026-10-29:** 0.71 % (426 ticks over 600 s), from the `sysinfo` walk of every process; a cheaper poll (read only `/proc/<pid>/comm`, or a longer interval) is open.
+- **V-DAEMON-2** (new, Task 5, measured in Task 10) A 3 s process poll costs ≈ 0 % idle CPU on the Fedora PC. **Refuted 2026-10-29:** 0.71 % (426 ticks over 600 s), from the `sysinfo` walk of every process; a cheaper poll (read only `/proc/<pid>/comm`, or a longer interval) is open. **2026-11-01 (Task 16):** the cached `/proc` poll brings it to 0.09 % (27 ticks over 300 s); not 0, but 8× lower.
 - Existing: V-REL-1, V-REL-4, V-REL-5 (sleep on GNOME/KDE, lingering, desktop idle suspend), V-DESK-1/2/3, V-REL-2, V-REL-3.
 
 ## Self-review

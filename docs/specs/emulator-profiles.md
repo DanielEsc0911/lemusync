@@ -152,7 +152,7 @@ Per device: base path, extra roots, include/exclude tweaks, disable a profile. *
 These five cover every layout and both ways of handling players. Draft profiles and fixture trees: `profiles/<id>.toml`, `profiles/fixtures/<id>/` (the Cemu profile is loaded and tested by `crates/core`).
 
 ### Linux paths (SP7)
-Verified 2026-10-08 on Fedora 44 x86_64. Flatpak trees were read from real installs (names only). Native and portable rules come from the upstream source at the tested version. Process names are what `ps -o comm` shows; Linux truncates `comm` to 15 characters, so discovery must match the full executable name (`/proc/<pid>/exe` or `cmdline`), not `comm`.
+Verified 2026-10-08 on Fedora 44 x86_64. Flatpak trees were read from real installs (names only). Native and portable rules come from the upstream source at the tested version. Process names are what `ps -o comm` shows; Linux truncates `comm` to 15 characters, so discovery must match the full executable name (`/proc/<pid>/exe` or `cmdline`), not `comm`. The engine's Linux probe lists `/proc` each poll and reads `exe` (file name, ` (deleted)` stripped) and `comm` only for pids it hasn't seen, re-reading `comm` of known pids and re-reading `exe` when `comm` changed (an `exec`). When `exe` is unreadable (another user's process) it falls back to `comm`, where a full 15-byte `comm` also matches a longer name it starts, so a running emulator is never missed (I3).
 
 | Emulator (version) | Base roots, in the emulator's own order | Config file → save-path key | Process | Default save layout |
 |---|---|---|---|---|

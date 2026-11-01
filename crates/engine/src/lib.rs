@@ -59,7 +59,7 @@ pub use local_config::{
 };
 pub use locations::Locations;
 pub use play::{LeaseChoice, PlayPrompt};
-pub use process::{Child, FakeProbe, Launcher, OsLauncher, ProcessProbe, SysinfoProbe};
+pub use process::{Child, FakeProbe, Launcher, OsLauncher, OsProbe, ProcessProbe};
 pub use progress::{ConnectionSink, ProgressSink};
 pub use remote::only_player;
 pub use remote_play::{PROMPT_TIMEOUT, PlayCall, PlayFrame};
@@ -93,7 +93,7 @@ impl EngineEnv {
         Ok(Self {
             locations: Locations::from_os()?,
             secrets: os_secrets(),
-            processes: Arc::new(SysinfoProbe),
+            processes: Arc::new(OsProbe::default()),
             kdf: KdfParams::DEFAULT,
         })
     }
