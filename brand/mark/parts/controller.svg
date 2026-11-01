@@ -1,0 +1,20 @@
+<g transform="translate(128 {{param.cy}}) scale({{param.scale}}) translate(-128 -133)">
+<g fill="{{color.outline}}" stroke="{{color.outline}}" stroke-width="16" stroke-linejoin="round">
+<rect x="22" y="66" width="212" height="110" rx="50"/>
+<circle cx="62" cy="148" r="52"/>
+<circle cx="194" cy="148" r="52"/>
+</g>
+<g fill="{{color.body}}">
+<rect x="22" y="66" width="212" height="110" rx="50"/>
+<circle cx="62" cy="148" r="52"/>
+<circle cx="194" cy="148" r="52"/>
+</g>
+<circle cx="68" cy="128" r="40" fill="{{color.outline}}"/>
+<circle cx="68" cy="128" r="30" fill="{{color.light}}"/>
+<circle cx="68" cy="128" r="20" fill="{{color.outline}}"/>
+<circle cx="68" cy="128" r="9" fill="{{color.light}}"/>
+<circle cx="188" cy="98" r="16" fill="{{color.blue}}"/>
+<circle cx="188" cy="158" r="16" fill="{{color.red}}"/>
+<circle cx="158" cy="128" r="16" fill="{{color.eye}}"/>
+<circle cx="218" cy="128" r="16" fill="{{color.eye}}"/>
+</g>

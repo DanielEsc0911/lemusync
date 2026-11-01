@@ -73,7 +73,7 @@ fn mark_outputs(root: &Path, tokens: &Tokens) -> Result<Vec<output::Output>, Vec
             targets::Format::Argb32 => pixmap(t.mark, t.px).map(|p| raster::argb32(&p)),
             targets::Format::Ico(sizes) => sizes
                 .iter()
-                .map(|&s| pixmap(t.mark, s))
+                .map(|&s| pixmap(targets::mark_for_size(t.mark, s), s))
                 .collect::<Result<Vec<_>, _>>()
                 .and_then(|ps| raster::ico(&ps)),
         };

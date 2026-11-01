@@ -3,17 +3,19 @@
 <path d="M87.43 223.01A96.00 96.00 0 1 1 195.88 203.88" fill="none" stroke="#FBFAF7" stroke-width="22" stroke-linecap="butt"/>
 <path d="M87.43 223.01A96.00 96.00 0 1 1 195.88 203.88" fill="none" stroke="#141211" stroke-width="22" stroke-linecap="butt" stroke-dasharray="34.71 34.71"/>
 <polygon points="209.88 217.88 181.88 189.88 174.10 225.66" fill="#FBFAF7"/>
-<circle cx="80" cy="86" r="26" fill="#A9A39B"/>
-<circle cx="176" cy="86" r="26" fill="#A9A39B"/>
-<circle cx="80" cy="88" r="13" fill="#FBFAF7"/>
-<circle cx="176" cy="88" r="13" fill="#FBFAF7"/>
-<path d="M66 124C66 92 96 80 128 80C160 80 190 92 190 124C190 160 162 190 128 214C94 190 66 160 66 124Z" fill="#A9A39B"/>
-<path d="M128 100C150 100 164 118 162 142C160 168 146 188 128 202C110 188 96 168 94 142C92 118 106 100 128 100Z" fill="#FBFAF7"/>
-<ellipse cx="104" cy="132" rx="23" ry="15" transform="rotate(-30 104 132)" fill="#141211"/>
-<ellipse cx="152" cy="132" rx="23" ry="15" transform="rotate(30 152 132)" fill="#141211"/>
-<path d="M115 188C115 182 121 180 128 180C135 180 141 182 141 188C141 196 134 202 128 202C122 202 115 196 115 188Z" fill="#141211"/>
-<circle cx="106" cy="133" r="11" fill="#E89B2D"/>
-<circle cx="150" cy="133" r="11" fill="#E89B2D"/>
-<circle cx="106" cy="133" r="5" fill="#141211"/>
-<circle cx="150" cy="133" r="5" fill="#141211"/>
+<circle cx="86" cy="94" r="24" fill="#A9A39B"/>
+<circle cx="170" cy="94" r="24" fill="#A9A39B"/>
+<circle cx="86" cy="96" r="14" fill="#FBFAF7"/>
+<circle cx="170" cy="96" r="14" fill="#FBFAF7"/>
+<ellipse cx="128" cy="138" rx="62" ry="55" fill="#A9A39B"/>
+<ellipse cx="128" cy="150" rx="42" ry="35" fill="#FBFAF7"/>
+<ellipse cx="103" cy="134" rx="25" ry="21" transform="rotate(-22 103 134)" fill="#141211"/>
+<ellipse cx="153" cy="134" rx="25" ry="21" transform="rotate(22 153 134)" fill="#141211"/>
+<ellipse cx="128" cy="162" rx="9" ry="6.5" fill="#141211"/>
+<circle cx="104" cy="135" r="14" fill="#E89B2D"/>
+<circle cx="152" cy="135" r="14" fill="#E89B2D"/>
+<circle cx="104" cy="136" r="7.5" fill="#141211"/>
+<circle cx="152" cy="136" r="7.5" fill="#141211"/>
+<circle cx="99.5" cy="130.5" r="3.4" fill="#FBFAF7"/>
+<circle cx="147.5" cy="130.5" r="3.4" fill="#FBFAF7"/>
 </svg>

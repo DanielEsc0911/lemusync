@@ -18,8 +18,9 @@ pub struct Target {
 }
 
 /// Composed marks written as SVG text: (path, mark).
-pub const SVGS: [(&str, &str); 2] = [
+pub const SVGS: [(&str, &str); 3] = [
     ("brand/out/app.svg", "app"),
+    ("brand/out/controller.svg", "controller"),
     ("brand/out/glyph.svg", "glyph"),
 ];
 
@@ -70,10 +71,22 @@ const IN_APP: [(&str, u32); 3] = [
     ("app/assets/brand/3.0x/mark.png", 192),
 ];
 
+/// Largest output (px) drawn with the small family.
+pub const SMALL_MAX: u32 = 48;
+
+/// The mark that draws `mark` at `px`: the controller family up to `SMALL_MAX`, else `mark`.
+pub fn mark_for_size(mark: &'static str, px: u32) -> &'static str {
+    match (mark, px <= SMALL_MAX) {
+        ("app", true) => "controller",
+        ("appSquare", true) => "controllerSquare",
+        _ => mark,
+    }
+}
+
 fn target(path: String, mark: &'static str, px: u32, format: Format) -> Target {
     Target {
         path,
-        mark,
+        mark: mark_for_size(mark, px),
         px,
         format,
     }
@@ -224,6 +237,27 @@ mod tests {
     }
 
     #[test]
+    fn small_sizes_use_the_controller_and_large_the_lemur() {
+        for t in targets() {
+            if matches!(t.format, Format::Argb32 | Format::Ico(_)) {
+                continue;
+            }
+            let small = t.px <= SMALL_MAX;
+            let controller = t.mark.starts_with("controller");
+            assert_eq!(
+                small, controller,
+                "{} ({} px) uses {}",
+                t.path, t.px, t.mark
+            );
+        }
+        assert_eq!(mark_for_size("app", 48), "controller");
+        assert_eq!(mark_for_size("app", 64), "app");
+        assert_eq!(mark_for_size("appSquare", 40), "controllerSquare");
+        assert_eq!(mark_for_size("appSquare", 58), "appSquare");
+        assert_eq!(mark_for_size("glyph", 16), "glyph");
+    }
+
+    #[test]
     fn tray_files_cover_six_states_and_three_sizes() {
         let n = targets()
             .iter()
@@ -247,6 +281,7 @@ mod tests {
                 .next()
                 .unwrap();
             assert_eq!(t.mark, format!("tray-{state}"), "{}", t.path);
+            assert!(TRAY_SIZES.iter().all(|&px| px <= SMALL_MAX));
         }
     }
 }

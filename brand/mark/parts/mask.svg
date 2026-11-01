@@ -1,4 +1,4 @@
-<path d="M128 100C150 100 164 118 162 142C160 168 146 188 128 202C110 188 96 168 94 142C92 118 106 100 128 100Z" fill="{{color.ring}}"/>
-<ellipse cx="104" cy="132" rx="23" ry="15" transform="rotate(-30 104 132)" fill="{{color.stripe}}"/>
-<ellipse cx="152" cy="132" rx="23" ry="15" transform="rotate(30 152 132)" fill="{{color.stripe}}"/>
-<path d="M115 188C115 182 121 180 128 180C135 180 141 182 141 188C141 196 134 202 128 202C122 202 115 196 115 188Z" fill="{{color.stripe}}"/>
+<ellipse cx="128" cy="150" rx="42" ry="35" fill="{{color.ring}}"/>
+<ellipse cx="103" cy="134" rx="25" ry="21" transform="rotate(-22 103 134)" fill="{{color.stripe}}"/>
+<ellipse cx="153" cy="134" rx="25" ry="21" transform="rotate(22 153 134)" fill="{{color.stripe}}"/>
+<ellipse cx="128" cy="162" rx="9" ry="6.5" fill="{{color.stripe}}"/>

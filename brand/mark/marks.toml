@@ -27,13 +27,22 @@ params = { badgeInset = 0, badgeSize = 256, badgeRadius = 0 }
 parts = ["tail", "head", "mask", "eyes"]
 colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "bone", eye = "amber-500", pupil = "charcoal-950" }
 
+[mark.controller]    # small family (<= 48 px): SNES-style pad, two amber buttons are the eyes
+parts = ["controller"]
+colors = { body = "stone-300", outline = "charcoal-950", light = "bone", eye = "amber-500", red = "red-500", blue = "blue-500" }
+params = { cy = 128, scale = 1 }
+
+[mark.controllerSquare]   # iOS small sizes: full-bleed and opaque
+extends = "controller"
+parts = ["bg", "controller"]
+colors = { bg = "charcoal-800" }
+params = { scale = 0.9 }
+
 [mark.tray]          # base for the six tray states, not an output itself
-extends = "glyph"
-parts = ["disc", "tail", "head", "mask", "eyes", "status-dot"]
-colors = { disc = "charcoal-800", symbol = "bone" }
-params = { dotR = 58, hollow = 0 }
-# A shorter sweep ends the arrowhead on the upper right, clear of the status dot.
-tail = { sweep_deg = 200, rings = 5 }
+extends = "controller"
+parts = ["controller", "status-dot"]
+colors = { symbol = "bone" }
+params = { cy = 86, scale = 0.92, dotR = 52, hollow = 0 }
 
 [mark.tray-synced]
 extends = "tray"
