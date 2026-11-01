@@ -1,0 +1,3 @@
+<circle cx="92" cy="84" r="22" fill="{{color.fur}}"/>
+<circle cx="164" cy="84" r="22" fill="{{color.fur}}"/>
+<circle cx="128" cy="136" r="52" fill="{{color.fur}}"/>

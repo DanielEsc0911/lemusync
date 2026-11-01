@@ -268,7 +268,6 @@ impl Tokens {
         })
     }
 
-    #[allow(dead_code)] // used by the mark generator (Task 4)
     pub fn primitive(&self, name: &str) -> Option<Rgb> {
         self.palette.get(name).copied()
     }

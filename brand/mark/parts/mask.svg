@@ -1,0 +1,3 @@
+<ellipse cx="128" cy="142" rx="40" ry="32" fill="{{color.ring}}"/>
+<ellipse cx="106" cy="128" rx="14" ry="10" fill="{{color.stripe}}"/>
+<ellipse cx="150" cy="128" rx="14" ry="10" fill="{{color.stripe}}"/>

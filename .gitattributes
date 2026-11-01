@@ -10,3 +10,4 @@
 *.otf binary
 app/assets/fonts/*/OFL.txt -text
 app/assets/licenses/*.txt -text
+*.argb binary

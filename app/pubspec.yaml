@@ -40,3 +40,6 @@ flutter:
     - assets/fonts/Inter/OFL.txt
     - assets/fonts/JetBrainsMono/OFL.txt
     - assets/licenses/lucide-ISC.txt
+    - assets/brand/
+    - assets/brand/2.0x/
+    - assets/brand/3.0x/

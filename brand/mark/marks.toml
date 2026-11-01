@@ -1,0 +1,61 @@
+# Lemur mark compositions. Colors name palette primitives from brand/tokens.toml.
+# Params are numbers substituted into {{param.x}}; "tail" is built in (drawn from [tail]).
+schema = 1
+
+[tail]
+cx = 128
+cy = 136
+r = 96
+start_deg = 115      # 0 = 3 o'clock, clockwise
+sweep_deg = 290      # the gap is the sync loop's opening
+width = 22
+rings = 7            # dark bands on the light tail
+
+[mark.app]
+parts = ["badge", "tail", "head", "mask", "eyes"]
+colors = { badge = "charcoal-800", bevel = "charcoal-700", fur = "stone-400", ring = "bone", stripe = "charcoal-950", eye = "amber-500", pupil = "charcoal-950" }
+params = { badgeInset = 16, badgeSize = 224, badgeRadius = 56 }
+
+[mark.appSquare]     # iOS: full-bleed and opaque; the OS rounds the corners
+extends = "app"
+params = { badgeInset = 0, badgeSize = 256, badgeRadius = 0 }
+
+[mark.glyph]         # in-app: no badge, transparent background
+parts = ["tail", "head", "mask", "eyes"]
+colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", eye = "amber-500", pupil = "charcoal-950" }
+
+[mark.tray]          # base for the six tray states, not an output itself
+extends = "glyph"
+parts = ["disc", "tail", "head", "mask", "eyes", "status-dot"]
+colors = { disc = "charcoal-800", dotRing = "charcoal-950", symbol = "bone" }
+params = { dotR = 56, hollow = 0 }
+
+[mark.tray-synced]
+extends = "tray"
+colors = { status = "green-500" }
+params = { symbol = 1 }      # 1 check, 2 arrows, 3 bars, 4 slash, 5 !, 6 x
+
+[mark.tray-syncing]
+extends = "tray"
+colors = { status = "blue-500" }
+params = { symbol = 2 }
+
+[mark.tray-paused]
+extends = "tray"
+colors = { status = "stone-400" }
+params = { symbol = 3 }
+
+[mark.tray-offline]
+extends = "tray"
+colors = { status = "stone-500" }
+params = { symbol = 4, hollow = 1 }
+
+[mark.tray-attention]
+extends = "tray"
+colors = { status = "amber-500" }
+params = { symbol = 5 }
+
+[mark.tray-error]
+extends = "tray"
+colors = { status = "red-500" }
+params = { symbol = 6 }

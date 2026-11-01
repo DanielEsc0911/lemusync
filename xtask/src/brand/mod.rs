@@ -3,19 +3,94 @@
 mod contrast;
 mod dart;
 mod literals;
+mod mark;
 mod output;
+mod raster;
 mod sources;
+mod targets;
 mod tokens;
 
-use std::path::Path;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+
+use resvg::tiny_skia::Pixmap;
 
 use tokens::Tokens;
 
 const TOKENS: &str = "brand/tokens.toml";
+const MARKS: &str = "brand/mark/marks.toml";
+const PARTS: &str = "brand/mark/parts";
+
+/// Composes every mark and encodes every icon and pixmap.
+fn mark_outputs(root: &Path, tokens: &Tokens) -> Result<Vec<output::Output>, Vec<String>> {
+    let marks = mark::load_marks(&root.join(MARKS))?;
+    let parts = root.join(PARTS);
+    let mut errors = Vec::new();
+    let mut svgs: HashMap<&str, String> = HashMap::new();
+    let mut pixmaps: HashMap<(&str, u32), Pixmap> = HashMap::new();
+    let mut outs = Vec::new();
+    let tgts = targets::targets();
+    let mut names: Vec<&str> = targets::SVGS.iter().map(|(_, m)| *m).collect();
+    names.extend(tgts.iter().map(|t| t.mark));
+    for name in names {
+        if !svgs.contains_key(name) {
+            match mark::compose(name, &marks, tokens, &parts) {
+                Ok(svg) => {
+                    svgs.insert(name, svg);
+                }
+                Err(e) => errors.push(e),
+            }
+        }
+    }
+    if !errors.is_empty() {
+        return Err(errors);
+    }
+    for (path, name) in targets::SVGS {
+        outs.push(output::Output {
+            path: PathBuf::from(path),
+            bytes: svgs[name].clone().into_bytes(),
+            binary: false,
+        });
+    }
+    let mut pixmap = |mark: &'static str, px: u32| -> Result<Pixmap, String> {
+        if let Some(p) = pixmaps.get(&(mark, px)) {
+            return Ok(p.clone());
+        }
+        let p = raster::render(&svgs[mark], px)?;
+        pixmaps.insert((mark, px), p.clone());
+        Ok(p)
+    };
+    for t in &tgts {
+        let bytes = match t.format {
+            targets::Format::Png => pixmap(t.mark, t.px).and_then(|p| raster::png(&p)),
+            targets::Format::PngOpaque => pixmap(t.mark, t.px).and_then(|p| raster::png_opaque(&p)),
+            targets::Format::Argb32 => pixmap(t.mark, t.px).map(|p| raster::argb32(&p)),
+            targets::Format::Ico(sizes) => sizes
+                .iter()
+                .map(|&s| pixmap(t.mark, s))
+                .collect::<Result<Vec<_>, _>>()
+                .and_then(|ps| raster::ico(&ps)),
+        };
+        match bytes {
+            Ok(bytes) => outs.push(output::Output {
+                path: PathBuf::from(&t.path),
+                bytes,
+                binary: true,
+            }),
+            Err(e) => errors.push(format!("{}: {e}", t.path)),
+        }
+    }
+    if errors.is_empty() {
+        Ok(outs)
+    } else {
+        Err(errors)
+    }
+}
 
 pub fn run(root: &Path, check: bool) -> Result<(), Vec<String>> {
     let tokens = Tokens::load(&root.join(TOKENS))?;
-    let outs = dart::emit(&tokens);
+    let mut outs = dart::emit(&tokens);
+    outs.extend(mark_outputs(root, &tokens)?);
     if !check {
         output::write_all(root, &outs)?;
         println!("brand: wrote {} files", outs.len());
