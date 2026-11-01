@@ -1,6 +1,6 @@
 # Brand
 
-> **Status:** Decided · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** — (planned: brand/, xtask/src/brand/, app/lib/design/)
+> **Status:** Decided · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** `brand/`, `xtask/src/brand/`, `app/lib/design/` (planned)
 
 ## Purpose
 One brand, one source: `brand/` holds the only hand-edited brand values. `cargo xtask brand` regenerates every derived file (Dart tokens, icons, tray pixmaps) from it.
@@ -13,7 +13,7 @@ One brand, one source: `brand/` holds the only hand-edited brand values. `cargo 
 - **Pixel art** is deferred (mascot and empty states only, later). Until then the vector mark fills those places.
 
 ## Palette
-Primitives are start values; the generator's contrast check is the arbiter, `brand/tokens.toml` is the source.
+Primitives below are the start values (snapshot of 2026-11-01). `brand/tokens.toml` is the source, and the generator's contrast check has the final say.
 
 | Name | Hex | Name | Hex |
 |---|---|---|---|
@@ -50,29 +50,21 @@ Roles (21, every theme defines all of them):
 | `focus` | Focus ring | Drawn outside the control with a gap |
 | `synced`, `onSynced` | All in sync | Synced status and its content |
 | `syncing`, `onSyncing` | Work in progress | Scanning and syncing status |
-| `attention`, `onAttention` | Needs the user | Locks, conflicts |
+| `attention`, `onAttention` | Needs the user | Conflicts, foreign leases |
 | `danger`, `onDanger` | Failed | Errors, destructive actions |
 | `offline`, `onOffline` | Not reachable or paused | Offline and paused status |
 
-`brightness` is not a role: it is `dark` for themes whose name starts with `dark`. Themes: `light`, `dark`, `lightHighContrast`, `darkHighContrast`. Flutter reports high contrast only on iOS and Android 14+, so desktop gets the HC themes through an in-app theme override planned for 3d (P5: also config and CLI).
-
-Status to role: synced to `synced`; scanning and syncing to `syncing`; paused and offline to `offline`; attention to `attention`; error to `danger`.
+`brightness` is not a role: it is `dark` for themes whose name starts with `dark`. Themes: `light`, `dark`, `lightHighContrast`, `darkHighContrast`. Flutter sets `MediaQuery.highContrast` only on iOS and Android API 34+ (`dart:ui` `window.dart`, `accessibilityFeatures.highContrast`, Flutter 3.47.6), so desktop gets the HC themes through an in-app theme override planned for Phase 3d ([roadmap](../../progress/roadmap.md#phase-3-flutter-app-desktop); P5: also config and CLI).
 
 Contrast: text pairs at least 4.5:1, non-text UI pairs at least 3:1 (WCAG 2.2 AA). In the high-contrast themes text is at least 7:1 and non-text at least 4.5:1.
 
 ## Type, space, size, shape, opacity, motion
-`brand/tokens.toml` is the source for all of them.
-- **Type:** Space Grotesk (display, headline), Inter (title, body, label, caption), JetBrains Mono (mono). All variable fonts, bundled.
-- **Space:** a 4-pt scale, `xs` to `xxxl`.
-- **Size:** touch target (48), icon sizes, bevel, focus ring, ring stroke, mark.
-- **Shape:** radius scale `sm`, `md`, `lg`, `pill`.
-- **Opacity:** pressed, hover, disabled.
-- **Motion:** durations `fast`, `medium`, `slow` and the `standard` and `emphasized` curves; reduce-motion is honoured.
+Groups and their use: [design-system §Tokens](design-system.md#tokens). Values: `brand/tokens.toml`. Families: Space Grotesk (display, headline), Inter (title, body, label, caption), JetBrains Mono (mono); all variable fonts, bundled.
 
 ## Mark
 Anatomy:
 - **Badge:** a rounded console face button with a top bevel line.
-- **Tail:** an arc that curls round the head into the sync loop, striped with N rings and ending in an arrowhead. The generator draws it.
+- **Tail:** an arc that curls around the head into the sync loop, striped with N rings and ending in an arrowhead. The generator draws it.
 - **Head** with ears, **face mask**, **amber eyes**.
 - **Status dot** with a symbol (tray only).
 
@@ -83,7 +75,7 @@ Compositions:
 | `app` | macOS, Windows, Android, Linux, packaging | Inset badge |
 | `appSquare` | iOS | Full-bleed and opaque; the OS rounds the corners |
 | `glyph` | In-app | No badge, transparent |
-| `tray-synced`, `tray-syncing`, `tray-paused`, `tray-offline`, `tray-attention`, `tray-error` | Tray | Glyph on a small `charcoal-800` disc so it reads on light and dark panels, plus a status dot |
+| `tray-synced`, `tray-syncing`, `tray-paused`, `tray-offline`, `tray-attention`, `tray-error` | Linux tray (macOS and Windows: [status-and-notifications §Desktop tray](status-and-notifications.md#desktop-tray-and-menu-bar)) | Glyph on a small `charcoal-800` disc so it reads on light and dark panels, plus a status dot |
 
 Status dot symbols: check (synced), two arrows (syncing), two bars (paused), a slash (offline, hollow ring), `!` (attention), `x` (error). Ring count, arc, radii and insets are parameters in `marks.toml`. Android adaptive and themed icons are deferred to Phase 4.
 
@@ -102,11 +94,11 @@ Sources: `brand/tokens.toml`, `brand/mark/parts/*.svg` and `brand/mark/marks.tom
 | `app/assets/brand/mark.png` (+ `2.0x`, `3.0x`) | In-app mark | `glyph` | 64, 128, 192 | PNG |
 | `crates/daemon/assets/tray/<state>-<px>.argb` | Tray pixmaps | `tray-<state>` | 24, 32, 48 | ARGB32 |
 
-`cargo xtask brand --check` regenerates in memory and fails on any difference or failed check. It also fails on any hard-coded design literal (color, duration, radius, size, spacing, opacity, font family) in `app/lib` outside the generated tokens. It runs in `just check` and in CI. The Linux tray moves from freedesktop symbolic icons to these pixmaps ([status-and-notifications §Desktop tray](status-and-notifications.md#desktop-tray-and-menu-bar), D42).
+`cargo xtask brand --check` regenerates in memory and fails on any difference or failed check. It also fails on any hard-coded design literal (color, duration, radius, size, spacing, opacity, font family) in `app/lib` outside the generated tokens. It runs in `just check` and in CI.
 
 To iterate: edit the sources, run `cargo xtask brand`, open the PNGs and the gallery, review the goldens, and commit sources and outputs together. Never hand-edit a generated file.
 
 ## Verify
 - `V-BRAND-1`: resvg output is byte-identical between the maintainer's Fedora PC and GitHub `ubuntu-latest` (first CI run after Task 4 of [phase-3a-brand](../../progress/plans/phase-3a-brand.md)).
-- `V-BRAND-2`: KDE Plasma 6 renders the ARGB32 tray pixmaps sharply at 24, 32 and 48 px (Task 10 Step 4, maintainer); GNOME with AppIndicator later.
-- `V-BRAND-3`: Flutter goldens made on Fedora match on `ubuntu-latest` (first CI run after Task 6).
+- `V-BRAND-2`: KDE Plasma 6 renders the ARGB32 tray pixmaps sharply at 24, 32 and 48 px (Task 10 Step 4 of phase-3a-brand, maintainer); GNOME with AppIndicator later.
+- `V-BRAND-3`: Flutter goldens made on Fedora match on `ubuntu-latest` (first CI run after Task 6 of phase-3a-brand).

@@ -67,7 +67,7 @@ Read this file, then only the docs your task needs. Headings are stable: grep th
 | Sync logic, versions, conflicts, locks | sync-model → reliability → security §Cryptography |
 | Add or fix an emulator | emulator-profiles → players-and-accounts → the platform spec |
 | Add a storage provider | storage-backends → security §Credentials |
-| UI screen or component | ui/design-system → ui/navigation → i18n |
+| UI screen or component | ui/design-system → ui/brand (tokens, mark) → ui/navigation → i18n |
 | Tray, notifications, live surfaces | ui/status-and-notifications → the platform spec |
 | Background or service behaviour | reliability → the platform spec |
 | CLI or config | config-and-cli → i18n §Rust strings |
