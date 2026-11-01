@@ -89,6 +89,14 @@ fn retry_after(text: &str) -> Option<Duration> {
     value.parse().ok().map(Duration::from_secs)
 }
 
+/// S3 error codes that mean the access key or its signature was rejected.
+const S3_AUTH_CODES: [&str; 4] = [
+    "Unauthorized",
+    "AccessDenied",
+    "InvalidAccessKeyId",
+    "SignatureDoesNotMatch",
+];
+
 pub(crate) fn classify(kind: ErrorKind, temporary: bool, text: &str) -> ErrorClass {
     match kind {
         ErrorKind::NotFound => ErrorClass::NotFound,
@@ -104,6 +112,10 @@ pub(crate) fn classify(kind: ErrorKind, temporary: bool, text: &str) -> ErrorCla
             ErrorClass::Quota
         }
         _ if text.contains("status: 429") || text.contains("status: 5") => ErrorClass::Transient,
+        // S3 (R2, B2, MinIO…): a rejected key arrives as Unexpected with its HTTP status/code.
+        _ if text.contains("status: 403") || S3_AUTH_CODES.iter().any(|c| text.contains(c)) => {
+            ErrorClass::Auth
+        }
         _ => ErrorClass::Permanent,
     }
 }
@@ -223,5 +235,22 @@ mod tests {
             ErrorClass::Auth
         );
         assert_eq!(classify(denied, false, ""), ErrorClass::Auth);
+    }
+
+    #[test]
+    fn s3_rejected_keys_are_auth() {
+        for text in [
+            "response: Parts { status: 403, ...",
+            "<Code>Unauthorized</Code>",
+            "<Code>AccessDenied</Code>",
+            "<Code>InvalidAccessKeyId</Code>",
+            "<Code>SignatureDoesNotMatch</Code>",
+        ] {
+            assert_eq!(
+                classify(ErrorKind::Unexpected, false, text),
+                ErrorClass::Auth,
+                "{text}"
+            );
+        }
     }
 }

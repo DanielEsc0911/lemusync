@@ -15,6 +15,8 @@ pub enum Fault {
     Transient,
     /// Do the real call, then report `Transient` (a lost response).
     TransientAfterWrite,
+    /// Fail before touching the backend with this class and provider-like text.
+    Fail(ErrorClass),
 }
 
 #[derive(Default)]
@@ -24,6 +26,8 @@ struct Plan {
     cut_from: Option<u32>,
     /// Requests `start..end` fail, then the network is back.
     outage: Option<(u32, u32)>,
+    /// Every attempt from this one on is refused as `Auth` (rejected credentials).
+    deny_from: Option<u32>,
     delay: Duration,
 }
 
@@ -54,6 +58,13 @@ impl Faults {
     pub fn cut_from(&self, n: u32) {
         let base = self.requests();
         self.lock().cut_from = Some(base + n);
+    }
+
+    /// Refuses every attempt from number `n` (1-based, counted from now) as `Auth` (the
+    /// credentials were rejected) until `heal`.
+    pub fn deny_from(&self, n: u32) {
+        let base = self.requests();
+        self.lock().deny_from = Some(base + n);
     }
 
     /// Fails `k` attempts from number `n` (1-based, counted from now), then heals by itself.
@@ -98,6 +109,14 @@ impl Faults {
         match fault {
             Some(Fault::Transient) => Err(StoreError::new(ErrorClass::Transient, "injected")),
             Some(Fault::TransientAfterWrite) => Ok(true),
+            Some(Fault::Fail(class)) => Err(StoreError::new(
+                class,
+                "Unexpected (permanent) at stat, context: { url: https://acct.r2.example/b?X-Amz-Signature=FAKESIG }",
+            )),
+            None if plan.deny_from.is_some_and(|at| n >= at) => Err(StoreError::new(
+                ErrorClass::Auth,
+                "injected: credentials rejected",
+            )),
             None if plan.cut_from.is_some_and(|at| n >= at)
                 || plan.outage.is_some_and(|(a, b)| (a..b).contains(&n)) =>
             {

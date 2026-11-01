@@ -105,13 +105,17 @@ Every error has a stable `code` (the `--json` `error.code`, and the key of its l
 | Class | Code | Exit | Message says |
 |---|---|---|---|
 | `transient` (after the store's retries) | `backend_offline` | 6 | Can't reach the storage; check the connection and try again; saves on this device are safe |
-| `auth` | `backend_auth` | 6 | The login failed; run `lemusync backend login` |
+| `auth` | `backend_auth` | 6 | The storage rejected the login: on S3 the access key was rejected (check or regenerate it, then `lemusync backend add s3`); on Google Drive run `lemusync backend login` |
 | `quota` | `backend_quota` | 1 | The storage is full; free up space; saves on this device are safe |
 | `not_found`, `already_exists`, `permanent` | `backend` | 1 | The storage returned an error; try again, then `lemusync doctor` |
 
 The keystore has two codes ([security §Secret Service activation](security.md#secret-service-activation)): `secrets_unavailable` (exit 1) means it isn't there yet (`no_owner`, `no_bus`, `locked`, `gone`). The daemon retries it with backoff and shows no error. `secrets` (exit 1) is a real failure (`no_default_collection`, `prompt_needed`, `ambiguous`, `bad_reply`, `bad_master_key`, `off_under_test_root`). Each key has its own en/es message.
 
 "Saves on this device are safe" holds because a sync or restore downloads and verifies everything into staging before it touches a save folder, and an upload only reads local files ([reliability §Restore procedure](reliability.md#restore-procedure)). The message never contains provider text. That goes on a second, dim line, `Details: …` / `Detalles: …`, and in `--json` as `error.detail` next to `code` and `message` (the English message for storage errors). It always passes through `crates/store/src/redact.rs` first (B2: `StoreError` redacts its text when it is built, so no path sees it raw), with control characters replaced and at most 500 characters. `redact` removes tokens, keys and signatures; it keeps endpoints and bucket names on purpose, because the line is shown only to this device's own user, who configured them and needs them to fix the problem. Other errors have no `detail`. Code: `crates/engine/src/error.rs`, `crates/cli/src/output.rs`.
+
+`store` classes S3 rejections as `auth`: HTTP 401/403 and the S3 codes `Unauthorized`, `AccessDenied`, `InvalidAccessKeyId`, `SignatureDoesNotMatch` (`crates/store/src/error.rs`).
+
+`doctor` uses the same codes. A failed check carries `code` and `detail` (`--json` too): `detail` is the redacted provider text for storage codes, else the engine payload. The CLI prints the code's localized message, and for storage codes the dim `Details:` line; provider text never appears in the message. One cause gives one failure: when the `backend` check fails, `repo` is not run and shows `skipped` (`code: "skipped"`). Passing checks have no `code`. Code: `crates/engine/src/query.rs`.
 
 ## Parity rule
 Any feature added to the UI gets its CLI command (desktop/headless) in the same plan, and the other way round. Mobile has no CLI. Its Settings → Advanced exposes the same options, mapped to the `config` keys above.

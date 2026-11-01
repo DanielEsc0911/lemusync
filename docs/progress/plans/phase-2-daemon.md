@@ -32,6 +32,7 @@ Tasks in the same wave touch different files and can run in parallel. Wave 2 sta
 | 1 | A: Tasks 1–2 (`api`, `ipc`) · B: Tasks 3–5 (`core` machines, `engine` watcher and poller) · C: Tasks 6–7 (Linux tray, notifications, power, `service`) |
 | 2 | Task 8 (`engine::Service`, `lemusyncd`), then Task 9 (CLI over IPC) |
 | 3 | Task 10 (daemon budgets), Task 14 (`doctor` messages), Task 15 (auth-stop recovery); Tasks 11–13 are the maintainer's |
+| 4 | Task 16 (budgets follow-up) |
 
 ---
 
@@ -186,17 +187,34 @@ Tasks in the same wave touch different files and can run in parallel. Wave 2 sta
 
 **Deviation (as built):** `cargo xtask budgets [idle-secs]` runs the release daemon isolated with no repo (the binary only has the OS keystore) and one fake Cemu install granted, so the poll looks for Cemu's 3 process names; it is the only bundled profile with a loader, and the poll does one `/proc` walk whatever the number of emulators. Change → upload is measured in-process through `engine::Service` in the engine bench (1 s quiet period, reported as quiet + overhead). Binary-size contributors come from `nm` on an unstripped build, because `cargo bloat` isn't installed. Idle CPU is 0.71 %, over the ≈ 0 % budget (V-DAEMON-2 refuted); fixing the poll is left for a follow-up. The CI job `budgets` is non-blocking (`continue-on-error`) and its references are the PC's numbers.
 
-### Task 11: Windows and macOS (blocked: SP2 on those OSes)
+### Task 11: Windows and macOS (deferred: UI first, D40)
 
-Blocked until the maintainer runs SP2 there (V-DESK-1, V-DESK-3, V-REL-2, deferred 2026-10-08). Then: named pipe with a current-user DACL and client-token check; Task Scheduler logon task; `SMAppService` LaunchAgent from the app bundle; tray (`tray-icon` or native) and toasts/`UNUserNotificationCenter`; `SetThreadExecutionState` / IOPM assertions. Plan the steps from the spike results.
+Deferred until Phase 3 has a usable desktop UI ([D40](../../decisions.md#d40-the-desktop-ui-comes-before-the-windows-and-macos-daemon-2026-11-01)), and blocked until the maintainer runs SP2 there (V-DESK-1, V-DESK-3, V-REL-2, deferred 2026-10-08). Then: named pipe with a current-user DACL and client-token check; Task Scheduler logon task; `SMAppService` LaunchAgent from the app bundle; tray (`tray-icon` or native) and toasts/`UNUserNotificationCenter`; `SetThreadExecutionState` / IOPM assertions. Plan the steps from the spike results.
 
-### Task 12: Flatpak packaging strategy (maintainer decision)
+### Task 12: Flatpak packaging strategy (decided: document portal, D41)
 
-V-DESK-2: static `--filesystem=~/.var/app/<id>` per emulator, the document portal, or a native daemon package next to a Flatpak UI. Needs the maintainer's call and a decision entry.
+Decided 2026-11-01: the user grants each emulator folder through the FileChooser/Documents portal ([D41](../../decisions.md#d41-a-flatpak-lemusync-reaches-emulator-folders-through-the-document-portal-2026-11-01)). Spike SP11 proves it ([desktop V-DESK-2](../../specs/platforms/desktop.md#verify)) before the Flatpak is built; the build itself goes with the Phase 3 packaging, since the Flatpak ships the UI.
 
 ### Task 13: M2 soak (maintainer)
 
 72 hours on Linux (then Windows and macOS after Task 11) with sleep/resume cycles: no missed or late sync beyond the budgets, tray states verified ([roadmap](../roadmap.md#phase-2-desktop-daemon)). Record in the roadmap.
+
+`scripts/soak.sh start` samples the installed daemon every 10 minutes (CPU ticks, RSS, restarts, finished syncs and WARN/ERROR lines from its log) into `~/.local/state/lemusync/soak.csv`; `scripts/soak.sh report` sums it up. It never calls the daemon. Run it on a daemon built with Task 15, which logs each finished sync.
+
+**Linux so far (2026-11-01, maintainer):** the daemon starts with the session and runs with no restarts; real syncs work (BotW and Bayonetta 2 in Cemu). Not yet measured over days. Spot checks on the Fedora PC with the release build from 2026-10-29: 1.1 % CPU averaged over 2.5 h of use, 0.85 % over 20 s idle, peak RSS 30.4 MiB, all over target ([reliability §Budgets](../../specs/reliability.md#budgets)); Task 16 fixes them.
+
+### Task 16: idle CPU, memory and binary size back under budget
+
+**Found:** Task 10 (idle CPU 0.71 %, `lemusyncd` 18.2 MB vs 15 MB) and the Task 13 spot checks (CPU 0.85–1.1 %, peak RSS 30.4 MiB vs 30 MB).
+
+Improve first, then set expectations (maintainer, 2026-11-01): the budgets stay as they are until the daemon's core loops have been inspected and, where it pays, changed (for example a cheaper way to notice emulator starts than walking every process).
+
+- [x] **Step 1:** find what wakes the idle daemon and what peaks its memory (the 3 s process poll walks every process with `sysinfo`; the tray and D-Bus clients; the engine's caches). Measure each change with `cargo xtask budgets` and `scripts/soak.sh`.
+- [ ] **Step 2:** fix within the budgets, or record why one can't be met and propose a budget change as a decision for the maintainer; specs; `just check`; commit `perf(daemon): bring idle CPU, memory and size under budget`.
+
+**As built (Step 1, 2026-11-01):** per-thread `/proc/<pid>/task/*/stat` on the real daemon showed every idle tick in the poll (≈ 35 ms per 3 s poll). `SysinfoProbe` became `OsProbe`: on Linux a cached `/proc` probe (list pids; `exe` file name + `comm` only for new pids; `comm` re-read each poll, `exe` re-read when it changed; vanished pids dropped; unreadable `exe` → `comm`, a full 15-byte `comm` also matching a longer name it starts). Other OSes reuse one `sysinfo::System` and refresh only `exe` (`OnlyIfNotSet`). One `running_set` over ≈ 550 processes: 23.1 → 0.83 ms median (20 runs, release, ignored test `running_set_timing`). `cargo xtask budgets 300`: idle CPU 0.71 → **0.09 %** (27 ticks / 300 s), RSS 11.3 MiB idle, peak 11.6 MiB, `lemusyncd` 17 995 968 bytes (−0.23 MB). Remaining candidates for Step 2:
+- **RSS (real daemon 22.9 MiB, peak 31.1 MiB; 13 MiB of it file-backed binary pages):** the runtime has 2 workers but 18 more `tokio-rt-worker` blocking-pool threads linger; each can hold a glibc malloc arena. `max_blocking_threads(4)` + a short `thread_keep_alive` (est. −3…6 MiB peak). The old per-poll `sysinfo` walk (cmdline/environ of every process) was a likely peak source and is gone on Linux.
+- **Size (18.0 vs 15 MB):** `lto = "fat"` (est. −0.5…1 MB), `opt-level = "s"` for non-hot crates (est. −1…2 MB, needs the rescan bench), dropping `crc_fast` via `opendal-service-s3` features (≈ −0.7 MB), `panic = "abort"` (≈ −1 MB unwind tables, only if nothing relies on `catch_unwind`).
 
 ### Task 14: friendly, localized `doctor` failures
 
@@ -209,8 +227,10 @@ V-DESK-2: static `--filesystem=~/.var/app/<id>` per emulator, the document porta
 - One cause, one line: when the backend check fails, `repo storage` says it was skipped (or is folded in), not a second dump of the same error.
 - An S3 401/403 maps to `backend_auth`; its message names the fix for S3 (the access key was rejected: check or regenerate it, then `lemusync backend add`/`login`), not only the OAuth wording. Check the `auth` class mapping in `store` covers S3 `Unauthorized`/`AccessDenied`/`InvalidAccessKeyId`/`SignatureDoesNotMatch`.
 
-- [ ] **Step 1: failing tests:** `doctor` against a store that fails with each class (`auth`, `transient`, `quota`, `permanent`) gives the right `code`, a localized line in en and es, no provider text outside `detail`, and one failure line for one cause; S3 401 → `backend_auth`.
-- [ ] **Step 2:** implement; pass; clippy; i18n-check; specs; `just check`; commit `fix(cli): show doctor failures as friendly, localized messages`.
+- [x] **Step 1: failing tests:** `doctor` against a store that fails with each class (`auth`, `transient`, `quota`, `permanent`) gives the right `code`, a localized line in en and es, no provider text outside `detail`, and one failure line for one cause; S3 401 → `backend_auth`.
+- [x] **Step 2:** implement; pass; clippy; i18n-check; specs; `just check`; commit `fix(cli): show doctor failures as friendly, localized messages`.
+
+**As built:** `Check` gained `code: Option<String>` (`#[serde(default)]`, omitted when `None`); the existing `detail` holds the redacted provider text or engine payload. The repo check shows `skipped` rather than being folded in. `EngineError::payload()` moved from the CLI into `error.rs` so `doctor` can fill `detail`. Tests use a new test-only `Fault::Fail(ErrorClass)` in `store` (`crates/engine/tests/doctor.rs`). The S3 fix is in the shared `error-backend_auth` message (S3 and Drive wording), so every `backend_auth` error names it. `store` also maps a bare `status: 403` to `auth` (after the Drive quota/rate-limit checks).
 
 ### Task 15: recover from an auth stop, show manual syncs, log recovery
 
@@ -223,14 +243,15 @@ V-DESK-2: static `--filesystem=~/.var/app/<id>` per emulator, the document porta
 - A manual sync (tray, CLI) publishes the `syncing` status before its first request, from any state including `error`; the tray shows it within one frame of the click.
 - The daemon logs each finished sync (`info`: streams, outcome, duration) and leaving the `error` or `offline` state (`info`: from, to, what triggered it).
 
-- [ ] **Step 1: failing tests:** `Service` in the auth stop: a passing `doctor` → one sync, state leaves `error`; a credential change → the same; a failing `doctor` → still stopped; a manual sync from `error` emits `syncing` before the store sees a request; the log gets the finished-sync and state-change lines.
-- [ ] **Step 2:** implement; pass; clippy; specs; `just check`; commit `fix(daemon): leave the auth stop on new credentials and show manual syncs`.
+- [x] **Step 1: failing tests:** `Service` in the auth stop: a passing `doctor` → one sync, state leaves `error`; a credential change → the same; a failing `doctor` → still stopped; a manual sync from `error` emits `syncing` before the store sees a request; the log gets the finished-sync and state-change lines.
+- [x] **Step 2:** implement; pass; clippy; specs; `just check`; commit `fix(daemon): leave the auth stop on new credentials and show manual syncs`.
+**As built:** `core::schedule::Trigger::Credentials` ends the auth stop and resets backoff but keeps a pause. `Service` treats a `doctor` whose `backend` check passes, or a successful `backend add fs`/`s3`, as new credentials only while the status shows the auth `error`. `backend login` can't run through the daemon (D28), so it's covered by the daemon restart. `StatusModel::sync_requested` clears the shown `error` and sets `syncing` for a manual or credential sync; the tray needs no change (it renders the status). Log lines: `sync finished: …` and `status left <from> for <to> (<cause>)`. Tests: `store::Faults::deny_from` injects `Auth` refusals; `query.rs` untouched.
 - [ ] **Step 3: manual (Fedora PC):** break the key, wait for the error icon, fix the key, run `doctor`: the icon leaves the error state without a click. Click Sync: "syncing" shows at once.
 
 ## Verify
 
 - **V-DAEMON-1** (new, Task 8) Narrowing a daemon-triggered sync to the changed streams is cheap enough to bother; otherwise a full sync each time.
-- **V-DAEMON-2** (new, Task 5, measured in Task 10) A 3 s process poll costs ≈ 0 % idle CPU on the Fedora PC. **Refuted 2026-10-29:** 0.71 % (426 ticks over 600 s), from the `sysinfo` walk of every process; a cheaper poll (read only `/proc/<pid>/comm`, or a longer interval) is open.
+- **V-DAEMON-2** (new, Task 5, measured in Task 10) A 3 s process poll costs ≈ 0 % idle CPU on the Fedora PC. **Refuted 2026-10-29:** 0.71 % (426 ticks over 600 s), from the `sysinfo` walk of every process; a cheaper poll (read only `/proc/<pid>/comm`, or a longer interval) is open. **2026-11-01 (Task 16):** the cached `/proc` poll brings it to 0.09 % (27 ticks over 300 s); not 0, but 8× lower.
 - Existing: V-REL-1, V-REL-4, V-REL-5 (sleep on GNOME/KDE, lingering, desktop idle suspend), V-DESK-1/2/3, V-REL-2, V-REL-3.
 
 ## Self-review

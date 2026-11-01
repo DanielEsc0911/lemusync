@@ -20,8 +20,8 @@ use std::time::Duration;
 use std::sync::Arc;
 
 use lemusync_api::{
-    DaemonStatus, ErrorBody, Event, LeaseInfo, Request, Response, Session, Status, StatusReport,
-    StreamAction, SyncReport, TransferProgress,
+    DaemonStatus, ErrorBody, ErrorKind, Event, LeaseInfo, Request, Response, Session, Status,
+    StatusReport, StreamAction, SyncReport, TransferProgress,
 };
 use lemusync_core::StreamId;
 use lemusync_core::schedule::{Action, Quiet, ScheduleConfig, Scheduler, SyncOutcome, Trigger};
@@ -190,6 +190,7 @@ struct Inputs {
 
 /// Everything the loop knows besides the engine, so an engine call can run while this is
 /// updated.
+#[allow(clippy::struct_excessive_bools)] // independent flags of the one loop
 struct Core {
     cfg: ServiceConfig,
     model: StatusModel,
@@ -224,6 +225,9 @@ struct Core {
     renew_at: Option<u64>,
     /// A request changed the setup: reload the watched folders and the status report.
     refresh: bool,
+    /// The next sync was asked for by the user or by new credentials: show `syncing` before
+    /// its first request, from any state.
+    show_syncing: bool,
     launcher: Arc<dyn Launcher>,
 }
 
@@ -338,6 +342,7 @@ impl Service {
             cancel_at: None,
             renew_at: None,
             refresh: false,
+            show_syncing: false,
             launcher,
         };
         refresh_targets(&mut engine, &mut core, &mut inputs, watcher.as_mut()).await;
@@ -472,6 +477,7 @@ impl Core {
                 }
                 Request::Resume => {
                     self.scheduler.resume();
+                    self.model.set_cause("resume");
                     self.model.update(|f| {
                         f.paused = false;
                         f.paused_until_ms = None;
@@ -506,6 +512,8 @@ impl Core {
                 }
                 Request::Sync { dry_run: false } => {
                     self.scheduler.on_trigger(Trigger::Manual, now);
+                    self.show_syncing = true;
+                    self.model.set_cause("manual");
                     self.sync_waiters.push(tx);
                 }
                 Request::Shutdown => {
@@ -521,6 +529,7 @@ impl Core {
             }
             Command::Resumed => {
                 self.suspended = false;
+                self.model.set_cause("resume");
                 self.scheduler.on_trigger(Trigger::Resume, now);
                 // Leases may have expired while asleep: take them again for running sessions.
                 self.renew_at = Some(now);
@@ -549,9 +558,21 @@ impl Core {
 
     fn connection(&mut self, c: lemusync_api::ConnectionEvent) {
         if c == lemusync_api::ConnectionEvent::Recovered {
+            self.model.set_cause("network back");
             self.model.update(|f| f.offline = false);
         }
         self.model.emit(Event::Connection(c));
+    }
+
+    /// New credentials were saved, or a `doctor` backend check passed: an auth stop ends
+    /// and a sync starts at once (reliability §Scheduler). Nothing happens otherwise.
+    fn credentials_ok(&mut self, now: u64) {
+        if self.model.status().error != Some(ErrorKind::Auth) {
+            return;
+        }
+        self.scheduler.on_trigger(Trigger::Credentials, now);
+        self.show_syncing = true;
+        self.model.set_cause("credentials");
     }
 
     fn target(&self, s: &StreamId) -> Option<&WatchTarget> {
@@ -617,8 +638,12 @@ async fn run_sync(
 ) -> Option<Result<SyncReport, EngineError>> {
     if !dry_run {
         core.scheduler.on_sync_started();
+        if std::mem::take(&mut core.show_syncing) {
+            core.model.sync_requested();
+        }
     }
     let before: BTreeSet<StreamId> = core.dirty.clone();
+    let t0 = std::time::Instant::now();
     core.model.sync_started();
     let out = drive(engine.sync(SyncOptions { dry_run }), core, inputs).await;
     core.model.sync_ended();
@@ -661,10 +686,39 @@ async fn run_sync(
             stopped()
         }
     };
+    tracing::info!("{}", redact(&finished_line(out.as_ref(), t0.elapsed())));
+    core.model.clear_cause();
     for w in core.sync_waiters.drain(..) {
         let _ = w.send(response.clone());
     }
     out
+}
+
+/// The `info` line for each finished sync: streams, outcome, duration.
+fn finished_line(out: Option<&Result<SyncReport, EngineError>>, took: Duration) -> String {
+    let ms = took.as_millis();
+    match out {
+        Some(Ok(r)) => format!("sync finished: {} streams, ok, {ms} ms", r.streams.len()),
+        Some(Err(e)) => format!("sync finished: failed ({}), {ms} ms", e.code()),
+        None => format!("sync finished: stopped (suspend or stop), {ms} ms"),
+    }
+}
+
+/// A request that, once it worked, means the storage accepts our credentials (again).
+fn proves_credentials(r: &Request) -> bool {
+    matches!(
+        r,
+        Request::Doctor | Request::BackendAddFs { .. } | Request::BackendAddS3 { .. }
+    )
+}
+
+/// The request worked, and for `doctor` its backend check passed.
+fn credentials_accepted(resp: &Response) -> bool {
+    match resp {
+        Response::Doctor(d) => d.checks.iter().any(|c| c.name == "backend" && c.ok),
+        Response::Error(_) => false,
+        _ => true,
+    }
 }
 
 /// After a good sync: conflicts, leases to release, the cached status report.
@@ -783,7 +837,11 @@ async fn do_work(w: Work, engine: &mut Engine, core: &mut Core, inputs: &mut Inp
         }
         Work::Request(r, tx) => {
             let refresh = remote::changes_setup(&r);
+            let creds = proves_credentials(&r);
             let resp = request(r, engine, core, inputs).await;
+            if creds && credentials_accepted(&resp) {
+                core.credentials_ok(now_ms());
+            }
             if refresh {
                 // A `status` arriving before the refresh must not get the old report.
                 core.report = None;

@@ -63,7 +63,7 @@ help-doctor = Revisa el llavero del sistema, el almacenamiento y las carpetas de
 error-usage = { $detail }
 error-config = El archivo de configuración no es válido: { $detail }
 error-backend = El almacenamiento devolvió un error. Vuelve a intentarlo; si sigue pasando, ejecuta `lemusync doctor`.
-error-backend_auth = Falló el inicio de sesión del almacenamiento. Ejecuta `lemusync backend login`.
+error-backend_auth = Tu almacenamiento rechazó el inicio de sesión. En S3, se rechazó la clave de acceso: revísala o genera una nueva y vuelve a ejecutar `lemusync backend add s3`. En Google Drive, ejecuta `lemusync backend login`.
 error-backend_offline = No se puede conectar con tu almacenamiento. Revisa tu conexión a internet y vuelve a intentarlo. Tus partidas guardadas en este dispositivo están seguras.
 error-backend_quota = Tu almacenamiento está lleno. Libera espacio o consigue más y vuelve a intentarlo. Tus partidas guardadas en este dispositivo están seguras.
 error-details = Detalles: { $detail }
@@ -241,6 +241,8 @@ history-backup = copia local { $name }
 
 doctor-ok = ok
 doctor-fail = FALLÓ
+doctor-skip = omitido
+doctor-skipped-backend = No se revisó: falló la revisión del almacenamiento de arriba.
 doctor-check = { $status } { $name } { $detail }
 
 help-play = Juega: trae la partida guardada más reciente, toma el bloqueo, abre el emulador y sube la partida al cerrarlo.

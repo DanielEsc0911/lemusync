@@ -511,8 +511,13 @@ pub struct Check {
     pub name: String,
     /// True when the check passed.
     pub ok: bool,
-    /// Display text with the result detail.
+    /// Display text with the result detail. For a failed check with a `code`: the engine
+    /// payload, or for storage codes the redacted provider text (never shown as the message).
     pub detail: String,
+    /// Failed checks: the stable error code (`backend_auth`, `secrets`…; config-and-cli
+    /// §Error codes), or `skipped` when an earlier check's failure made this one pointless.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
 }
 
 /// Error output for any command run with `--json`.

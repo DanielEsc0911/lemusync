@@ -29,28 +29,9 @@ fn snake<T: Serialize>(value: &T) -> String {
 }
 
 /// The data part of an error, never translated (paths, ids, provider text).
+/// Storage text goes on its own `Details` line (`store_detail`), never in the message.
 fn detail(e: &EngineError) -> String {
-    match e {
-        EngineError::Usage(d)
-        | EngineError::Config(d)
-        | EngineError::Io(d)
-        | EngineError::Locked(d)
-        | EngineError::EmulatorRunning(d)
-        | EngineError::NotGranted(d)
-        | EngineError::Secrets(d)
-        | EngineError::SecretsUnavailable(d)
-        | EngineError::Data(d)
-        | EngineError::Busy(d)
-        | EngineError::NeedsDecision(d)
-        | EngineError::LeaseHeld(d)
-        | EngineError::Daemon(d) => d.clone(),
-        EngineError::Crypto(c) => c.to_string(),
-        EngineError::NotSetUp(d) | EngineError::Injected(d) => (*d).to_owned(),
-        // Storage text goes on its own `Details` line (`store_detail`), never in the message.
-        EngineError::Store(_) | EngineError::Unlock | EngineError::NeedsConfirmation => {
-            String::new()
-        }
-    }
+    e.payload()
 }
 
 pub fn error(t: &I18n, as_json: bool, e: &EngineError) {
@@ -79,12 +60,16 @@ fn store_detail(e: &EngineError) -> Option<String> {
     let EngineError::Store(s) = e else {
         return None;
     };
-    let clean: String = lemusync_engine::redact(s.message())
+    Some(clean(s.message()))
+}
+
+/// Provider text made safe to print: redacted (B2), control characters replaced, capped.
+fn clean(text: &str) -> String {
+    lemusync_engine::redact(text)
         .chars()
         .map(|c| if c.is_control() { ' ' } else { c })
         .take(DETAIL_MAX)
-        .collect();
-    Some(clean)
+        .collect()
 }
 
 /// Characters of provider text shown at most.
@@ -117,15 +102,21 @@ fn error_lines(t: &I18n, e: &EngineError) -> (String, Option<String>) {
 /// Engine payloads are keys (`key` or `key:data`, Task 11/13): each key has its own message
 /// `error-<code>-<key>`. Anything else is data and goes through the generic `error-<code>`.
 fn error_text(t: &I18n, e: &EngineError) -> String {
-    let detail = detail(e);
-    let (key, data) = detail.split_once(':').unwrap_or((detail.as_str(), ""));
-    t.get(&format!("error-{}-{key}", e.code()), &[("detail", s(data))])
-        .unwrap_or_else(|| {
-            t.t(
-                &format!("error-{}", e.code()),
-                &[("detail", s(detail.clone()))],
-            )
-        })
+    coded_text(t, e.code(), &detail(e))
+}
+
+fn coded_text(t: &I18n, code: &str, detail: &str) -> String {
+    let (key, data) = detail.split_once(':').unwrap_or((detail, ""));
+    t.get(
+        &format!("error-{code}-{key}"),
+        &[("detail", s(data.to_owned()))],
+    )
+    .unwrap_or_else(|| {
+        t.t(
+            &format!("error-{code}"),
+            &[("detail", s(detail.to_owned()))],
+        )
+    })
 }
 
 pub fn line(t: &I18n, key: &str, args: &[(&str, FluentValue<'static>)]) {
@@ -481,18 +472,49 @@ pub fn history(t: &I18n, r: &HistoryReport, key: &str) {
 }
 
 pub fn doctor(t: &I18n, r: &DoctorReport) {
-    for c in &r.checks {
-        let status = t.t(if c.ok { "doctor-ok" } else { "doctor-fail" }, &[]);
-        line(
-            t,
-            "doctor-check",
-            &[
-                ("status", s(status)),
-                ("name", s(c.name.clone())),
-                ("detail", s(c.detail.clone())),
-            ],
-        );
+    let dim = color_on();
+    for (text, details) in doctor_lines(t, r) {
+        println!("{text}");
+        if let Some(d) = details {
+            if dim {
+                println!("\x1b[2m{d}\x1b[0m");
+            } else {
+                println!("{d}");
+            }
+        }
     }
+}
+
+/// One line per check; a failed storage check adds the dim `Details: …` line. Failed checks
+/// show the same localized message as the CLI error with that code (Task 14).
+fn doctor_lines(t: &I18n, r: &DoctorReport) -> Vec<(String, Option<String>)> {
+    r.checks
+        .iter()
+        .map(|c| {
+            let (status, message, details) = match c.code.as_deref() {
+                None => {
+                    let status = if c.ok { "doctor-ok" } else { "doctor-fail" };
+                    (status, c.detail.clone(), None)
+                }
+                Some("skipped") => ("doctor-skip", t.t("doctor-skipped-backend", &[]), None),
+                Some(code) if code.starts_with("backend") => {
+                    let details = (!c.detail.is_empty())
+                        .then(|| t.t("error-details", &[("detail", s(clean(&c.detail)))]));
+                    ("doctor-fail", t.t(&format!("error-{code}"), &[]), details)
+                }
+                Some(code) => ("doctor-fail", coded_text(t, code, &c.detail), None),
+            };
+            let text = t.t(
+                "doctor-check",
+                &[
+                    ("status", s(t.t(status, &[]))),
+                    ("name", s(c.name.clone())),
+                    ("detail", s(message)),
+                ],
+            );
+            (text, details)
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -612,6 +634,112 @@ mod tests {
                     && game.contains("lemusync config set emulators.cemu.games.101c9500"),
                 "{game}"
             );
+        }
+    }
+
+    fn report(class: lemusync_store::ErrorClass) -> DoctorReport {
+        let e = store_error(class);
+        let EngineError::Store(st) = &e else {
+            unreachable!()
+        };
+        DoctorReport {
+            api_version: API_VERSION,
+            checks: vec![
+                lemusync_api::Check {
+                    name: "backend".into(),
+                    ok: false,
+                    detail: st.message().to_owned(),
+                    code: Some(e.code().into()),
+                },
+                lemusync_api::Check {
+                    name: "repo".into(),
+                    ok: false,
+                    detail: String::new(),
+                    code: Some("skipped".into()),
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn doctor_failures_are_localized_with_provider_text_only_in_details() {
+        use lemusync_store::ErrorClass;
+        for lang in ["en", "es"] {
+            let t = I18n::new(lang);
+            for class in [
+                ErrorClass::Transient,
+                ErrorClass::Quota,
+                ErrorClass::Auth,
+                ErrorClass::Permanent,
+            ] {
+                let lines = doctor_lines(&t, &report(class));
+                let (backend, details) = &lines[0];
+                assert!(
+                    !backend.contains("Unexpected") && !backend.contains("http"),
+                    "{backend}"
+                );
+                assert_eq!(
+                    backend,
+                    &t.t(
+                        "doctor-check",
+                        &[
+                            ("status", s(t.t("doctor-fail", &[]))),
+                            ("name", s("backend".to_owned())),
+                            ("detail", s(error_text(&t, &store_error(class)))),
+                        ],
+                    )
+                );
+                let details = details.as_ref().unwrap();
+                assert!(details.contains("Unexpected"), "{details}");
+                assert!(!details.contains("FAKESIG123"), "{details}");
+                assert!(!details.contains('\u{1b}'), "{details}");
+                let (repo, repo_details) = &lines[1];
+                assert!(
+                    repo_details.is_none() && !repo.contains("Unexpected"),
+                    "{repo}"
+                );
+                assert!(repo.contains(&t.t("doctor-skip", &[])), "{repo}");
+            }
+        }
+        let en = doctor_lines(&I18n::new("en"), &report(ErrorClass::Auth));
+        assert!(en[0].0.contains("access key"), "S3 fix named: {}", en[0].0);
+    }
+
+    #[test]
+    fn doctor_json_has_code_and_detail_only_on_failures() {
+        let v = serde_json::to_value(report(lemusync_store::ErrorClass::Auth)).unwrap();
+        assert_eq!(v["checks"][0]["code"], "backend_auth");
+        assert!(
+            v["checks"][0]["detail"]
+                .as_str()
+                .unwrap()
+                .contains("REDACTED")
+        );
+        let ok = lemusync_api::Check {
+            name: "x".into(),
+            ok: true,
+            detail: String::new(),
+            code: None,
+        };
+        assert!(serde_json::to_value(ok).unwrap().get("code").is_none());
+    }
+
+    #[test]
+    fn non_storage_doctor_failures_use_their_key_message() {
+        let r = DoctorReport {
+            api_version: API_VERSION,
+            checks: vec![lemusync_api::Check {
+                name: "keystore".into(),
+                ok: false,
+                detail: "prompt_needed".into(),
+                code: Some("secrets".into()),
+            }],
+        };
+        for lang in ["en", "es"] {
+            let t = I18n::new(lang);
+            let lines = doctor_lines(&t, &r);
+            assert!(!lines[0].0.contains("prompt_needed"), "{}", lines[0].0);
+            assert!(lines[0].1.is_none());
         }
     }
 }

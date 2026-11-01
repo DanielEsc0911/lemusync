@@ -512,3 +512,137 @@ async fn a_daemon_with_no_repo_is_not_set_up_not_a_config_error() {
     assert_eq!(svc.handle.status().state, StatusState::Error);
     svc.stop().await;
 }
+
+type LogBuf = Arc<std::sync::Mutex<Vec<u8>>>;
+
+/// Every log line of this test binary (tests run in parallel: look for a line, never count).
+fn log() -> LogBuf {
+    static LOG: std::sync::OnceLock<LogBuf> = std::sync::OnceLock::new();
+    LOG.get_or_init(|| {
+        let buf = LogBuf::default();
+        let w = buf.clone();
+        let sub = tracing_subscriber::fmt()
+            .with_writer(move || LogWriter(w.clone()))
+            .finish();
+        let _ = tracing::subscriber::set_global_default(sub);
+        buf
+    })
+    .clone()
+}
+
+struct LogWriter(LogBuf);
+
+impl std::io::Write for LogWriter {
+    fn write(&mut self, b: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().unwrap().extend_from_slice(b);
+        Ok(b.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+fn logged(what: &str) -> bool {
+    String::from_utf8_lossy(&log().lock().unwrap()).contains(what)
+}
+
+/// A service whose store rejects the credentials: it stops in `error` (auth).
+async fn auth_stopped(root: &std::path::Path) -> (Running, Faults) {
+    let mut a = pc(root).await;
+    let faults = Faults::default();
+    faults.deny_from(0);
+    a.engine.set_store_faults(Some(faults.clone()));
+    let svc = start(a.engine, cfg());
+    until(&svc.handle, "auth stop", |s| {
+        s.state == StatusState::Error && s.error == Some(lemusync_api::ErrorKind::Auth)
+    })
+    .await;
+    (svc, faults)
+}
+
+fn backend_ok(r: &Response) -> bool {
+    let Response::Doctor(d) = r else {
+        panic!("doctor: {r:?}")
+    };
+    d.checks.iter().any(|c| c.name == "backend" && c.ok)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_passing_doctor_ends_the_auth_stop() {
+    log();
+    let root = tempfile::tempdir().unwrap();
+    let (svc, faults) = auth_stopped(root.path()).await;
+    faults.heal();
+    assert!(backend_ok(&svc.handle.call(Request::Doctor).await));
+    until(&svc.handle, "synced after doctor", |s| {
+        s.state == StatusState::Synced
+    })
+    .await;
+    assert!(
+        logged("status left error for syncing (credentials)"),
+        "no state line"
+    );
+    assert!(logged("sync finished"), "no finished-sync line");
+    svc.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn new_credentials_end_the_auth_stop() {
+    let root = tempfile::tempdir().unwrap();
+    let (svc, faults) = auth_stopped(root.path()).await;
+    faults.heal();
+    let path = root.path().join("remote").display().to_string();
+    assert_eq!(
+        svc.handle.call(Request::BackendAddFs { path }).await,
+        Response::Done
+    );
+    until(&svc.handle, "synced after new credentials", |s| {
+        s.state == StatusState::Synced
+    })
+    .await;
+    svc.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_failing_doctor_leaves_the_auth_stop() {
+    let root = tempfile::tempdir().unwrap();
+    let (svc, faults) = auth_stopped(root.path()).await;
+    assert!(!backend_ok(&svc.handle.call(Request::Doctor).await));
+    let tries = faults.requests();
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    assert_eq!(svc.handle.status().state, StatusState::Error);
+    assert_eq!(faults.requests(), tries, "a sync ran while stopped");
+    svc.stop().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_manual_sync_from_error_shows_syncing_before_any_request() {
+    let root = tempfile::tempdir().unwrap();
+    let (svc, faults) = auth_stopped(root.path()).await;
+    faults.heal();
+    faults.delay(Duration::from_millis(300));
+    // Let the work after the auth stop (the watch-plan refresh) finish first.
+    let mut before = faults.requests();
+    loop {
+        tokio::time::sleep(Duration::from_millis(700)).await;
+        let now = faults.requests();
+        if now == before {
+            break;
+        }
+        before = now;
+    }
+    let mut rx = svc.handle.subscribe();
+    let h = svc.handle.clone();
+    let call = tokio::spawn(async move { h.call(Request::Sync { dry_run: false }).await });
+    let first = next(&mut rx, |e| match e {
+        Event::StatusChanged(s) => Some(s.state),
+        _ => None,
+    })
+    .await;
+    assert_eq!(first, StatusState::Syncing);
+    assert_eq!(faults.requests(), before, "the store saw a request first");
+    let r = call.await.unwrap();
+    assert!(matches!(r, Response::Sync(_)), "{r:?}");
+    assert_eq!(svc.handle.status().state, StatusState::Synced);
+    svc.stop().await;
+}
