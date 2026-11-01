@@ -31,7 +31,7 @@ Tasks in the same wave touch different files and can run in parallel. Wave 2 sta
 |---|---|
 | 1 | A: Tasks 1–2 (`api`, `ipc`) · B: Tasks 3–5 (`core` machines, `engine` watcher and poller) · C: Tasks 6–7 (Linux tray, notifications, power, `service`) |
 | 2 | Task 8 (`engine::Service`, `lemusyncd`), then Task 9 (CLI over IPC) |
-| 3 | Task 10 (daemon budgets); Tasks 11–13 are the maintainer's |
+| 3 | Task 10 (daemon budgets), Task 14 (`doctor` messages), Task 15 (auth-stop recovery); Tasks 11–13 are the maintainer's |
 
 ---
 
@@ -198,6 +198,35 @@ V-DESK-2: static `--filesystem=~/.var/app/<id>` per emulator, the document porta
 
 72 hours on Linux (then Windows and macOS after Task 11) with sleep/resume cycles: no missed or late sync beyond the budgets, tray states verified ([roadmap](../roadmap.md#phase-2-desktop-daemon)). Record in the roadmap.
 
+### Task 14: friendly, localized `doctor` failures
+
+**Depends on:** Task 9. **Found:** 2026-10-31, an R2 401 printed two raw OpenDAL dumps (`Unexpected (permanent) at stat, context: { … }`) under `backend storage` and `repo storage`.
+
+**Files:** `crates/engine/src/query.rs` (`doctor`), `crates/api` (`Check`, `#[serde(default)]` fields only), `crates/cli/src/output.rs`, `locales/{en,es}/lemusync.ftl`, spec `config-and-cli.md` §Error codes and §Commands.
+
+**Behaviour:**
+- A failed check carries the same stable `code` (+ key) as the CLI errors ([config-and-cli §Error codes](../../specs/config-and-cli.md#error-codes)) instead of `e.to_string()`; the CLI prints the localized message (en + es, P6) and the redacted provider text on the dim `Details:` line, as other errors do. `--json` gains `code` and `detail` on each check.
+- One cause, one line: when the backend check fails, `repo storage` says it was skipped (or is folded in), not a second dump of the same error.
+- An S3 401/403 maps to `backend_auth`; its message names the fix for S3 (the access key was rejected: check or regenerate it, then `lemusync backend add`/`login`), not only the OAuth wording. Check the `auth` class mapping in `store` covers S3 `Unauthorized`/`AccessDenied`/`InvalidAccessKeyId`/`SignatureDoesNotMatch`.
+
+- [ ] **Step 1: failing tests:** `doctor` against a store that fails with each class (`auth`, `transient`, `quota`, `permanent`) gives the right `code`, a localized line in en and es, no provider text outside `detail`, and one failure line for one cause; S3 401 → `backend_auth`.
+- [ ] **Step 2:** implement; pass; clippy; i18n-check; specs; `just check`; commit `fix(cli): show doctor failures as friendly, localized messages`.
+
+### Task 15: recover from an auth stop, show manual syncs, log recovery
+
+**Depends on:** Task 8. **Found:** 2026-11-01 on the Fedora PC, after a rotated R2 key: the tray showed the error icon; a passing `doctor` (through the daemon) left it there; the tray's Sync went straight from error to synced after about 5 s with no "syncing" state in between; the log had no line for the recovery.
+
+**Files:** `crates/engine/src/service.rs`, `crates/core` (scheduler: auth-stop exit), `crates/engine/src/{remote,query}.rs`, `crates/daemon` (tray status), spec `reliability.md` §Scheduler, `ui/status-and-notifications.md`.
+
+**Behaviour:**
+- The auth stop also clears, and a sync starts at once, when a `doctor` backend check passes or the credentials change (`backend add`, `backend login`), on top of a manual sync or resume.
+- A manual sync (tray, CLI) publishes the `syncing` status before its first request, from any state including `error`; the tray shows it within one frame of the click.
+- The daemon logs each finished sync (`info`: streams, outcome, duration) and leaving the `error` or `offline` state (`info`: from, to, what triggered it).
+
+- [ ] **Step 1: failing tests:** `Service` in the auth stop: a passing `doctor` → one sync, state leaves `error`; a credential change → the same; a failing `doctor` → still stopped; a manual sync from `error` emits `syncing` before the store sees a request; the log gets the finished-sync and state-change lines.
+- [ ] **Step 2:** implement; pass; clippy; specs; `just check`; commit `fix(daemon): leave the auth stop on new credentials and show manual syncs`.
+- [ ] **Step 3: manual (Fedora PC):** break the key, wait for the error icon, fix the key, run `doctor`: the icon leaves the error state without a click. Click Sync: "syncing" shows at once.
+
 ## Verify
 
 - **V-DAEMON-1** (new, Task 8) Narrowing a daemon-triggered sync to the changed streams is cheap enough to bother; otherwise a full sync each time.
@@ -206,7 +235,7 @@ V-DESK-2: static `--filesystem=~/.var/app/<id>` per emulator, the document porta
 
 ## Self-review
 
-- **Coverage:** roadmap Phase 2 deliverables: `lemusyncd` + `ipc` (2, 8), service install (7; Windows/macOS 11), tray (6, 8), actionable notifications in Fluent en/es (6, 8), launcher mode over the daemon (9) and watch mode with process detection (3, 5, 8), sleep inhibition and resume (6, 8), `doctor` (9), daemon budgets carried over from M1 (10).
+- **Coverage:** roadmap Phase 2 deliverables: `lemusyncd` + `ipc` (2, 8), service install (7; Windows/macOS 11), tray (6, 8), actionable notifications in Fluent en/es (6, 8), launcher mode over the daemon (9) and watch mode with process detection (3, 5, 8), sleep inhibition and resume (6, 8), `doctor` (9, friendly failures 14), auth-stop recovery and manual-sync feedback (15), daemon budgets carried over from M1 (10).
 - **Not planned (P1):** retention/GC, local history pruning, hot-reload of `config.toml` (a restart picks changes up; add when the UI writes config in Phase 3), UnifiedPush.
 - **Open for the maintainer:** Flatpak (12), the watch-mode "lease the last played game at start" question ([sync-model §Open questions](../../specs/sync-model.md#open-questions)) stays open until there's usage data.
 - **Names:** `Request`, `Response`, `Event`, `Status`, `StatusFacts`, `Quiet`, `Scheduler`, `Trigger`, `WatchSessions`, `SessionAction`, `SaveWatcher`, `ProcessPoller`, `Service`, `ServiceHandle`, `TrayView`, `Notice`, `Power` are used consistently across Tasks 1–9.
