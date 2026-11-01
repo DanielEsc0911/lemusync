@@ -36,6 +36,7 @@ Read this file, then only the docs your task needs. Headings are stable: grep th
 |---|---|---|
 | [specs/config-and-cli.md](specs/config-and-cli.md) | Config files and locations, CLI commands, JSON output, exit codes | Draft |
 | [specs/i18n.md](specs/i18n.md) | English/Spanish, string sources per layer, terminology, parity checks | Decided |
+| [specs/ui/brand.md](specs/ui/brand.md) | Direction, palette roles, lemur mark, the generator pipeline and its outputs | Decided |
 | [specs/ui/design-system.md](specs/ui/design-system.md) | Visual parity, tokens, components, motion, accessibility, frame budgets | Draft |
 | [specs/ui/navigation.md](specs/ui/navigation.md) | Destinations, adaptive containers, every user flow, deep links | Draft |
 | [specs/ui/status-and-notifications.md](specs/ui/status-and-notifications.md) | One status model → tray, Live Updates, Live Activities, toasts | Draft |
