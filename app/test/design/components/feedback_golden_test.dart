@@ -57,6 +57,7 @@ void main() {
         ),
       ),
       sizes: const [Size(390, 300)],
+      locales: const [Locale('en')],
     );
   }, skip: !Platform.isLinux);
 

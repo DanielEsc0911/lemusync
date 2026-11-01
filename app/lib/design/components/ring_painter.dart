@@ -11,10 +11,11 @@ class RingPainter extends CustomPainter {
     required this.idle,
     required this.stroke,
     this.rotation = 0,
-  });
+    this.turns,
+  }) : super(repaint: turns);
 
   static const int segments = 7;
-  // Share of each segment's slot left empty as the gap.
+  // The ring's own geometry: share of each segment's slot left empty.
   static const double _gapShare = 0.22;
 
   final int filled;
@@ -25,12 +26,18 @@ class RingPainter extends CustomPainter {
   /// Turns (0–1) the whole pattern is rotated.
   final double rotation;
 
+  /// Drives the rotation when set (turns 0–1); repaints without a rebuild.
+  final Animation<double>? turns;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = (Offset.zero & size).deflate(stroke / 2);
     const slot = 2 * math.pi / segments;
     const sweep = slot * (1 - _gapShare);
-    final start = -math.pi / 2 + rotation * 2 * math.pi + slot * _gapShare / 2;
+    final start =
+        -math.pi / 2 +
+        (turns?.value ?? rotation) * 2 * math.pi +
+        slot * _gapShare / 2;
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
@@ -46,5 +53,6 @@ class RingPainter extends CustomPainter {
       active != old.active ||
       idle != old.idle ||
       stroke != old.stroke ||
-      rotation != old.rotation;
+      (turns == null && rotation != old.rotation) ||
+      turns != old.turns;
 }

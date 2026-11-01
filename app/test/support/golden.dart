@@ -13,11 +13,13 @@ Future<void> goldenMatrix(
   Widget Function() build, {
   List<Size> sizes = const [Size(390, 844), Size(900, 1000), Size(1400, 1000)],
   List<ImageProvider> precache = const [],
+  List<Locale> locales = const [Locale('en'), Locale('es')],
 }) async {
   const themes = {'light': LsColors.light, 'dark': LsColors.dark};
   addTearDown(tester.view.reset);
   for (final MapEntry(key: theme, value: colors) in themes.entries) {
-    for (final locale in const ['en', 'es']) {
+    for (final loc in locales) {
+      final locale = loc.languageCode;
       for (final size in sizes) {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
@@ -27,7 +29,7 @@ Future<void> goldenMatrix(
             debugShowCheckedModeBanner: false,
             themeAnimationDuration: Duration.zero,
             theme: lsTheme(colors),
-            locale: Locale(locale),
+            locale: loc,
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,

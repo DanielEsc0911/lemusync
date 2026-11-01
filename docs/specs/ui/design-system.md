@@ -57,7 +57,7 @@ The inventory grows with the code. Each component gets a widget test and goldens
 - `app/lib/design/status.dart`: `LsStatus` (same order as `api::StatusState`) with its color role, icon and label.
 - `app/lib/design/components/ls_surface.dart`: `LsSurface`, the plastic panel (bevel gradient behind a flat fill, inverted on `sunken` so it reads pressed in; never a non-uniform border with a radius, never a shadow).
 - `app/lib/design/components/status_badge.dart`: `StatusBadge`, a face-button dot plus label; `compact` keeps the label for screen readers.
-- `app/lib/design/components/progress_ring.dart`, `ring_painter.dart`: `ProgressRing` (determinate or indeterminate; seven tail segments painted by `RingPainter`; stands still under reduced motion).
+- `app/lib/design/components/progress_ring.dart`, `ring_painter.dart`: `ProgressRing` (determinate or indeterminate; seven tail segments painted by `RingPainter`; determinate lights `floor(value * 7)` segments, at least one when `value > 0`; the indeterminate ring repaints from the controller without rebuilding and stands still under reduced motion).
 - `app/lib/design/components/ls_banner.dart`: `LsBanner`, a raised panel with a tone strip, tone icon, message and optional action.
 - `app/lib/design/components/empty_state.dart`, `error_state.dart`: `EmptyState` (mark, title, hint, action) and `ErrorState` (icon, title, hint, retry; default label `actionRetry`).
 - `app/lib/design/design.dart`: barrel export. Test harness: `app/test/support/golden.dart` (`goldenMatrix`).

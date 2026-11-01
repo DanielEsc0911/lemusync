@@ -33,47 +33,48 @@ class LsBanner extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(inner),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ColoredBox(
-                color: color,
-                child: const SizedBox(width: LsSpace.xs),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(LsSpace.md),
-                  child: Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: LsSpace.md,
-                    runSpacing: LsSpace.xs,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(tone.icon, size: LsSize.iconMd, color: color),
-                          const SizedBox(width: LsSpace.sm),
-                          Flexible(
-                            child: Text(
-                              message,
-                              style: LsType.body.copyWith(color: c.onSurface),
-                            ),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: LsSpace.xs,
+              child: ColoredBox(color: color),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: LsSpace.xs),
+              child: Padding(
+                padding: const EdgeInsets.all(LsSpace.md),
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: LsSpace.md,
+                  runSpacing: LsSpace.xs,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(tone.icon, size: LsSize.iconMd, color: color),
+                        const SizedBox(width: LsSpace.sm),
+                        Flexible(
+                          child: Text(
+                            message,
+                            style: LsType.body.copyWith(color: c.onSurface),
                           ),
-                        ],
-                      ),
-                      if (actionLabel != null)
-                        TextButton(
-                          onPressed: onAction,
-                          child: Text(actionLabel!),
                         ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    if (actionLabel != null)
+                      TextButton(
+                        onPressed: onAction,
+                        child: Text(actionLabel!),
+                      ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

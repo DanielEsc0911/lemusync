@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../status.dart';
@@ -33,6 +35,24 @@ class _ProgressRingState extends State<ProgressRing>
     duration: LsMotion.slow * 4,
   );
 
+  void _update() {
+    final animate =
+        widget.value == null && !MediaQuery.disableAnimationsOf(context);
+    _sync(animate);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _update();
+  }
+
+  @override
+  void didUpdateWidget(ProgressRing old) {
+    super.didUpdateWidget(old);
+    _update();
+  }
+
   void _sync(bool animate) {
     if (animate && !_controller.isAnimating) {
       _controller.repeat();
@@ -51,30 +71,24 @@ class _ProgressRingState extends State<ProgressRing>
   Widget build(BuildContext context) {
     final c = Theme.of(context).extension<LsColors>()!;
     final value = widget.value?.clamp(0.0, 1.0);
-    _sync(value == null && !MediaQuery.disableAnimationsOf(context));
     final color = widget.status.color(c);
 
-    Widget paint(int filled, double rotation) => CustomPaint(
+    // Few segments lit as soon as there is any progress; full only at 1.
+    final filled = value == null
+        ? 4 // A comet of four lit segments that turns around the ring.
+        : value > 0
+        ? math.max(1, (value * RingPainter.segments).floor())
+        : 0;
+    final ring = CustomPaint(
       size: Size.square(widget.size),
       painter: RingPainter(
         filled: filled,
         active: color,
         idle: c.outline,
         stroke: LsSize.ringStroke,
-        rotation: rotation,
+        turns: value == null ? _controller : null,
       ),
     );
-
-    final Widget ring;
-    if (value != null) {
-      ring = paint((value * RingPainter.segments).ceil(), 0);
-    } else {
-      // A comet of four lit segments that turns around the ring.
-      ring = AnimatedBuilder(
-        animation: _controller,
-        builder: (_, _) => paint(4, _controller.value),
-      );
-    }
     return Semantics(
       label: widget.semanticsLabel,
       value: value == null ? null : '${(value * 100).round()}%',
