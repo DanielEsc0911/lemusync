@@ -473,8 +473,8 @@ Art direction (good enough, not final; recognisable at 24 px): a ring-tailed lem
 - [x] **Step 1:** draw the parts; `cargo xtask brand`.
 - [x] **Step 2: look.** Upscale with nearest-neighbour into the scratchpad (for example a few lines of Rust in a scratch test, or `magick x.png -filter point -resize 800% y.png` if ImageMagick is installed) and open with the Read tool: `app` at 1024, 192, 48; `appSquare` at 180; each tray state at 24 px on `#000000` and on `#FFFFFF` (composite the `.argb` data or the source mark rendered at 24). Pass when: a lemur is recognisable at 48 px; the six tray states are distinguishable at 24 px by symbol alone (convert to greyscale to check); the glyph reads on both backgrounds. Iterate parts/params until it passes; list what changed.
 - [x] **Step 3:** `cargo xtask brand --check`; `just check`; brand.md §Mark notes. Tick Steps 1–3; board "Tasks 1–5 done, Task 5 awaiting maintainer review".
-- [ ] **Step 4: commit** `feat(brand): draw the first lemur mark`.
-- [ ] **Step 5: maintainer review (stop here).** The maintainer looks at `brand/out/app.svg`, the 1024 px and 24 px renders and the tray states, and approves or asks for changes (changes go back to Step 1). Tick when approved.
+- [x] **Step 4: commit** `feat(brand): draw the first lemur mark`.
+- [x] **Step 5: maintainer review (stop here).** The maintainer looks at `brand/out/app.svg`, the 1024 px and 24 px renders and the tray states, and approves or asks for changes (changes go back to Step 1). Tick when approved. Approved 2026-11-01 (soft lemur ≥ 64 px, controller ≤ 48 px, tray state on the buttons).
 
 ### Task 6: status visuals, the plastic surface and the golden harness
 
