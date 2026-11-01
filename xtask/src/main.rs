@@ -1,5 +1,6 @@
 //! Repository checks, run as `cargo xtask <task>`.
 
+mod brand;
 mod budgets;
 mod docs;
 mod i18n;
@@ -15,13 +16,14 @@ fn main() -> ExitCode {
     let task = std::env::args().nth(1).unwrap_or_default();
     let result = match task.as_str() {
         "docs-check" => docs::check(&root),
+        "brand" => brand::run(&root, std::env::args().nth(2).as_deref() == Some("--check")),
         "layers" => layers::check(&root),
         "i18n-check" => i18n::check(&root),
         "budgets" => budgets::measure(&root, &std::env::args().nth(2).unwrap_or_default()),
         "budgets-check" => budgets::check(&root),
         "version-check" => version::check(&root, &std::env::args().nth(2).unwrap_or_default()),
         _ => Err(vec![format!(
-            "unknown task `{task}`; available: docs-check, layers, i18n-check, version-check <tag>, budgets [idle-secs], budgets-check"
+            "unknown task `{task}`; available: brand [--check], docs-check, layers, i18n-check, version-check <tag>, budgets [idle-secs], budgets-check"
         )]),
     };
     match result {

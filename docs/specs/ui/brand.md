@@ -1,6 +1,6 @@
 # Brand
 
-> **Status:** Decided · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** `brand/`, `xtask/src/brand/`, `app/lib/design/` (planned)
+> **Status:** Decided · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** `brand/`, `xtask/src/brand/`, `app/lib/design/tokens/`
 
 ## Purpose
 One brand, one source: `brand/` holds the only hand-edited brand values. `cargo xtask brand` regenerates every derived file (Dart tokens, icons, tray pixmaps) from it.
@@ -13,25 +13,7 @@ One brand, one source: `brand/` holds the only hand-edited brand values. `cargo 
 - **Pixel art** is deferred (mascot and empty states only, later). Until then the vector mark fills those places.
 
 ## Palette
-Primitives below are the start values (snapshot of 2026-11-01). `brand/tokens.toml` is the source, and the generator's contrast check has the final say.
-
-| Name | Hex | Name | Hex |
-|---|---|---|---|
-| `charcoal-950` | `#141211` | `amber-300` | `#F6C177` |
-| `charcoal-900` | `#1E1B19` | `amber-500` | `#E89B2D` |
-| `charcoal-800` | `#2A2623` | `amber-800` | `#7A4A0C` |
-| `charcoal-700` | `#3A3531` | `lavender-300` | `#C4B5F0` |
-| `stone-600` | `#655E57` | `lavender-500` | `#7E68D6` |
-| `stone-550` | `#7D766E` | `lavender-700` | `#5541A8` |
-| `stone-500` | `#8C857D` | `green-300` | `#8FD6A0` |
-| `stone-400` | `#A9A39B` | `green-500` | `#2F9E55` |
-| `stone-300` | `#C6C1B9` | `green-800` | `#1A5E32` |
-| `stone-200` | `#DEDAD3` | `blue-300` | `#93BFF2` |
-| `stone-100` | `#ECE9E3` | `blue-500` | `#2F74D0` |
-| `stone-50` | `#F6F4F0` | `blue-800` | `#1B4682` |
-| `bone` | `#FBFAF7` | `red-300` | `#F2A097` |
-| | | `red-500` | `#D3402F` |
-| | | `red-800` | `#86261B` |
+The primitives (name to hex) live in `brand/tokens.toml` `[palette]`; that file is the source and the generator's contrast check has the final say.
 
 Roles (21, every theme defines all of them):
 
@@ -95,6 +77,8 @@ Sources: `brand/tokens.toml`, `brand/mark/parts/*.svg` and `brand/mark/marks.tom
 | `crates/daemon/assets/tray/<state>-<px>.argb` | Tray pixmaps | `tray-<state>` | 24, 32, 48 | ARGB32 |
 
 `cargo xtask brand --check` regenerates in memory and fails on any difference or failed check. It also fails on any hard-coded design literal (color, duration, radius, size, spacing, opacity, font family) in `app/lib` outside the generated tokens. It runs in `just check` and in CI.
+
+As built (Task 2): `cargo xtask brand` writes the seven token files; `--check` also runs the literal scan (`xtask/src/brand/literals.rs`). A line ending in `// brand-literal-ok: <reason>` is exempt. The mark outputs arrive with Task 4.
 
 To iterate: edit the sources, run `cargo xtask brand`, open the PNGs and the gallery, review the goldens, and commit sources and outputs together. Never hand-edit a generated file.
 

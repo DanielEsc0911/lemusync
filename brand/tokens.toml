@@ -1,0 +1,220 @@
+# LemuSync brand tokens: the only place brand values are written by hand.
+# Run `cargo xtask brand` after editing. Spec: docs/specs/ui/brand.md
+schema = 1
+
+[palette]
+charcoal-950 = "#141211"
+charcoal-900 = "#1E1B19"
+charcoal-800 = "#2A2623"
+charcoal-700 = "#3A3531"
+stone-600 = "#655E57"
+stone-550 = "#7D766E"
+stone-500 = "#8C857D"
+stone-400 = "#A9A39B"
+stone-300 = "#C6C1B9"
+stone-200 = "#DEDAD3"
+stone-100 = "#ECE9E3"
+stone-50 = "#F6F4F0"
+bone = "#FBFAF7"
+amber-300 = "#F6C177"
+amber-500 = "#E89B2D"
+amber-800 = "#7A4A0C"
+lavender-300 = "#C4B5F0"
+lavender-500 = "#7E68D6"
+lavender-700 = "#5541A8"
+green-300 = "#8FD6A0"
+green-500 = "#2F9E55"
+green-800 = "#1A5E32"
+blue-300 = "#93BFF2"
+blue-500 = "#2F74D0"
+blue-800 = "#1B4682"
+red-300 = "#F2A097"
+red-500 = "#D3402F"
+red-800 = "#86261B"
+
+[themes.light]
+surface = "stone-100"
+surfaceSunken = "stone-200"
+surfaceRaised = "stone-50"
+onSurface = "charcoal-900"
+onSurfaceMuted = "stone-600"
+outline = "stone-550"
+bevelLight = "bone"
+bevelDark = "stone-300"
+accent = "lavender-700"
+onAccent = "bone"
+focus = "lavender-700"
+synced = "green-800"
+onSynced = "bone"
+syncing = "blue-800"
+onSyncing = "bone"
+attention = "amber-800"
+onAttention = "bone"
+danger = "red-800"
+onDanger = "bone"
+offline = "stone-600"
+onOffline = "bone"
+
+[themes.dark]
+surface = "charcoal-900"
+surfaceSunken = "charcoal-950"
+surfaceRaised = "charcoal-800"
+onSurface = "stone-100"
+onSurfaceMuted = "stone-400"
+outline = "stone-550"
+bevelLight = "charcoal-700"
+bevelDark = "charcoal-950"
+accent = "lavender-300"
+onAccent = "charcoal-950"
+focus = "lavender-300"
+synced = "green-300"
+onSynced = "charcoal-950"
+syncing = "blue-300"
+onSyncing = "charcoal-950"
+attention = "amber-300"
+onAttention = "charcoal-950"
+danger = "red-300"
+onDanger = "charcoal-950"
+offline = "stone-400"
+onOffline = "charcoal-950"
+
+[themes.lightHighContrast]
+surface = "bone"
+surfaceSunken = "stone-100"
+surfaceRaised = "bone"
+onSurface = "charcoal-950"
+onSurfaceMuted = "charcoal-700"
+outline = "charcoal-700"
+bevelLight = "bone"
+bevelDark = "charcoal-700"
+accent = "lavender-700"
+onAccent = "bone"
+focus = "charcoal-950"
+synced = "green-800"
+onSynced = "bone"
+syncing = "blue-800"
+onSyncing = "bone"
+attention = "amber-800"
+onAttention = "bone"
+danger = "red-800"
+onDanger = "bone"
+offline = "charcoal-700"
+onOffline = "bone"
+
+[themes.darkHighContrast]
+surface = "charcoal-950"
+surfaceSunken = "charcoal-950"
+surfaceRaised = "charcoal-900"
+onSurface = "bone"
+onSurfaceMuted = "stone-200"
+outline = "stone-300"
+bevelLight = "stone-400"
+bevelDark = "charcoal-950"
+accent = "lavender-300"
+onAccent = "charcoal-950"
+focus = "bone"
+synced = "green-300"
+onSynced = "charcoal-950"
+syncing = "blue-300"
+onSyncing = "charcoal-950"
+attention = "amber-300"
+onAttention = "charcoal-950"
+danger = "red-300"
+onDanger = "charcoal-950"
+offline = "stone-300"
+onOffline = "charcoal-950"
+
+# kind = "text" → 4.5 (7.0 in *HighContrast); kind = "ui" → 3.0 (4.5 in *HighContrast)
+# fg and bg take one role or a list; every fg × bg combination is checked.
+[[contrast]]
+fg = "onSurface"
+bg = ["surface", "surfaceSunken", "surfaceRaised"]
+kind = "text"
+[[contrast]]
+fg = "onSurfaceMuted"
+bg = ["surface", "surfaceSunken", "surfaceRaised"]
+kind = "text"
+[[contrast]]
+fg = "onAccent"
+bg = "accent"
+kind = "text"
+[[contrast]]
+fg = "onSynced"
+bg = "synced"
+kind = "text"
+[[contrast]]
+fg = "onSyncing"
+bg = "syncing"
+kind = "text"
+[[contrast]]
+fg = "onAttention"
+bg = "attention"
+kind = "text"
+[[contrast]]
+fg = "onDanger"
+bg = "danger"
+kind = "text"
+[[contrast]]
+fg = "onOffline"
+bg = "offline"
+kind = "text"
+[[contrast]]
+fg = ["accent", "focus", "synced", "syncing", "attention", "danger", "offline"]
+bg = ["surface", "surfaceRaised"]
+kind = "ui"
+[[contrast]]
+fg = "outline"
+bg = ["surface", "surfaceSunken", "surfaceRaised"]
+kind = "ui"
+
+[type.families]
+display = "Space Grotesk"
+body = "Inter"
+mono = "JetBrains Mono"
+
+# size and line height in logical px, weight 100–900, tracking in px
+[type.scale]
+display = { family = "display", size = 40, weight = 700, height = 48, tracking = -0.5 }
+headline = { family = "display", size = 28, weight = 700, height = 36, tracking = -0.25 }
+title = { family = "body", size = 20, weight = 600, height = 28, tracking = 0 }
+body = { family = "body", size = 16, weight = 400, height = 24, tracking = 0 }
+label = { family = "body", size = 14, weight = 500, height = 20, tracking = 0.1 }
+caption = { family = "body", size = 12, weight = 400, height = 16, tracking = 0.2 }
+mono = { family = "mono", size = 14, weight = 400, height = 20, tracking = 0 }
+
+[space]
+xs = 4
+sm = 8
+md = 12
+lg = 16
+xl = 24
+xxl = 32
+xxxl = 48
+
+[size]
+target = 48
+iconSm = 16
+iconMd = 24
+iconLg = 32
+bevel = 1
+focusRing = 2
+ringStroke = 4
+mark = 64
+
+[shape]
+radiusSm = 6
+radiusMd = 12
+radiusLg = 20
+radiusPill = 999
+
+[opacity]
+pressed = 0.12
+hover = 0.08
+disabled = 0.38
+
+[motion]
+fast = 100
+medium = 200
+slow = 300
+standard = [0.2, 0.0, 0.0, 1.0]
+emphasized = [0.3, 0.0, 0.0, 1.0]
