@@ -48,12 +48,23 @@ impl ksni::Tray for Item {
         "LemuSync".into()
     }
 
+    // Empty: the brand pixmaps below are the icon (a theme name would win over them).
     fn icon_name(&self) -> String {
+        String::new()
+    }
+
+    fn icon_pixmap(&self) -> Vec<ksni::Icon> {
         self.view
             .as_ref()
             .map_or(TrayIcon::Synced, |v| v.icon)
-            .freedesktop_name()
-            .into()
+            .pixmaps()
+            .into_iter()
+            .map(|(size, data)| ksni::Icon {
+                width: size,
+                height: size,
+                data: data.to_vec(),
+            })
+            .collect()
     }
 
     fn tool_tip(&self) -> ToolTip {

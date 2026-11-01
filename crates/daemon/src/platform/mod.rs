@@ -8,6 +8,9 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use tokio::sync::mpsc;
 
+mod icons;
+pub use icons::APP_ICON_NAME;
+
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "linux")]

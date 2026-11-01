@@ -1,6 +1,6 @@
 # Brand
 
-> **Status:** Decided · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** `brand/`, `xtask/src/brand/`, `app/lib/design/`, `app/assets/fonts/`, `app/assets/licenses/`
+> **Status:** Partial · **Related:** [rules](../../rules.md) (F1, F2, P6, P7), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D42) · **Code:** `brand/`, `xtask/src/brand/`, `app/lib/design/`, `app/assets/fonts/`, `app/assets/licenses/`, `crates/daemon/src/platform/icons.rs`
 
 ## Purpose
 One brand, one source: `brand/` holds the only hand-edited brand values. `cargo xtask brand` regenerates every derived file (Dart tokens, icons, tray pixmaps) from it.

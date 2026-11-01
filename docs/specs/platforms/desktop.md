@@ -1,6 +1,6 @@
 # Desktop: Windows, macOS, Linux
 
-> **Status:** Draft · **Related:** [rules](../../rules.md) (B3, P4), [architecture §Process model](../architecture.md#process-model), [reliability](../reliability.md#always-on-247), [status-and-notifications](../ui/status-and-notifications.md#desktop-tray-and-menu-bar), [emulator-profiles](../emulator-profiles.md), [security](../security.md) · **Code:** `crates/daemon` (`lemusyncd`: `src/main.rs`, run loop `src/run.rs`, logs `src/logging.rs`; Linux tray, notifications, power: `crates/daemon/src/platform/linux/`; systemd user unit: `crates/cli/src/service.rs`; other OSes no-op until Phase 2 Task 11), `packaging/` (planned)
+> **Status:** Draft · **Related:** [rules](../../rules.md) (B3, P4), [architecture §Process model](../architecture.md#process-model), [reliability](../reliability.md#always-on-247), [status-and-notifications](../ui/status-and-notifications.md#desktop-tray-and-menu-bar), [emulator-profiles](../emulator-profiles.md), [security](../security.md) · **Code:** `crates/daemon` (`lemusyncd`: `src/main.rs`, run loop `src/run.rs`, logs `src/logging.rs`; Linux tray, notifications, power: `crates/daemon/src/platform/linux/`, brand tray pixmaps: `platform/icons.rs`; systemd user unit: `crates/cli/src/service.rs`; other OSes no-op until Phase 2 Task 11), `packaging/` (planned)
 
 ## Purpose
 Desktop is where most emulators run. The daemon gives true 24/7 sync with native tray and notifications. The Flutter app is a client of it.

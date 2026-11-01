@@ -1,6 +1,6 @@
 # Design system
 
-> **Status:** Draft · **Related:** [rules](../../rules.md) (F1, F2, P5, P6), [brand](brand.md), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [i18n](../i18n.md), [testing](../testing.md), [skill: lemusync-ui](../../../.claude/skills/lemusync-ui/SKILL.md) · **Code:** `app/lib/design/` (planned)
+> **Status:** Partial · **Related:** [rules](../../rules.md) (F1, F2, P5, P6), [brand](brand.md), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [i18n](../i18n.md), [testing](../testing.md), [skill: lemusync-ui](../../../.claude/skills/lemusync-ui/SKILL.md) · **Code:** `app/lib/design/` (planned)
 
 ## Purpose
 One visual language that looks identical on every platform (F1), feels instant (F2), and is simple for players while keeping power tools one level deeper (P5).
