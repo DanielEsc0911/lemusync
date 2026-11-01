@@ -111,7 +111,7 @@ class CardsSection extends StatelessWidget {
     title: 'Mario Kart 8 Deluxe',
     emulator: 'Ryujinx',
     status: s,
-    lastSynced: '2 min',
+    lastSynced: '2 min ago',
     lease: s == LsStatus.attention ? 'In use on Desktop' : null,
     onPlay: () {},
     onTap: () {},

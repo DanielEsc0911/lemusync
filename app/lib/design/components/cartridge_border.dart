@@ -20,7 +20,8 @@ class CartridgeBorder extends OutlinedBorder {
   /// Notch width as a share of the card width (the shape's own geometry).
   static const double _notchShare = 0.4;
 
-  /// Depth of the notch. `LsSpace.md` (12): at `sm` (8) the notch was too
+  /// Depth of the notch, fixed: it does not change under [scale] (like the
+  /// width share, it belongs to the shape, not to the radii). `LsSpace.md` (12): at `sm` (8) the notch was too
   /// shallow to read as a grip at card size.
   static const double notchDepth = LsSpace.md;
 
@@ -34,8 +35,12 @@ class CartridgeBorder extends OutlinedBorder {
   final double topRadius;
 
   @override
-  EdgeInsetsGeometry get dimensions =>
-      EdgeInsets.only(top: notchDepth + side.width);
+  EdgeInsetsGeometry get dimensions => EdgeInsets.fromLTRB(
+    side.width,
+    notchDepth + side.width,
+    side.width,
+    side.width,
+  );
 
   @override
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
@@ -88,6 +93,9 @@ class CartridgeBorder extends OutlinedBorder {
       ..close();
   }
 
+  // Inner path, bevel: the inner notch is a parallel shape inset by the bevel
+  // width, so its slopes' perpendicular thickness is thinner than the straight
+  // edges (about width * sqrt(1/2) along the 45 degree slopes). Accepted.
   @override
   Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
       getOuterPath(rect.deflate(side.width), textDirection: textDirection);

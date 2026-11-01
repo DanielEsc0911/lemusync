@@ -105,7 +105,7 @@ class GalleryPage extends StatelessWidget {
             actions: [
               PopupMenuButton<LsColors>(
                 tooltip: 'Theme',
-                icon: const Icon(Icons.palette_outlined),
+                icon: const Icon(LsIcons.theme),
                 onSelected: onColors,
                 itemBuilder: (_) => [
                   for (final e in galleryThemes.entries)
@@ -118,7 +118,7 @@ class GalleryPage extends StatelessWidget {
               ),
               PopupMenuButton<Locale>(
                 tooltip: 'Language',
-                icon: const Icon(Icons.translate),
+                icon: const Icon(LsIcons.language),
                 onSelected: onLocale,
                 itemBuilder: (_) => [
                   for (final l in AppLocalizations.supportedLocales)
@@ -133,7 +133,7 @@ class GalleryPage extends StatelessWidget {
                 IconButton(
                   tooltip: 'Performance overlay',
                   isSelected: overlay,
-                  icon: const Icon(Icons.speed),
+                  icon: const Icon(LsIcons.performance),
                   onPressed: () => onOverlay(!overlay),
                 ),
             ],

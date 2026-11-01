@@ -27,10 +27,9 @@ class ColorRolesSection extends StatelessWidget {
     final c = _colors(context);
     // (role, color, onRole, onColor)
     final roles = <(String, Color, String?, Color?)>[
-      ('surface', c.surface, 'onSurface', c.onSurface),
+      ('surface', c.surface, 'onSurface  onSurfaceMuted', c.onSurface),
       ('surfaceSunken', c.surfaceSunken, 'onSurface', c.onSurface),
       ('surfaceRaised', c.surfaceRaised, 'onSurface', c.onSurface),
-      ('surface', c.surface, 'onSurfaceMuted', c.onSurfaceMuted),
       ('outline', c.outline, null, null),
       ('bevelLight', c.bevelLight, null, null),
       ('bevelDark', c.bevelDark, null, null),
@@ -232,12 +231,9 @@ class OpacitySection extends StatelessWidget {
           Column(
             spacing: LsSpace.xs,
             children: [
-              Opacity(
-                opacity: v,
-                child: SizedBox.square(
-                  dimension: LsSize.target,
-                  child: ColoredBox(color: c.accent),
-                ),
+              SizedBox.square(
+                dimension: LsSize.target,
+                child: ColoredBox(color: c.accent.withValues(alpha: v)),
               ),
               Text(
                 '$name  $v',
@@ -295,10 +291,9 @@ class _MotionRowState extends State<_MotionRow> {
   Widget build(BuildContext context) {
     final c = _colors(context);
     final reduce = MediaQuery.disableAnimationsOf(context);
-    return GestureDetector(
+    return InkWell(
       onTap: () => setState(() => _end = !_end),
       child: Semantics(
-        button: true,
         label: 'Animate ${widget.name}',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,6 +350,9 @@ class IconsSection extends StatelessWidget {
       ('lock', LsIcons.lock),
       ('chevronRight', LsIcons.chevronRight),
       ('close', LsIcons.close),
+      ('theme', LsIcons.theme),
+      ('language', LsIcons.language),
+      ('performance', LsIcons.performance),
     ];
     return Wrap(
       spacing: LsSpace.md,

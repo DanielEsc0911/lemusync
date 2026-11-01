@@ -59,6 +59,21 @@ void main() {
       expect(path.contains(const Offset(0, 0)), isFalse); // rounded corner
     });
 
+    test(
+      'dimensions cover the notch and every edge; notch is fixed on scale',
+      () {
+        const b = CartridgeBorder(side: BorderSide(width: 2));
+        expect(
+          b.dimensions,
+          const EdgeInsets.fromLTRB(2, CartridgeBorder.notchDepth + 2, 2, 2),
+        );
+        expect(
+          b.scale(2).dimensions,
+          const EdgeInsets.fromLTRB(4, CartridgeBorder.notchDepth + 4, 4, 4),
+        );
+      },
+    );
+
     test('copyWith and scale keep the shape', () {
       const b = CartridgeBorder();
       expect(b.copyWith(), b);
@@ -108,6 +123,25 @@ void main() {
       ),
       findsOneWidget,
     );
+    h.dispose();
+  });
+
+  testWidgets('the card is a button only when onTap is set', (t) async {
+    final h = t.ensureSemantics();
+    await t.pumpWidget(
+      _app(
+        LsColors.light,
+        GameCard(title: 'Zelda', emulator: 'Cemu', onTap: () {}),
+      ),
+    );
+    var node = t.getSemantics(find.bySemanticsLabel(RegExp('^Zelda, Cemu')));
+    expect(node.getSemanticsData().flagsCollection.isButton, isTrue);
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    await t.pumpWidget(
+      _app(LsColors.light, const GameCard(title: 'Zelda', emulator: 'Cemu')),
+    );
+    node = t.getSemantics(find.bySemanticsLabel(RegExp('^Zelda, Cemu')));
+    expect(node.getSemanticsData().flagsCollection.isButton, isFalse);
     h.dispose();
   });
 

@@ -14,6 +14,7 @@ Future<void> goldenMatrix(
   List<Size> sizes = const [Size(390, 844), Size(900, 1000), Size(1400, 1000)],
   List<ImageProvider> precache = const [],
   List<Locale> locales = const [Locale('en'), Locale('es')],
+  Future<void> Function(WidgetTester tester)? settle,
 }) async {
   const themes = {'light': LsColors.light, 'dark': LsColors.dark};
   addTearDown(tester.view.reset);
@@ -51,6 +52,7 @@ Future<void> goldenMatrix(
           );
         }
         await tester.pump();
+        await settle?.call(tester);
         await expectLater(
           find.byType(MaterialApp),
           matchesGoldenFile(

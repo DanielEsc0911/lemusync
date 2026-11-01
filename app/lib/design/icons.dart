@@ -22,4 +22,7 @@ abstract final class LsIcons {
   static const IconData lock = LucideIcons.lock;
   static const IconData chevronRight = LucideIcons.chevronRight;
   static const IconData close = LucideIcons.x;
+  static const IconData theme = LucideIcons.palette;
+  static const IconData language = LucideIcons.languages;
+  static const IconData performance = LucideIcons.gauge;
 }
