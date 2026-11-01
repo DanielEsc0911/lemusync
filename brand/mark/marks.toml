@@ -31,7 +31,7 @@ colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "b
 extends = "glyph"
 parts = ["disc", "tail", "head", "mask", "eyes", "status-dot"]
 colors = { disc = "charcoal-800", symbol = "bone" }
-params = { dotR = 56, hollow = 0 }
+params = { dotR = 58, hollow = 0 }
 # A shorter sweep ends the arrowhead on the upper right, clear of the status dot.
 tail = { sweep_deg = 200, rings = 5 }
 

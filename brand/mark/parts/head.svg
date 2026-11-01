@@ -1,3 +1,5 @@
-<circle cx="92" cy="84" r="22" fill="{{color.fur}}"/>
-<circle cx="164" cy="84" r="22" fill="{{color.fur}}"/>
-<circle cx="128" cy="136" r="52" fill="{{color.fur}}"/>
+<circle cx="80" cy="86" r="26" fill="{{color.fur}}"/>
+<circle cx="176" cy="86" r="26" fill="{{color.fur}}"/>
+<circle cx="80" cy="88" r="13" fill="{{color.ring}}"/>
+<circle cx="176" cy="88" r="13" fill="{{color.ring}}"/>
+<path d="M66 124C66 92 96 80 128 80C160 80 190 92 190 124C190 160 162 190 128 214C94 190 66 160 66 124Z" fill="{{color.fur}}"/>
