@@ -5,7 +5,7 @@ The only hand-edited brand sources. Spec: [docs/specs/ui/brand.md](../docs/specs
 - `tokens.toml`: palette, colors per theme, contrast pairs, type, space, size, shape, opacity, motion.
 - `mark/marks.toml` and `mark/parts/*.svg`: the lemur mark. Parts are SVG fragments (256×256 space) with `{{color.x}}` and `{{param.x}}` placeholders; `marks.toml` composes them (`extends`, colors by palette name, params) and sets the built-in tail. Part names match `^[A-Za-z0-9@._-]+$`.
 
-To change the brand: edit a source, run `just brand`, review the result, and commit sources and outputs together. Never edit a generated file; `cargo xtask brand --check` (part of `just check` and CI) fails when one is stale.
+To change the brand: edit a source, run `just brand`, review the result (run the design gallery, `cd app && flutter run -d linux -t lib/gallery/main.dart`, to see every token and component in all four themes), and commit sources and outputs together. Never edit a generated file; `cargo xtask brand --check` (part of `just check` and CI) fails when one is stale.
 
 No color, duration, curve, radius, size, spacing, opacity, font-family or font-weight literal may appear in `app/lib/` outside `app/lib/design/tokens/`. The check reads whole files (wrapped arguments included), allows a bare `0`, and names the offending lines. A true one-off ends with `// brand-literal-ok: <reason>` on the line where the literal starts.
 
