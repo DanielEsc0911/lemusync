@@ -199,7 +199,7 @@ Decided 2026-11-01: the user grants each emulator folder through the FileChooser
 
 72 hours on Linux (then Windows and macOS after Task 11) with sleep/resume cycles: no missed or late sync beyond the budgets, tray states verified ([roadmap](../roadmap.md#phase-2-desktop-daemon)). Record in the roadmap.
 
-`scripts/soak.sh start` samples the installed daemon every 10 minutes (CPU ticks, RSS, restarts, finished syncs and WARN/ERROR lines from its log) into `~/.local/state/lemusync/soak.csv`; `scripts/soak.sh report` sums it up. It never calls the daemon. Run it on a daemon built with Task 15, which logs each finished sync.
+`scripts/soak.sh start` installs a systemd user timer (`~/.config/systemd/user/lemusync-soak.timer`, kept across reboots; `stop` removes it) that samples the installed daemon every 10 minutes (CPU ticks, RSS, restarts, finished syncs and WARN/ERROR lines from its log) into `~/.local/state/lemusync/soak.csv`; `scripts/soak.sh report` sums it up. It never calls the daemon. Run it on a daemon built with Task 15, which logs each finished sync.
 
 **Linux so far (2026-11-01, maintainer):** the daemon starts with the session and runs with no restarts; real syncs work (BotW and Bayonetta 2 in Cemu). Not yet measured over days. Spot checks on the Fedora PC with the release build from 2026-10-29: 1.1 % CPU averaged over 2.5 h of use, 0.85 % over 20 s idle, peak RSS 30.4 MiB, all over target ([reliability §Budgets](../../specs/reliability.md#budgets)); Task 16 fixes them.
 

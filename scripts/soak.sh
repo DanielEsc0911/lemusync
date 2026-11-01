@@ -2,9 +2,10 @@
 # M2 soak sampler for the installed lemusyncd (Linux). Reads /proc, systemctl and the
 # daemon's own log; never talks to the daemon (an IPC call would wake it and log a line).
 #
-#   soak.sh start    sample every 10 minutes (transient systemd user timer; gone at reboot,
-#                    run start again)
-#   soak.sh stop     stop sampling (the CSV stays)
+#   soak.sh start    sample every 10 minutes: installs and enables a systemd user timer in
+#                    ~/.config/systemd/user, so sampling survives reboots (with linger it
+#                    runs from boot, before login)
+#   soak.sh stop     stop sampling and remove the timer (the CSV stays)
 #   soak.sh sample   take one sample now (what the timer runs)
 #   soak.sh report   summarise the CSV: uptime, CPU %, RSS, restarts, syncs, warnings
 set -euo pipefail
@@ -12,6 +13,7 @@ set -euo pipefail
 out="${XDG_STATE_HOME:-$HOME/.local/state}/lemusync/soak.csv"
 log="${XDG_DATA_HOME:-$HOME/.local/share}/lemusync/logs/lemusyncd.log"
 unit=lemusync-soak
+units="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 
 sample() {
   mkdir -p "$(dirname "$out")"
@@ -59,10 +61,26 @@ case "${1:-}" in
   report) report ;;
   start)
     sample
-    systemd-run --user --quiet --unit="$unit" --on-calendar='*:0/10' --timer-property=AccuracySec=1min \
-      "$(readlink -f "$0")" sample
-    echo "sampling every 10 min into $out (stop: $0 stop)"
+    # An older soak.sh ran a transient timer of the same name; it would shadow the file.
+    if [[ $(systemctl --user show -p Transient --value "$unit.timer" 2>/dev/null) == yes ]]; then
+      systemctl --user stop "$unit.timer"
+    fi
+    mkdir -p "$units"
+    printf '%s\n' '[Unit]' 'Description=LemuSync soak sampler' '' '[Service]' 'Type=oneshot' \
+      "ExecStart=\"$(readlink -f "$0")\" sample" >"$units/$unit.service.tmp"
+    printf '%s\n' '[Unit]' 'Description=LemuSync soak sampler, every 10 minutes' '' '[Timer]' \
+      'OnCalendar=*:0/10' 'AccuracySec=1min' '' '[Install]' 'WantedBy=timers.target' >"$units/$unit.timer.tmp"
+    mv -f "$units/$unit.service.tmp" "$units/$unit.service"
+    mv -f "$units/$unit.timer.tmp" "$units/$unit.timer"
+    systemctl --user daemon-reload
+    systemctl --user enable --now --quiet "$unit.timer"
+    echo "sampling every 10 min into $out, across reboots (stop: $0 stop)"
     ;;
-  stop) systemctl --user stop "$unit.timer" ;;
+  stop)
+    systemctl --user disable --now --quiet "$unit.timer" 2>/dev/null || true
+    rm -f "$units/$unit.timer" "$units/$unit.service"
+    systemctl --user daemon-reload
+    echo "sampling stopped; samples kept in $out"
+    ;;
   *) echo "usage: $0 start|stop|sample|report" >&2; exit 2 ;;
 esac
