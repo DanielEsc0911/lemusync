@@ -9,5 +9,9 @@
   "statusOffline": "Sin conexión",
   "statusAttention": "Necesita tu atención",
   "statusError": "Algo salió mal",
-  "actionRetry": "Reintentar"
+  "actionRetry": "Reintentar",
+  "statusDownloading": "{count, plural, =1{Descargando 1 cambio} other{Descargando {count} cambios}}",
+  "actionSyncNow": "Sincronizar ahora",
+  "gamePlay": "Jugar",
+  "gameLastSynced": "Sincronizado {when}"
 }

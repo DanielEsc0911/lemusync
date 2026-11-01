@@ -44,5 +44,31 @@
   "actionRetry": "Try again",
   "@actionRetry": {
     "description": "Default label of the button that retries a failed action."
+  },
+  "statusDownloading": "{count, plural, =1{Downloading 1 change} other{Downloading {count} changes}}",
+  "@statusDownloading": {
+    "description": "Status while downloads are in flight.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "actionSyncNow": "Sync now",
+  "@actionSyncNow": {
+    "description": "Button that starts a sync right away."
+  },
+  "gamePlay": "Play",
+  "@gamePlay": {
+    "description": "Tooltip and label of the button that launches a game."
+  },
+  "gameLastSynced": "Synced {when}",
+  "@gameLastSynced": {
+    "description": "Caption on a game card. {when} is a preformatted time such as \"2 min ago\".",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
   }
 }

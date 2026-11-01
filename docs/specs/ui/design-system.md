@@ -60,6 +60,8 @@ The inventory grows with the code. Each component gets a widget test and goldens
 - `app/lib/design/components/progress_ring.dart`, `ring_painter.dart`: `ProgressRing` (determinate or indeterminate; seven tail segments painted by `RingPainter`; determinate lights `floor(value * 7)` segments, at least one when `value > 0`; the indeterminate ring repaints from the controller without rebuilding and stands still under reduced motion).
 - `app/lib/design/components/ls_banner.dart`: `LsBanner`, a raised panel with a tone strip, tone icon, message and optional action.
 - `app/lib/design/components/empty_state.dart`, `error_state.dart`: `EmptyState` (mark, title, hint, action) and `ErrorState` (icon, title, hint, retry; default label `actionRetry`).
+- `app/lib/design/components/status_hero.dart`: `StatusHero`, the Home status panel (face-button dot, or an indeterminate `ProgressRing` while scanning or syncing; headline is the status label, or the upload text, else the download text, while syncing; with both, the detail line adds the download text; optional Sync now).
+- `app/lib/design/components/game_card.dart`, `cartridge_border.dart`: `GameCard`, a cartridge (`CartridgeBorder`: rounded rectangle with a grip notch, 40 % of the width and `LsSpace.md` deep, on the top edge) with a sunken label recess for title and emulator, status dot, optional lease line, last-synced caption and Play. The bevel is the `LsSurface` gradient clipped to the cartridge shape. One merged semantics label: "title, emulator, status[, lease]".
 - `app/lib/design/design.dart`: barrel export. Test harness: `app/test/support/golden.dart` (`goldenMatrix`).
 
 ## Accessibility
