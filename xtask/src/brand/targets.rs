@@ -23,13 +23,14 @@ pub const SVGS: [(&str, &str); 2] = [
     ("brand/out/glyph.svg", "glyph"),
 ];
 
-pub const TRAY_STATES: [&str; 6] = [
-    "synced",
-    "syncing",
-    "paused",
-    "offline",
-    "attention",
-    "error",
+/// Tray state → the mark that draws it.
+pub const TRAY: [(&str, &str); 6] = [
+    ("synced", "tray-synced"),
+    ("syncing", "tray-syncing"),
+    ("paused", "tray-paused"),
+    ("offline", "tray-offline"),
+    ("attention", "tray-attention"),
+    ("error", "tray-error"),
 ];
 pub const TRAY_SIZES: [u32; 3] = [24, 32, 48];
 pub const ICO_SIZES: [u32; 7] = [16, 24, 32, 48, 64, 128, 256];
@@ -119,16 +120,8 @@ pub fn targets() -> Vec<Target> {
     for (path, px) in IN_APP {
         t.push(target(path.into(), "glyph", px, Format::Png));
     }
-    for state in TRAY_STATES {
+    for (state, mark) in TRAY {
         for px in TRAY_SIZES {
-            let mark = match state {
-                "synced" => "tray-synced",
-                "syncing" => "tray-syncing",
-                "paused" => "tray-paused",
-                "offline" => "tray-offline",
-                "attention" => "tray-attention",
-                _ => "tray-error",
-            };
             t.push(target(
                 format!("crates/daemon/assets/tray/{state}-{px}.argb"),
                 mark,
@@ -237,5 +230,23 @@ mod tests {
             .filter(|t| matches!(t.format, Format::Argb32))
             .count();
         assert_eq!(n, 18);
+    }
+
+    #[test]
+    fn tray_marks_follow_their_state() {
+        for t in targets()
+            .iter()
+            .filter(|t| matches!(t.format, Format::Argb32))
+        {
+            let state = t
+                .path
+                .rsplit('/')
+                .next()
+                .unwrap()
+                .split('-')
+                .next()
+                .unwrap();
+            assert_eq!(t.mark, format!("tray-{state}"), "{}", t.path);
+        }
     }
 }

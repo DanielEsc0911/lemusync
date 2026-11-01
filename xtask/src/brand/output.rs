@@ -28,6 +28,13 @@ pub fn write_all(root: &Path, outs: &[Output]) -> Result<(), Vec<String>> {
             continue;
         }
         let full = root.join(&out.path);
+        if fs::symlink_metadata(&full).is_ok_and(|m| m.file_type().is_symlink()) {
+            errors.push(format!(
+                "{}: is a symlink, refusing to write through it",
+                full.display()
+            ));
+            continue;
+        }
         if let Some(Err(e)) = full.parent().map(|parent| {
             fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))
         }) {
@@ -126,5 +133,17 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         assert!(write_all(dir.path(), &[out("../evil.txt", b"x")]).is_err());
         assert!(write_all(dir.path(), &[out("/abs.txt", b"x")]).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn refuses_to_write_through_a_symlink() {
+        let dir = tempfile::tempdir().unwrap();
+        let elsewhere = dir.path().join("elsewhere.txt");
+        fs::write(&elsewhere, b"keep").unwrap();
+        std::os::unix::fs::symlink(&elsewhere, dir.path().join("link.txt")).unwrap();
+        let e = write_all(dir.path(), &[out("link.txt", b"overwritten")]).unwrap_err();
+        assert!(e[0].contains("symlink"), "{e:?}");
+        assert_eq!(fs::read(&elsewhere).unwrap(), b"keep");
     }
 }

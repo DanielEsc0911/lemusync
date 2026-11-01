@@ -1,5 +1,8 @@
 # Lemur mark compositions. Colors name palette primitives from brand/tokens.toml.
 # Params are numbers substituted into {{param.x}}; "tail" is built in (drawn from [tail]).
+# [mark.<name>.tail] overrides any [tail] key for that mark (and its children). Colors: ring, stripe,
+# arrow (default stripe), tailHalo (+ param haloWidth). Derived params for parts: tailCx, tailCy, tailR,
+# tailWidth, tailStartX/Y, tailEndX/Y.
 schema = 1
 
 [tail]
@@ -13,7 +16,7 @@ rings = 7            # dark bands on the light tail
 
 [mark.app]
 parts = ["badge", "tail", "head", "mask", "eyes"]
-colors = { badge = "charcoal-800", bevel = "charcoal-700", fur = "stone-400", ring = "bone", stripe = "charcoal-950", eye = "amber-500", pupil = "charcoal-950" }
+colors = { badge = "charcoal-800", bevel = "charcoal-700", fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "bone", eye = "amber-500", pupil = "charcoal-950" }
 params = { badgeInset = 16, badgeSize = 224, badgeRadius = 56 }
 
 [mark.appSquare]     # iOS: full-bleed and opaque; the OS rounds the corners
@@ -22,13 +25,15 @@ params = { badgeInset = 0, badgeSize = 256, badgeRadius = 0 }
 
 [mark.glyph]         # in-app: no badge, transparent background
 parts = ["tail", "head", "mask", "eyes"]
-colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", eye = "amber-500", pupil = "charcoal-950" }
+colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "bone", eye = "amber-500", pupil = "charcoal-950" }
 
 [mark.tray]          # base for the six tray states, not an output itself
 extends = "glyph"
 parts = ["disc", "tail", "head", "mask", "eyes", "status-dot"]
-colors = { disc = "charcoal-800", dotRing = "charcoal-950", symbol = "bone" }
+colors = { disc = "charcoal-800", symbol = "bone" }
 params = { dotR = 56, hollow = 0 }
+# A shorter sweep ends the arrowhead on the upper right, clear of the status dot.
+tail = { sweep_deg = 200, rings = 5 }
 
 [mark.tray-synced]
 extends = "tray"

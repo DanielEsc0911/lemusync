@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use resvg::tiny_skia::Pixmap;
+use resvg::usvg;
 
 use tokens::Tokens;
 
@@ -26,6 +27,7 @@ fn mark_outputs(root: &Path, tokens: &Tokens) -> Result<Vec<output::Output>, Vec
     let marks = mark::load_marks(&root.join(MARKS))?;
     let parts = root.join(PARTS);
     let mut errors = Vec::new();
+    let mut trees: HashMap<&str, usvg::Tree> = HashMap::new();
     let mut svgs: HashMap<&str, String> = HashMap::new();
     let mut pixmaps: HashMap<(&str, u32), Pixmap> = HashMap::new();
     let mut outs = Vec::new();
@@ -34,9 +36,13 @@ fn mark_outputs(root: &Path, tokens: &Tokens) -> Result<Vec<output::Output>, Vec
     names.extend(tgts.iter().map(|t| t.mark));
     for name in names {
         if !svgs.contains_key(name) {
-            match mark::compose(name, &marks, tokens, &parts) {
-                Ok(svg) => {
+            match mark::compose(name, &marks, tokens, &parts).and_then(|svg| {
+                let tree = raster::parse(&svg).map_err(|e| format!("mark `{name}`: {e}"))?;
+                Ok((svg, tree))
+            }) {
+                Ok((svg, tree)) => {
                     svgs.insert(name, svg);
+                    trees.insert(name, tree);
                 }
                 Err(e) => errors.push(e),
             }
@@ -56,7 +62,7 @@ fn mark_outputs(root: &Path, tokens: &Tokens) -> Result<Vec<output::Output>, Vec
         if let Some(p) = pixmaps.get(&(mark, px)) {
             return Ok(p.clone());
         }
-        let p = raster::render(&svgs[mark], px)?;
+        let p = raster::render_tree(&trees[mark], px).map_err(|e| format!("mark `{mark}`: {e}"))?;
         pixmaps.insert((mark, px), p.clone());
         Ok(p)
     };
