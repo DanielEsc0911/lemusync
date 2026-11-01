@@ -32,6 +32,7 @@ Tasks in the same wave touch different files and can run in parallel. Wave 2 sta
 | 1 | A: Tasks 1–2 (`api`, `ipc`) · B: Tasks 3–5 (`core` machines, `engine` watcher and poller) · C: Tasks 6–7 (Linux tray, notifications, power, `service`) |
 | 2 | Task 8 (`engine::Service`, `lemusyncd`), then Task 9 (CLI over IPC) |
 | 3 | Task 10 (daemon budgets), Task 14 (`doctor` messages), Task 15 (auth-stop recovery); Tasks 11–13 are the maintainer's |
+| 4 | Task 16 (budgets follow-up) |
 
 ---
 
@@ -186,17 +187,30 @@ Tasks in the same wave touch different files and can run in parallel. Wave 2 sta
 
 **Deviation (as built):** `cargo xtask budgets [idle-secs]` runs the release daemon isolated with no repo (the binary only has the OS keystore) and one fake Cemu install granted, so the poll looks for Cemu's 3 process names; it is the only bundled profile with a loader, and the poll does one `/proc` walk whatever the number of emulators. Change → upload is measured in-process through `engine::Service` in the engine bench (1 s quiet period, reported as quiet + overhead). Binary-size contributors come from `nm` on an unstripped build, because `cargo bloat` isn't installed. Idle CPU is 0.71 %, over the ≈ 0 % budget (V-DAEMON-2 refuted); fixing the poll is left for a follow-up. The CI job `budgets` is non-blocking (`continue-on-error`) and its references are the PC's numbers.
 
-### Task 11: Windows and macOS (blocked: SP2 on those OSes)
+### Task 11: Windows and macOS (deferred: UI first, D40)
 
-Blocked until the maintainer runs SP2 there (V-DESK-1, V-DESK-3, V-REL-2, deferred 2026-10-08). Then: named pipe with a current-user DACL and client-token check; Task Scheduler logon task; `SMAppService` LaunchAgent from the app bundle; tray (`tray-icon` or native) and toasts/`UNUserNotificationCenter`; `SetThreadExecutionState` / IOPM assertions. Plan the steps from the spike results.
+Deferred until Phase 3 has a usable desktop UI ([D40](../../decisions.md#d40-the-desktop-ui-comes-before-the-windows-and-macos-daemon-2026-11-01)), and blocked until the maintainer runs SP2 there (V-DESK-1, V-DESK-3, V-REL-2, deferred 2026-10-08). Then: named pipe with a current-user DACL and client-token check; Task Scheduler logon task; `SMAppService` LaunchAgent from the app bundle; tray (`tray-icon` or native) and toasts/`UNUserNotificationCenter`; `SetThreadExecutionState` / IOPM assertions. Plan the steps from the spike results.
 
-### Task 12: Flatpak packaging strategy (maintainer decision)
+### Task 12: Flatpak packaging strategy (decided: document portal, D41)
 
-V-DESK-2: static `--filesystem=~/.var/app/<id>` per emulator, the document portal, or a native daemon package next to a Flatpak UI. Needs the maintainer's call and a decision entry.
+Decided 2026-11-01: the user grants each emulator folder through the FileChooser/Documents portal ([D41](../../decisions.md#d41-a-flatpak-lemusync-reaches-emulator-folders-through-the-document-portal-2026-11-01)). Spike SP11 proves it ([desktop V-DESK-2](../../specs/platforms/desktop.md#verify)) before the Flatpak is built; the build itself goes with the Phase 3 packaging, since the Flatpak ships the UI.
 
 ### Task 13: M2 soak (maintainer)
 
 72 hours on Linux (then Windows and macOS after Task 11) with sleep/resume cycles: no missed or late sync beyond the budgets, tray states verified ([roadmap](../roadmap.md#phase-2-desktop-daemon)). Record in the roadmap.
+
+`scripts/soak.sh start` samples the installed daemon every 10 minutes (CPU ticks, RSS, restarts, finished syncs and WARN/ERROR lines from its log) into `~/.local/state/lemusync/soak.csv`; `scripts/soak.sh report` sums it up. It never calls the daemon. Run it on a daemon built with Task 15, which logs each finished sync.
+
+**Linux so far (2026-11-01, maintainer):** the daemon starts with the session and runs with no restarts; real syncs work (BotW and Bayonetta 2 in Cemu). Not yet measured over days. Spot checks on the Fedora PC with the release build from 2026-10-29: 1.1 % CPU averaged over 2.5 h of use, 0.85 % over 20 s idle, peak RSS 30.4 MiB, all over target ([reliability §Budgets](../../specs/reliability.md#budgets)); Task 16 fixes them.
+
+### Task 16: idle CPU, memory and binary size back under budget
+
+**Found:** Task 10 (idle CPU 0.71 %, `lemusyncd` 18.2 MB vs 15 MB) and the Task 13 spot checks (CPU 0.85–1.1 %, peak RSS 30.4 MiB vs 30 MB).
+
+Improve first, then set expectations (maintainer, 2026-11-01): the budgets stay as they are until the daemon's core loops have been inspected and, where it pays, changed (for example a cheaper way to notice emulator starts than walking every process).
+
+- [ ] **Step 1:** find what wakes the idle daemon and what peaks its memory (the 3 s process poll walks every process with `sysinfo`; the tray and D-Bus clients; the engine's caches). Measure each change with `cargo xtask budgets` and `scripts/soak.sh`.
+- [ ] **Step 2:** fix within the budgets, or record why one can't be met and propose a budget change as a decision for the maintainer; specs; `just check`; commit `perf(daemon): bring idle CPU, memory and size under budget`.
 
 ### Task 14: friendly, localized `doctor` failures
 

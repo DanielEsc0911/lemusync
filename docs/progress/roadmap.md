@@ -19,7 +19,7 @@ Each phase ends with a demo of its exit criteria on real devices. Scenario IDs (
 ## Phase 2: Desktop daemon
 - **Goal:** always-on desktop sync with native presence. Plan: [phase-2-daemon](plans/phase-2-daemon.md), Linux first ([D36](../decisions.md#d36-phase-2-builds-the-daemon-on-linux-first-2026-10-28)).
 - **Deliverables:** `lemusyncd` + `ipc`; service install on all three OSes; tray/menu bar; actionable notifications (Fluent en/es); launcher and watch modes with process detection; sleep inhibition and resume handling; `doctor`.
-- **Exit (M2):** 72-hour soak on Windows, macOS and Linux with sleep/resume cycles. No missed or late sync beyond the budgets. Tray states verified.
+- **Exit (M2):** 72-hour soak on Windows, macOS and Linux with sleep/resume cycles. No missed or late sync beyond the budgets. Tray states verified. The Linux soak comes first; Windows and macOS follow Phase 3's first usable UI ([D40](../decisions.md#d40-the-desktop-ui-comes-before-the-windows-and-macos-daemon-2026-11-01)).
 
 ## Phase 3: Flutter app (desktop)
 - **Goal:** the beautiful, parity-locked UI.
