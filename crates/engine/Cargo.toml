@@ -46,8 +46,10 @@ criterion = { workspace = true }
 name = "budgets"
 harness = false
 
+# Linux keystore: our own Secret Service client (src/secret_service.rs) over libdbus built from
+# source, because `keyring` can't stop D-Bus activation or its own unlock calls.
 [target.'cfg(target_os = "linux")'.dependencies]
-keyring = { workspace = true, features = ["sync-secret-service", "crypto-rust", "vendored"] }
+dbus = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 keyring = { workspace = true, features = ["apple-native"] }

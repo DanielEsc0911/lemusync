@@ -48,7 +48,7 @@ Implemented in `crates/engine/src/{snapshot,upload}.rs`. Local history pruning i
 ## Always on (24/7)
 | Platform | Mechanism |
 |---|---|
-| Linux | systemd **user** unit, `Restart=on-failure`, `WantedBy=default.target` (not `graphical-session.target`, which XFCE never reaches). `StartLimitIntervalSec=600`, `StartLimitBurst=5` (the crash-loop rule below), `RestartSec=2`. Written by `lemusync service install` (`ExecStart` = the absolute `lemusyncd` next to `lemusync`, else on `PATH`). Headless: `service install --headless` adds `--headless` and runs `loginctl enable-linger`. Evidence: [desktop §Linux results](platforms/desktop.md#linux-results-sp2-xfce) |
+| Linux | systemd **user** unit, `Restart=on-failure`, `After=`/`PartOf=`/`WantedBy=graphical-session.target`, so it starts with the desktop session and stops at logout, never at boot under linger ([D39](../decisions.md#d39-the-desktop-unit-starts-with-the-graphical-session-2026-10-29); XFCE: V-DESK-6). `StartLimitIntervalSec=600`, `StartLimitBurst=5` (the crash-loop rule below), `RestartSec=2`. Written by `lemusync service install` (`ExecStart` = the absolute `lemusyncd` next to `lemusync`, else on `PATH`). Headless: `service install --headless` adds `--headless`, uses `WantedBy=default.target` and runs `loginctl enable-linger`. Evidence: [desktop §Linux results](platforms/desktop.md#linux-results-sp2-xfce), [§Secret Service activation race](platforms/desktop.md#secret-service-activation-race-under-linger) |
 | macOS | LaunchAgent (`KeepAlive`), registered from the app bundle via `SMAppService` |
 | Windows | Task Scheduler task at logon with restart-on-failure. A user-session process is needed for the tray and notifications |
 | Android | Launcher sessions + foreground service during transfers + WorkManager periodic sync ([platforms/android](platforms/android.md#background-work)) |
@@ -85,23 +85,31 @@ What the tests prove for [SC5](product.md) (crash, power loss or network drop mi
 | `list` is retried | `store` unit test `a_transient_list_is_retried` | | |
 
 ## Budgets
-Targets for the daemon on desktop. Measured in Phase 1/2 benchmarks and enforced in CI on regression (not yet: Phase 2, with the daemon).
+Targets for the daemon on desktop. Measured with `just bench` (engine benches, `crates/engine/benches/budgets.rs`, and the isolated release `lemusyncd`, `cargo xtask budgets`). CI's `budgets` job (`cargo xtask budgets-check`) fails on a >20 % regression of binary size and rescan time against the [CI reference](#ci-reference); it is a non-blocking report for now (`continue-on-error`). Idle CPU and latency stay manual.
 
-Measured 2026-10-21 on the Fedora PC (AMD Ryzen AI 7 350), release build, `just bench` (`crates/engine/benches/budgets.rs`). These are the engine-side numbers the daemon will inherit; there is no daemon yet.
+Measured 2026-10-21 on the Fedora PC (AMD Ryzen AI 7 350), release build, `just bench` (`crates/engine/benches/budgets.rs`). These are the engine-side numbers. The daemon column: 2026-10-29, same machine (Fedora 44, KDE Plasma 6 Wayland, 11 GB RAM), release build, `just bench`; the daemon runs with every location (home, XDG, `LEMUSYNC_TEST_ROOT`) under a tempdir.
 
-| Metric | Target | Measured (engine, 2026-10-21) |
-|---|---|---|
-| Idle CPU | ≈ 0% (event-driven, no busy polling) | not measured (needs the daemon) |
-| Idle memory (RSS) | ≤ 30 MB | 23 MiB: whole bench process (criterion included) with an open engine, from `/proc/self/statm` |
-| Cold start to ready | ≤ 300 ms | 0.22 ms: `Engine::open` on a populated state DB, repo unlocked from the keystore, one remote read (local-folder backend) |
-| Change detected → upload started | quiet period + ≤ 2 s | not measured (needs the daemon's watcher) |
-| Rescan of 10 000 files (warm) | ≤ 1 s | 21 ms: dry-run sync of one unchanged 10 001-file save folder |
-| Binary size (daemon) | ≤ 15 MB | 14.0 MB (14 016 632 bytes): `lemusync` CLI, Linux x86-64; close to the target. `lemusyncd` itself (2026-10-28, Phase 2 Task 8, release, x86-64): **17.5 MB (17 549 784 bytes), over the target**; Task 10 works on it |
+| Metric | Target | Measured (engine, 2026-10-21) | Measured (daemon, 2026-10-29) |
+|---|---|---|---|
+| Idle CPU | ≈ 0% (event-driven, no busy polling) | not measured (needs the daemon) | **0.71 %, over the target**: 426 ticks utime+stime over 600 s (`/proc/<pid>/stat`), `lemusyncd --headless`, no repo, one fake Cemu install granted so the 3 s poll looks for its 3 process names. Almost all of it is the poll's full `/proc` walk (`sysinfo` refreshes every process) |
+| Idle memory (RSS) | ≤ 30 MB | 23 MiB: whole bench process (criterion included) with an open engine, from `/proc/self/statm` | 12.7 MiB after 10 min idle (`VmRSS`), peak 14.1 MiB (`VmHWM`) |
+| Cold start to ready | ≤ 300 ms | 0.22 ms: `Engine::open` on a populated state DB, repo unlocked from the keystore, one remote read (local-folder backend) | spawn → IPC socket accepts: median 1.4 ms, max 2.2 ms (5 runs, no repo) |
+| Change detected → upload started | quiet period + ≤ 2 s | not measured (needs the daemon's watcher) | quiet period + 190 ms median, 206 ms max: save write → first `Uploading` progress event through `engine::Service` (the daemon's loop) with default timings and a 1 s quiet period, the 10 001-file folder, local-folder backend (5 writes; in-process, because the daemon binary can only use the OS keystore) |
+| Rescan of 10 000 files (warm) | ≤ 1 s | 21 ms: dry-run sync of one unchanged 10 001-file save folder | 22 ms (same bench) |
+| Binary size (daemon) | ≤ 15 MB | 14.0 MB (14 016 632 bytes): `lemusync` CLI, Linux x86-64 | **18.2 MB (18 230 232 bytes), 3.2 MB (21.5 %) over the target**. The CLI is 17.4 MB, so the daemon-only crates (zbus 0.78 MB + zvariant 0.37 MB, ksni 0.36 MB, notify-rust, tracing) add ≈ 0.8 MB; the rest is the engine stack. Largest in an unstripped build (`nm` sizes by crate; `cargo bloat` is not installed): monomorphised `core`/`alloc`/`std` 2.8 MB, unwind tables 1.2 MB, `lemusync_engine` 0.82 MB, SQLite 0.79 MB, `crc_fast` 0.73 MB (via `opendal-service-s3`), OpenDAL core + gdrive + s3 0.92 MB, `tokio` 0.50 MB, `rustls` + ring 0.77 MB |
+
+### CI reference
+Values `cargo xtask budgets-check` compares with (fails above +20 %). `lemusyncd_bytes` was measured on the Fedora PC 2026-10-29 (the binary size matches CI). `rescan_10k_ms` is calibrated for the GitHub `ubuntu-latest` runner, which runs the bench about 2.2× slower than the PC: 49.7 and 47.0 ms in the first two runs (2026-10-30). Update them in the commit that knowingly changes them (W1). The job stays non-blocking until more runs confirm them.
+
+| Key | Reference |
+|---|---|
+| `lemusyncd_bytes` | 18 230 232 |
+| `rescan_10k_ms` | 48.4 |
 
 ## Verify
 - **V-REL-1** logind sleep inhibition from a user service on GNOME and KDE (SP2). XFCE is done ([Sleep and resume](#sleep-and-resume)). GNOME and KDE deferred by the maintainer on 2026-10-08.
 - **V-REL-4** Whether polkit refuses logind inhibitors for a lingering service with no session (`allow_any` is `auth_admin_keep` for `inhibit-block-sleep`; the `idle` block and `sleep` delay locks used now are `yes`, but untested without a session) (SP2).
 - **V-REL-5** Desktop idle suspend actually waits while LemuSync holds its inhibit (needs an idle-timeout run): XFCE with `org.freedesktop.PowerManagement.Inhibit`; GNOME (gnome-settings-daemon follows `org.gnome.SessionManager` inhibitors, which the portal's `Inhibit` feeds) and KDE (PowerDevil's policy agent, which also reads logind inhibitors) from documentation only, unmeasured (SP2).
 - **V-REL-2** Windows logon task restart behaviour and tray from a scheduled task (SP2). Deferred by the maintainer on 2026-10-08.
-- **V-REL-3** Budgets are achievable with OpenDAL + tokio + SQLite. Engine side measured 2026-10-21 ([Budgets](#budgets)): cold start, rescan and RSS are well inside; binary size is 14.0 of 15 MB. Still open: idle CPU, change-to-upload latency and RSS of the daemon itself (Phase 2), and cold start against a remote backend.
+- **V-REL-3** Budgets are achievable with OpenDAL + tokio + SQLite. Measured 2026-10-29 ([Budgets](#budgets)): cold start, rescan, RSS and change-to-upload latency are well inside, for the engine and the daemon. Still open: idle CPU (0.71 %, the 3 s `sysinfo` walk of every process; needs a cheaper poll), binary size (18.2 of 15 MB), change-to-upload through the real daemon binary with a repo (needs a keystore the isolated run can use) and cold start against a remote backend.
 - **V-REL-6** Whether the I4 rename survives power loss on Windows without a folder fsync. `fsx::write_atomic` doesn't do that step on Windows (SP2).

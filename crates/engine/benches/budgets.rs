@@ -1,17 +1,27 @@
 //! Engine-side budgets (reliability §Budgets): cold start to ready, warm rescan of 10 000
-//! files (an unchanged save folder, dry-run sync), idle RSS of an open engine. Run with `just bench` (release). Not enforced in CI yet.
+//! files (an unchanged save folder, dry-run sync), idle RSS of an open engine, and, through
+//! `Service` (the daemon's loop), a save write to the start of its upload. Run with `just bench`
+//! (release); CI's `budgets` job compares the rescan time with the spec (`cargo xtask
+//! budgets-check`).
 #![allow(clippy::unwrap_used)] // bench setup: a failure here is a failed run
 
 #[path = "../tests/common/mod.rs"]
 mod common;
 
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use common::{FileSecrets, Pc, SAVE, env_with, map};
 use criterion::{Criterion, criterion_group, criterion_main};
-use lemusync_engine::{Engine, FakeProbe, MapChoice, SecretStore, SyncOptions};
+use lemusync_api::{Event, TransferPhase};
+use lemusync_engine::{
+    Engine, FakeProbe, MapChoice, SecretStore, Service, ServiceConfig, SyncOptions,
+};
 
 const FILES: usize = 10_000;
+/// Quiet period for the latency run; the budget is this plus at most 2 s.
+const QUIET: Duration = Duration::from_secs(1);
+const WRITES: usize = 5;
 
 /// Resident set size of this process in MiB, from `/proc/self/statm` (Linux only).
 fn rss_mib() -> Option<f64> {
@@ -68,6 +78,60 @@ fn budgets(c: &mut Criterion) {
             assert_eq!(r.streams.len(), 1);
         });
     });
+    change_to_upload(&rt, engine, &pc_save(&root));
+}
+
+fn pc_save(root: &std::path::Path) -> std::path::PathBuf {
+    root.join("home/.var/app/info.cemu.Cemu/data/Cemu")
+        .join(SAVE)
+        .join("80000001/0/game_data.sav")
+}
+
+/// Change detected → upload started, through `Service` with the default timings but a 1 s
+/// quiet period: the time from a save write to the first `Uploading` progress event, minus
+/// the quiet period. Printed, not a criterion bench (each sample waits out the quiet period).
+fn change_to_upload(rt: &tokio::runtime::Runtime, engine: Engine, file: &std::path::Path) {
+    let cfg = ServiceConfig {
+        quiet: QUIET,
+        ..ServiceConfig::default()
+    };
+    let (service, handle) = Service::new(engine, cfg);
+    let thread = service.spawn().unwrap();
+    let mut over = rt.block_on(async {
+        // The first sync at start, then the watcher is registered.
+        let mut rx = handle.subscribe();
+        while handle.status().last_sync_ms.is_none() {
+            let _ = tokio::time::timeout(Duration::from_millis(100), rx.recv()).await;
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        let mut over = Vec::new();
+        for i in 0..WRITES {
+            let mut rx = handle.subscribe();
+            let t0 = Instant::now();
+            std::fs::write(file, format!("change {i}")).unwrap();
+            loop {
+                let left = Duration::from_secs(30).saturating_sub(t0.elapsed());
+                let e = tokio::time::timeout(left, rx.recv()).await.unwrap();
+                if let Ok(Event::TransferProgress(p)) = e
+                    && p.phase == TransferPhase::Uploading
+                {
+                    break;
+                }
+            }
+            over.push(t0.elapsed().saturating_sub(QUIET));
+            // Let that sync finish before the next write.
+            tokio::time::sleep(Duration::from_secs(2)).await;
+        }
+        handle.stop().await;
+        over
+    });
+    drop(thread.join());
+    over.sort();
+    eprintln!(
+        "change detected -> upload started: quiet period + median {:.0} ms, max {:.0} ms ({WRITES} writes)",
+        over[WRITES / 2].as_secs_f64() * 1000.0,
+        over[WRITES - 1].as_secs_f64() * 1000.0
+    );
 }
 
 criterion_group! {

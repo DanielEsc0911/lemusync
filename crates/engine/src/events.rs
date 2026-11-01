@@ -124,6 +124,8 @@ pub fn outcome(e: &EngineError) -> SyncOutcome {
             ErrorClass::Auth => SyncOutcome::Auth,
             _ => SyncOutcome::Other,
         },
+        // Waiting for the desktop's keystore is not an error: retry with backoff.
+        EngineError::SecretsUnavailable(_) => SyncOutcome::Transient,
         _ => SyncOutcome::Other,
     }
 }
@@ -208,6 +210,10 @@ mod tests {
         );
         assert_eq!(outcome(&store(ErrorClass::Auth)), SyncOutcome::Auth);
         assert_eq!(outcome(&EngineError::Busy("x".into())), SyncOutcome::Other);
+        // Waiting for the desktop keystore: retried with backoff, never a blocking error.
+        let waiting = EngineError::SecretsUnavailable("no_owner".into());
+        assert_eq!(outcome(&waiting), SyncOutcome::Transient);
+        assert_eq!(error_kind(&waiting), None);
         assert_eq!(error_kind(&store(ErrorClass::Transient)), None);
         assert_eq!(
             error_kind(&store(ErrorClass::Quota)),

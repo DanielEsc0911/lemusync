@@ -9,6 +9,9 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 pub use zeroize::Zeroizing;
 
+#[cfg(target_os = "linux")]
+pub mod secret_service;
+
 pub const OBJECT_CONTEXT: &str = "lemusync v1 object";
 pub const BLOB_ID_CONTEXT: &str = "lemusync v1 blob-id";
 pub const STREAM_ID_CONTEXT: &str = "lemusync v1 stream-id";

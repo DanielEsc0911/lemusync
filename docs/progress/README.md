@@ -17,6 +17,6 @@
 | [phase-0-foundations](plans/phase-0-foundations.md) | 0 | In progress (Tasks 1–5 done; SP7 Linux done; SP6 in progress, Google Drive live done; SP1 in progress, Fedora, Android emulator and CachyOS done; SP3 skipped until an Android device is available; next M1 sync Fedora ↔ CachyOS) | 2026-10-18 |
 | [phase-1-first-sync](plans/phase-1-first-sync.md) | 1 | In progress (Tasks 1–17, 17b (S3/R2), 17c (retries) and 17d (only new blobs, live progress) done; Task 18 done: **M1a reached 2026-10-20**; Task 19 (SP8) done 2026-10-20: Cemu accepts LemuSync-written accounts, option c designed; Task 8 Step 8, Task 17b Step 6 and Task 17d Step 7 live runs are the maintainer's) | 2026-10-20 |
 | [phase-1b-play](plans/phase-1b-play.md) | 1 | Done (M1b reached 2026-10-21; SC5 network follow-ups done 2026-10-27; V-ACC-4 deferred) | 2026-10-27 |
-| [phase-2-daemon](plans/phase-2-daemon.md) | 2 | In progress (wave 1 done: Tasks 1–7; Task 8 Steps 1–2 done, Step 3 is the maintainer's; Task 9 done; next Task 10; Linux first, D36) | 2026-10-28 |
+| [phase-2-daemon](plans/phase-2-daemon.md) | 2 | In progress (wave 1 done: Tasks 1–7; Task 8 Steps 1–2 done, Step 3 is the maintainer's; Task 9 done; Task 10 done (idle CPU and binary size over budget); Linux first, D36) | 2026-10-29 |
 
 Status values: Not started · In progress · Blocked (reason) · Done (awaiting cleanup).

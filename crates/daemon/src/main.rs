@@ -12,7 +12,9 @@ use std::process::ExitCode;
 use lemusync_daemon::i18n::{I18n, s};
 use lemusync_daemon::logging;
 use lemusync_daemon::run::{Desktop, run};
-use lemusync_engine::{Engine, EngineEnv, EngineError, Locations, Service, ServiceConfig};
+use lemusync_engine::{
+    DisabledSecrets, Engine, EngineEnv, EngineError, Locations, Service, ServiceConfig,
+};
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -41,6 +43,8 @@ fn env() -> Result<EngineEnv, EngineError> {
     let mut env = EngineEnv::system()?;
     if let Some(root) = std::env::var_os("LEMUSYNC_TEST_ROOT").filter(|r| !r.is_empty()) {
         env.locations = Locations::under(Path::new(&root));
+        // Tests never reach the user's real keystore (security §Credentials).
+        env.secrets = std::sync::Arc::new(DisabledSecrets);
     }
     Ok(env)
 }

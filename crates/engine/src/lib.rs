@@ -27,6 +27,8 @@ mod repo_config;
 mod resolve;
 mod restore;
 mod scan;
+#[cfg(target_os = "linux")]
+mod secret_service;
 mod secrets;
 mod service;
 mod session;
@@ -61,7 +63,11 @@ pub use process::{Child, FakeProbe, Launcher, OsLauncher, ProcessProbe, SysinfoP
 pub use progress::{ConnectionSink, ProgressSink};
 pub use remote::only_player;
 pub use remote_play::{PROMPT_TIMEOUT, PlayCall, PlayFrame};
-pub use secrets::{KeyringSecrets, MemorySecrets, SecretStore};
+#[cfg(target_os = "linux")]
+pub use secret_service::{SECRETS_NAME, SecretServiceStore};
+#[cfg(not(target_os = "linux"))]
+pub use secrets::KeyringSecrets;
+pub use secrets::{DisabledSecrets, MemorySecrets, SecretStore, os_secrets};
 pub use service::{Service, ServiceConfig, ServiceHandle};
 pub use session::{DEFAULT_POLL, ProcessPoller};
 pub use setup::{GdriveLogin, JoinSecret, S3Backend};
@@ -78,14 +84,15 @@ pub struct EngineEnv {
 }
 
 impl EngineEnv {
-    /// The real OS: XDG locations, the OS keystore, `sysinfo`, default Argon2id.
+    /// The real OS: XDG locations, the OS keystore, `sysinfo`, default Argon2id. Opening an
+    /// engine never touches the keystore; secrets are read the first time a step needs them.
     ///
     /// # Errors
     /// `Config` when there is no home directory.
     pub fn system() -> Result<Self, EngineError> {
         Ok(Self {
             locations: Locations::from_os()?,
-            secrets: Arc::new(KeyringSecrets),
+            secrets: os_secrets(),
             processes: Arc::new(SysinfoProbe),
             kdf: KdfParams::DEFAULT,
         })
@@ -251,6 +258,31 @@ mod tests {
                 t: 1,
                 p: 1,
             },
+        }
+    }
+
+    /// Fails the test on any keystore call.
+    struct Untouchable;
+    impl SecretStore for Untouchable {
+        fn get(&self, n: &str) -> Result<Option<zeroize::Zeroizing<String>>, EngineError> {
+            panic!("keystore read at open: {n}")
+        }
+        fn set(&self, n: &str, _: &str) -> Result<(), EngineError> {
+            panic!("keystore write at open: {n}")
+        }
+        fn delete(&self, n: &str) -> Result<(), EngineError> {
+            panic!("keystore delete at open: {n}")
+        }
+    }
+
+    #[test]
+    fn opening_an_engine_never_touches_the_keystore() {
+        let dir = tempfile::tempdir().unwrap();
+        for _ in 0..2 {
+            let mut env = test_env(dir.path());
+            env.secrets = Arc::new(Untouchable);
+            let mut e = Engine::open(env).unwrap();
+            e.backend_add_fs(&dir.path().join("store")).unwrap();
         }
     }
 

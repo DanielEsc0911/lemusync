@@ -38,6 +38,7 @@ fn detail(e: &EngineError) -> String {
         | EngineError::EmulatorRunning(d)
         | EngineError::NotGranted(d)
         | EngineError::Secrets(d)
+        | EngineError::SecretsUnavailable(d)
         | EngineError::Data(d)
         | EngineError::Busy(d)
         | EngineError::NeedsDecision(d)

@@ -18,3 +18,12 @@ blake3 = { workspace = true }
 zeroize = { workspace = true }
 getrandom = { workspace = true }
 thiserror = { workspace = true }
+
+# The Secret Service transport session (src/secret_service.rs). Versions already in the tree
+# through `keyring`'s `crypto-rust`, so nothing new is downloaded.
+[target.'cfg(target_os = "linux")'.dependencies]
+aes = "0.8.4"
+cbc = { version = "0.1.2", features = ["alloc", "block-padding"] }
+hkdf = "0.12.4"
+num-bigint = "0.4.8"
+sha2 = "0.10.9"
