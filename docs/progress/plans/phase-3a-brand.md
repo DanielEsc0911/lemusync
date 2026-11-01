@@ -468,6 +468,8 @@ Art direction (good enough, not final; recognisable at 24 px): a ring-tailed lem
 
 (Redrawn after maintainer review 2026-11-01: the lemur is softer (round head, round ears, oval eye patches, big round eyes with a highlight) and used only above 48 px; a new SNES-style `controller` mark (amber eye buttons, red and blue buttons, striped thumb-stick) draws every output of 48 px or less and the tray. This needed a code change in `targets.rs`/`mod.rs` (`mark_for_size`), the exception to "no code change" below.)
 
+(Tray change after maintainer review 2026-11-01: no status dot; the tray uses the full-size controller and shows the state by recoloring the four face buttons, hollow rings for offline; the `status-dot` part and its `symbol`/`show*`/`dotFill` code were removed. See brand.md §Mark.)
+
 - [x] **Step 1:** draw the parts; `cargo xtask brand`.
 - [x] **Step 2: look.** Upscale with nearest-neighbour into the scratchpad (for example a few lines of Rust in a scratch test, or `magick x.png -filter point -resize 800% y.png` if ImageMagick is installed) and open with the Read tool: `app` at 1024, 192, 48; `appSquare` at 180; each tray state at 24 px on `#000000` and on `#FFFFFF` (composite the `.argb` data or the source mark rendered at 24). Pass when: a lemur is recognisable at 48 px; the six tray states are distinguishable at 24 px by symbol alone (convert to greyscale to check); the glyph reads on both backgrounds. Iterate parts/params until it passes; list what changed.
 - [x] **Step 3:** `cargo xtask brand --check`; `just check`; brand.md §Mark notes. Tick Steps 1–3; board "Tasks 1–5 done, Task 5 awaiting maintainer review".

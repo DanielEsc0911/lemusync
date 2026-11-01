@@ -1,9 +1,0 @@
-<circle cx="190" cy="190" r="{{param.dotR}}" fill="{{param.dotFill}}" stroke="{{color.status}}" stroke-width="12"/>
-<g fill="none" stroke="{{color.symbol}}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" transform="translate(190 190)">
-<g display="{{param.show1}}"><path d="M-24 2L-8 18L24 -16"/></g>
-<g display="{{param.show2}}"><path d="M-24 -12H20M10 -22L20 -12L10 -2M24 12H-20M-10 2L-20 12L-10 22"/></g>
-<g display="{{param.show3}}"><path d="M-14 -22V22M14 -22V22"/></g>
-<g display="{{param.show4}}"><path d="M-26 26L26 -26"/></g>
-<g display="{{param.show5}}"><path d="M0 -26V6M0 24V24"/></g>
-<g display="{{param.show6}}"><path d="M-22 -22L22 22M22 -22L-22 22"/></g>
-</g>

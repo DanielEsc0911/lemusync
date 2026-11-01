@@ -29,8 +29,8 @@ colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "b
 
 [mark.controller]    # small family (<= 48 px): SNES-style pad, two amber buttons are the eyes
 parts = ["controller"]
-colors = { body = "stone-300", outline = "charcoal-950", light = "bone", eye = "amber-500", red = "red-500", blue = "blue-500" }
-params = { cy = 128, scale = 1 }
+colors = { body = "stone-300", outline = "charcoal-950", light = "bone", btnTop = "blue-500", btnBottom = "red-500", btnLeft = "amber-500", btnRight = "amber-500" }
+params = { cy = 128, scale = 1, hollow = 0, btnR = 16 }   # hollow = 1: the four buttons are rings (stroke only)
 
 [mark.controllerSquare]   # iOS small sizes: full-bleed and opaque
 extends = "controller"
@@ -38,38 +38,30 @@ parts = ["bg", "controller"]
 colors = { bg = "charcoal-800" }
 params = { scale = 0.9 }
 
-[mark.tray]          # base for the six tray states, not an output itself
+[mark.tray]          # base for the six tray states, not an output itself: the state is the four button colors
 extends = "controller"
-parts = ["controller", "status-dot"]
-colors = { symbol = "bone" }
-params = { cy = 86, scale = 0.92, dotR = 52, hollow = 0 }
+params = { btnR = 20 }
 
 [mark.tray-synced]
 extends = "tray"
-colors = { status = "green-500" }
-params = { symbol = 1 }      # 1 check, 2 arrows, 3 bars, 4 slash, 5 !, 6 x
 
 [mark.tray-syncing]
 extends = "tray"
-colors = { status = "blue-500" }
-params = { symbol = 2 }
+colors = { btnTop = "blue-500", btnBottom = "blue-500", btnLeft = "blue-500", btnRight = "blue-500" }
 
 [mark.tray-paused]
 extends = "tray"
-colors = { status = "stone-400" }
-params = { symbol = 3 }
+colors = { btnTop = "stone-400", btnBottom = "stone-400", btnLeft = "stone-400", btnRight = "stone-400" }
 
-[mark.tray-offline]
+[mark.tray-offline]   # shape cue: rings, not discs
 extends = "tray"
-colors = { status = "stone-500" }
-params = { symbol = 4, hollow = 1 }
+colors = { btnTop = "charcoal-950", btnBottom = "charcoal-950", btnLeft = "charcoal-950", btnRight = "charcoal-950" }
+params = { hollow = 1, btnR = 16 }
 
 [mark.tray-attention]
 extends = "tray"
-colors = { status = "amber-500" }
-params = { symbol = 5 }
+colors = { btnTop = "amber-500", btnBottom = "amber-500", btnLeft = "amber-500", btnRight = "amber-500" }
 
 [mark.tray-error]
 extends = "tray"
-colors = { status = "red-500" }
-params = { symbol = 6 }
+colors = { btnTop = "red-500", btnBottom = "red-500", btnLeft = "red-500", btnRight = "red-500" }

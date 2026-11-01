@@ -218,7 +218,7 @@ fn hex(c: Rgb) -> String {
     format!("#{:02X}{:02X}{:02X}", c.0, c.1, c.2)
 }
 
-/// Checks the resolved mark: tail numbers, status-dot params, and every color against the palette.
+/// Checks the resolved mark: tail numbers, the `hollow` param, and every color against the palette.
 fn validate(name: &str, r: &Resolved, tokens: &Tokens) -> Result<(), String> {
     r.tail.validate(name)?;
     for (key, prim) in &r.colors {
@@ -228,59 +228,29 @@ fn validate(name: &str, r: &Resolved, tokens: &Tokens) -> Result<(), String> {
             ));
         }
     }
-    if r.parts.iter().any(|p| p == "status-dot") {
-        let whole = |v: f64| v.fract() == 0.0;
-        if let Some(&s) = r
-            .params
-            .get("symbol")
-            .filter(|s| !(whole(**s) && (1.0..=6.0).contains(*s)))
-        {
-            return Err(format!(
-                "mark `{name}`: param `symbol` must be a whole number from 1 to 6, not {s}"
-            ));
-        }
-        if let Some(&h) = r
-            .params
-            .get("hollow")
-            .filter(|h| !(whole(**h) && (0.0..=1.0).contains(*h)))
-        {
-            return Err(format!(
-                "mark `{name}`: param `hollow` must be 0 or 1, not {h}"
-            ));
-        }
+    if let Some(&h) = r
+        .params
+        .get("hollow")
+        .filter(|h| !(h.fract() == 0.0 && (0.0..=1.0).contains(*h)))
+    {
+        return Err(format!(
+            "mark `{name}`: param `hollow` must be 0 or 1, not {h}"
+        ));
     }
     Ok(())
 }
 
 /// The text values a part may use as `{{param.x}}`: numbers plus the derived ones.
-fn derive_params(
-    r: &Resolved,
-    tokens: &Tokens,
-    mark: &str,
-) -> Result<BTreeMap<String, String>, String> {
+fn derive_params(r: &Resolved) -> BTreeMap<String, String> {
     let mut p: BTreeMap<String, String> =
         r.params.iter().map(|(k, v)| (k.clone(), num(*v))).collect();
-    if let Some(symbol) = r.params.get("symbol") {
-        for i in 1..=6u32 {
-            let on = (symbol - f64::from(i)).abs() < 1e-9;
-            p.insert(
-                format!("show{i}"),
-                if on { "inline" } else { "none" }.to_string(),
-            );
-        }
-    }
     let hollow = r
         .params
         .get("hollow")
         .is_some_and(|h| (h - 1.0).abs() < 1e-9);
-    if hollow {
-        p.insert("dotFill".into(), "none".into());
-    } else if let Some(status) = r.colors.get("status") {
-        let c = tokens.primitive(status).ok_or_else(|| {
-            format!("mark `{mark}`: color `status`: unknown primitive `{status}`")
-        })?;
-        p.insert("dotFill".into(), hex(c));
-    }
+    let (fill_a, ring) = if hollow { ("0", "9") } else { ("1", "0") };
+    p.insert("btnFillA".into(), fill_a.into());
+    p.insert("btnRing".into(), ring.into());
     let t = &r.tail;
     let (sx, sy) = t.start();
     let (ex, ey) = t.end();
@@ -296,7 +266,7 @@ fn derive_params(
     ] {
         p.insert(k.into(), format!("{v:.2}"));
     }
-    Ok(p)
+    p
 }
 
 fn substitute(
@@ -431,7 +401,7 @@ pub fn compose(
 ) -> Result<String, String> {
     let r = resolve(name, marks, &mut Vec::new())?;
     validate(name, &r, tokens)?;
-    let derived = derive_params(&r, tokens, name)?;
+    let derived = derive_params(&r);
     let mut svg = format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\">\n{GENERATED}\n"
     );
@@ -506,17 +476,16 @@ mod tests {
     }
 
     #[test]
-    fn symbol_selects_one_group_and_hollow_clears_fill() {
-        let part = "{{param.show1}}{{param.show2}}{{param.show3}}|{{param.dotFill}}";
+    fn hollow_turns_button_fills_into_rings() {
+        let part = "{{param.btnFillA}}|{{param.btnRing}}";
         let (d, m) = fixture(
             &[("a", part)],
-            "[mark.s]\nparts=[\"a\"]\ncolors={status=\"green-500\"}\nparams={symbol=3}\n\
-             [mark.h]\nextends=\"s\"\nparams={hollow=1}\n",
+            "[mark.s]\nparts=[\"a\"]\n[mark.h]\nextends=\"s\"\nparams={hollow=1}\n",
         );
         let s = compose("s", &m, &tokens(), d.path()).unwrap();
-        assert!(s.contains("nonenoneinline|#2F9E55"), "{s}");
+        assert!(s.contains("1|0"), "{s}");
         let h = compose("h", &m, &tokens(), d.path()).unwrap();
-        assert!(h.contains("|none"), "{h}");
+        assert!(h.contains("0|9"), "{h}");
     }
 
     #[test]
@@ -740,21 +709,14 @@ mod tests {
     }
 
     #[test]
-    fn status_dot_params_are_validated() {
-        for (params, needle) in [
-            ("symbol=0", "symbol"),
-            ("symbol=7", "symbol"),
-            ("symbol=2.5", "symbol"),
-            ("symbol=1,hollow=2", "hollow"),
-        ] {
+    fn hollow_param_is_validated() {
+        for params in ["hollow=2", "hollow=0.5", "hollow=-1"] {
             let (d, m) = fixture(
-                &[("status-dot", "x")],
-                &format!(
-                    "[mark.m]\nparts=[\"status-dot\"]\ncolors={{status=\"green-500\"}}\nparams={{{params}}}\n"
-                ),
+                &[("a", "x")],
+                &format!("[mark.m]\nparts=[\"a\"]\nparams={{{params}}}\n"),
             );
             let e = compose("m", &m, &tokens(), d.path()).unwrap_err();
-            assert!(e.contains("`m`") && e.contains(needle), "{params}: {e}");
+            assert!(e.contains("`m`") && e.contains("hollow"), "{params}: {e}");
         }
     }
 
