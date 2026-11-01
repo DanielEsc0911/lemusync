@@ -288,10 +288,9 @@ impl Engine {
                 self.env.secrets.delete(probe)?;
                 Ok(v)
             });
-        checks.push(Check {
-            name: "keystore".into(),
-            ok: keystore.is_ok(),
-            detail: keystore.err().map(|e| e.to_string()).unwrap_or_default(),
+        checks.push(match keystore {
+            Ok(_) => passed("keystore", String::new()),
+            Err(e) => failed("keystore", &e),
         });
         let backend = match self.store() {
             Ok(s) => s
@@ -307,17 +306,25 @@ impl Engine {
                 .map_err(EngineError::from),
             Err(e) => Err(e),
         };
-        checks.push(Check {
-            name: "backend".into(),
-            ok: backend.is_ok(),
-            detail: backend.map_or_else(|e| e.to_string(), str::to_owned),
+        let backend_ok = backend.is_ok();
+        checks.push(match backend {
+            Ok(found) => passed("backend", found.into()),
+            Err(e) => failed("backend", &e),
         });
         if self.config.repo.is_some() {
-            let unlocked = self.ensure_repo().await;
-            checks.push(Check {
-                name: "repo".into(),
-                ok: unlocked.is_ok(),
-                detail: unlocked.err().map(|e| e.to_string()).unwrap_or_default(),
+            // One cause, one line: a broken storage would only fail the repo check again.
+            checks.push(if backend_ok {
+                match self.ensure_repo().await {
+                    Ok(()) => passed("repo", String::new()),
+                    Err(e) => failed("repo", &e),
+                }
+            } else {
+                Check {
+                    name: "repo".into(),
+                    ok: false,
+                    detail: String::new(),
+                    code: Some("skipped".into()),
+                }
             });
         }
         for (profile, install, discovery) in self.installs()? {
@@ -325,6 +332,7 @@ impl Engine {
                 name: format!("{} folder", profile.id),
                 ok: discovery.is_some(),
                 detail: install.base.display().to_string(),
+                code: None,
             });
             let names = profile
                 .platforms
@@ -340,11 +348,36 @@ impl Engine {
                 } else {
                     "closed".into()
                 },
+                code: None,
             });
         }
         Ok(DoctorReport {
             api_version: API_VERSION,
             checks,
         })
+    }
+}
+
+fn passed(name: &str, detail: String) -> Check {
+    Check {
+        name: name.into(),
+        ok: true,
+        detail,
+        code: None,
+    }
+}
+
+/// A failed check: the error's stable code; `detail` is the engine payload, or for storage
+/// errors the provider text (already redacted by `StoreError`), never shown as the message.
+fn failed(name: &str, e: &EngineError) -> Check {
+    let detail = match e {
+        EngineError::Store(s) => s.message().to_owned(),
+        _ => e.payload(),
+    };
+    Check {
+        name: name.into(),
+        ok: false,
+        detail,
+        code: Some(e.code().into()),
     }
 }

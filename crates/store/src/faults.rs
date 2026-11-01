@@ -15,6 +15,8 @@ pub enum Fault {
     Transient,
     /// Do the real call, then report `Transient` (a lost response).
     TransientAfterWrite,
+    /// Fail before touching the backend with this class and provider-like text.
+    Fail(ErrorClass),
 }
 
 #[derive(Default)]
@@ -98,6 +100,10 @@ impl Faults {
         match fault {
             Some(Fault::Transient) => Err(StoreError::new(ErrorClass::Transient, "injected")),
             Some(Fault::TransientAfterWrite) => Ok(true),
+            Some(Fault::Fail(class)) => Err(StoreError::new(
+                class,
+                "Unexpected (permanent) at stat, context: { url: https://acct.r2.example/b?X-Amz-Signature=FAKESIG }",
+            )),
             None if plan.cut_from.is_some_and(|at| n >= at)
                 || plan.outage.is_some_and(|(a, b)| (a..b).contains(&n)) =>
             {

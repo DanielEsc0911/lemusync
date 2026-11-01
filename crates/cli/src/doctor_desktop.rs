@@ -13,6 +13,7 @@ fn check(name: &str, ok: bool, detail: impl Into<String>) -> Check {
         name: name.into(),
         ok,
         detail: detail.into(),
+        code: None,
     }
 }
 

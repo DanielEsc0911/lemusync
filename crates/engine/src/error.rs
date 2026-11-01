@@ -48,6 +48,30 @@ pub enum EngineError {
 }
 
 impl EngineError {
+    /// The data part (a message key, `key:data`, a path, an id), never translated. Empty for
+    /// storage errors: their provider text is a separate, redacted detail.
+    #[must_use]
+    pub fn payload(&self) -> String {
+        match self {
+            Self::Usage(d)
+            | Self::Config(d)
+            | Self::Io(d)
+            | Self::Locked(d)
+            | Self::EmulatorRunning(d)
+            | Self::NotGranted(d)
+            | Self::Secrets(d)
+            | Self::SecretsUnavailable(d)
+            | Self::Data(d)
+            | Self::Busy(d)
+            | Self::NeedsDecision(d)
+            | Self::LeaseHeld(d)
+            | Self::Daemon(d) => d.clone(),
+            Self::Crypto(c) => c.to_string(),
+            Self::NotSetUp(d) | Self::Injected(d) => (*d).to_owned(),
+            Self::Store(_) | Self::Unlock | Self::NeedsConfirmation => String::new(),
+        }
+    }
+
     #[must_use]
     pub fn code(&self) -> &'static str {
         match self {

@@ -64,7 +64,7 @@ help-doctor = Check the keystore, the storage and the emulator folders.
 error-usage = { $detail }
 error-config = The config file is invalid: { $detail }
 error-backend = The storage returned an error. Try again; if it keeps happening, run `lemusync doctor`.
-error-backend_auth = The storage login failed. Run `lemusync backend login`.
+error-backend_auth = Your storage rejected the login. On S3, the access key was rejected: check it or make a new one, then run `lemusync backend add s3` again. On Google Drive, run `lemusync backend login`.
 error-backend_offline = Can't reach your storage. Check your internet connection and try again. Your saves on this device are safe.
 error-backend_quota = Your storage is full. Free up space or get more, then try again. Your saves on this device are safe.
 error-details = Details: { $detail }
@@ -242,6 +242,8 @@ history-backup = local backup { $name }
 
 doctor-ok = ok
 doctor-fail = FAILED
+doctor-skip = skipped
+doctor-skipped-backend = Not checked: the storage check above failed.
 doctor-check = { $status } { $name } { $detail }
 
 help-play = Play a game: get the newest save, take the lease, start the emulator, upload when it closes.

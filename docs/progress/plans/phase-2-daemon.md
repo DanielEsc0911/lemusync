@@ -223,8 +223,10 @@ Improve first, then set expectations (maintainer, 2026-11-01): the budgets stay 
 - One cause, one line: when the backend check fails, `repo storage` says it was skipped (or is folded in), not a second dump of the same error.
 - An S3 401/403 maps to `backend_auth`; its message names the fix for S3 (the access key was rejected: check or regenerate it, then `lemusync backend add`/`login`), not only the OAuth wording. Check the `auth` class mapping in `store` covers S3 `Unauthorized`/`AccessDenied`/`InvalidAccessKeyId`/`SignatureDoesNotMatch`.
 
-- [ ] **Step 1: failing tests:** `doctor` against a store that fails with each class (`auth`, `transient`, `quota`, `permanent`) gives the right `code`, a localized line in en and es, no provider text outside `detail`, and one failure line for one cause; S3 401 → `backend_auth`.
-- [ ] **Step 2:** implement; pass; clippy; i18n-check; specs; `just check`; commit `fix(cli): show doctor failures as friendly, localized messages`.
+- [x] **Step 1: failing tests:** `doctor` against a store that fails with each class (`auth`, `transient`, `quota`, `permanent`) gives the right `code`, a localized line in en and es, no provider text outside `detail`, and one failure line for one cause; S3 401 → `backend_auth`.
+- [x] **Step 2:** implement; pass; clippy; i18n-check; specs; `just check`; commit `fix(cli): show doctor failures as friendly, localized messages`.
+
+**As built:** `Check` gained `code: Option<String>` (`#[serde(default)]`, omitted when `None`); the existing `detail` holds the redacted provider text or engine payload. The repo check shows `skipped` rather than being folded in. `EngineError::payload()` moved from the CLI into `error.rs` so `doctor` can fill `detail`. Tests use a new test-only `Fault::Fail(ErrorClass)` in `store` (`crates/engine/tests/doctor.rs`). The S3 fix is in the shared `error-backend_auth` message (S3 and Drive wording), so every `backend_auth` error names it. `store` also maps a bare `status: 403` to `auth` (after the Drive quota/rate-limit checks).
 
 ### Task 15: recover from an auth stop, show manual syncs, log recovery
 
