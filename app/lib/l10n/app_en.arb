@@ -40,5 +40,9 @@
   "statusError": "Something went wrong",
   "@statusError": {
     "description": "Status label when a sync failed."
+  },
+  "actionRetry": "Try again",
+  "@actionRetry": {
+    "description": "Default label of the button that retries a failed action."
   }
 }

@@ -516,10 +516,10 @@ Art direction (good enough, not final; recognisable at 24 px): a ring-tailed lem
   - `LsBanner({Key? key, required LsStatus tone, required String message, String? actionLabel, VoidCallback? onAction})`: `LsSurface(raised)` with a leading `tone.color` strip of width `LsSpace.xs`, the tone icon, message (`LsType.body`), optional `TextButton`.
   - `EmptyState({Key? key, required String title, String? body, Widget? action})`: `Image.asset('assets/brand/mark.png', width: LsSize.mark, height: LsSize.mark, excludeFromSemantics: true)`, title (`LsType.title`), body (`onSurfaceMuted`), action.
   - `ErrorState({Key? key, required String title, String? body, String? retryLabel, VoidCallback? onRetry})`: `LsIcons.error` in `danger`, title, body, `FilledButton` retry.
-- [ ] **Step 1: failing tests** (`setUpAll(loadBrandFonts)`): `ProgressRing` determinate at 0.5 paints (golden), indeterminate has running animations, with `disableAnimations` has none (`tester.hasRunningAnimations`); every component at 200 % text scale and width 320 in all four themes has no overflow; semantics labels; tappables pass `meetsGuideline(androidTapTargetGuideline)` and `textContrastGuideline`; `onAction`/`onRetry` fire. Goldens via `goldenMatrix` (pass `precache: [AssetImage('assets/brand/mark.png')]` for `EmptyState`).
-- [ ] **Step 2:** `flutter test` → FAIL. **Step 3:** implement. 
-- [ ] **Step 4:** update goldens, open every new one, `flutter test`, `cargo xtask brand --check`, `just check`.
-- [ ] **Step 5:** design-system §Components (Code paths); tick; board "Tasks 1–7 done". **Commit** `feat(app): add the progress ring, banner, empty and error states`.
+- [x] **Step 1: failing tests** (`setUpAll(loadBrandFonts)`): `ProgressRing` determinate at 0.5 paints (golden), indeterminate has running animations, with `disableAnimations` has none (`tester.hasRunningAnimations`); every component at 200 % text scale and width 320 in all four themes has no overflow; semantics labels; tappables pass `meetsGuideline(androidTapTargetGuideline)` and `textContrastGuideline`; `onAction`/`onRetry` fire. Goldens via `goldenMatrix` (pass `precache: [AssetImage('assets/brand/mark.png')]` for `EmptyState`).
+- [x] **Step 2:** `flutter test` → FAIL. **Step 3:** implement. 
+- [x] **Step 4:** update goldens, open every new one, `flutter test`, `cargo xtask brand --check`, `just check`.
+- [x] **Step 5:** design-system §Components (Code paths); tick; board "Tasks 1–7 done". **Commit** `feat(app): add the progress ring, banner, empty and error states`.
 
 ### Task 8: `StatusHero` and the cartridge `GameCard`
 

@@ -8,5 +8,6 @@
   "statusPaused": "Sincronización en pausa",
   "statusOffline": "Sin conexión",
   "statusAttention": "Necesita tu atención",
-  "statusError": "Algo salió mal"
+  "statusError": "Algo salió mal",
+  "actionRetry": "Reintentar"
 }
