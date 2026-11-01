@@ -32,21 +32,6 @@ pub enum TrayIcon {
     Error,
 }
 
-impl TrayIcon {
-    /// The freedesktop symbolic icon name used on Linux.
-    #[must_use]
-    pub fn freedesktop_name(self) -> &'static str {
-        match self {
-            Self::Synced => "emblem-ok-symbolic",
-            Self::Syncing => "emblem-synchronizing-symbolic",
-            Self::Paused => "media-playback-pause-symbolic",
-            Self::Offline => "network-offline-symbolic",
-            Self::Attention => "dialog-warning-symbolic",
-            Self::Error => "dialog-error-symbolic",
-        }
-    }
-}
-
 /// Everything the tray shows, already localised (built by `view::tray_view`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrayView {
@@ -300,19 +285,5 @@ mod tests {
         };
         assert_eq!(notifier.notify(n.clone()), NoticeId(1));
         assert_eq!(notifier.notify(n), NoticeId(2));
-    }
-
-    #[test]
-    fn icons_are_symbolic() {
-        for icon in [
-            TrayIcon::Synced,
-            TrayIcon::Syncing,
-            TrayIcon::Paused,
-            TrayIcon::Offline,
-            TrayIcon::Attention,
-            TrayIcon::Error,
-        ] {
-            assert!(icon.freedesktop_name().ends_with("-symbolic"));
-        }
     }
 }

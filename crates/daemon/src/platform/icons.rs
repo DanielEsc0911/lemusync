@@ -4,7 +4,8 @@
 
 use super::TrayIcon;
 
-/// The installed app icon name (nfpm puts it in hicolor 256); used by notifications.
+/// The app icon name notifications ask for. It resolves only when the icon is installed into
+/// the icon theme (rpm and deb put it in hicolor 256); otherwise the host shows its generic icon.
 pub const APP_ICON_NAME: &str = "io.github.danielesc0911.lemusync";
 
 macro_rules! pixmaps {
@@ -70,15 +71,118 @@ mod tests {
     }
 
     #[test]
-    fn states_look_different() {
-        assert_ne!(
-            TrayIcon::Synced.pixmaps()[0].1,
-            TrayIcon::Error.pixmaps()[0].1
-        );
+    fn every_pair_of_states_differs_at_every_size() {
+        for (a, ia) in ALL.iter().enumerate() {
+            for ib in &ALL[a + 1..] {
+                for k in 0..3 {
+                    assert_ne!(ia.pixmaps()[k].1, ib.pixmaps()[k].1, "{ia:?} {ib:?} #{k}");
+                }
+            }
+        }
+    }
+
+    /// Button centres in the mark's 256 user space (`brand/mark/parts/controller.svg`, whose
+    /// group shifts y by -5): top, bottom, left, right.
+    const BUTTONS: [(&str, usize, usize); 4] = [
+        ("top", 188, 93),
+        ("bottom", 188, 153),
+        ("left", 158, 123),
+        ("right", 218, 123),
+    ];
+    const BODY: [u8; 3] = [0xC6, 0xC1, 0xB9]; // stone-300
+    const BLUE: [u8; 3] = [0x2F, 0x74, 0xD0]; // blue-500
+    const RED: [u8; 3] = [0xD3, 0x40, 0x2F]; // red-500
+    const AMBER: [u8; 3] = [0xE8, 0x9B, 0x2D]; // amber-500
+    const STONE: [u8; 3] = [0xA9, 0xA3, 0x9B]; // stone-400
+
+    /// `[A, R, G, B]` at the centre of a button, for the pixmap of `size` px.
+    fn at(icon: TrayIcon, size: usize, x: usize, y: usize) -> [u8; 4] {
+        let (_, bytes) = icon
+            .pixmaps()
+            .into_iter()
+            .find(|(s, _)| usize::try_from(*s).unwrap() == size)
+            .unwrap();
+        let (px, py) = (x * size / 256, y * size / 256);
+        let o = 4 * (py * size + px);
+        bytes[o..o + 4].try_into().unwrap()
+    }
+
+    fn assert_buttons(icon: TrayIcon, want: [[u8; 3]; 4]) {
+        for size in [24, 32, 48] {
+            for ((name, x, y), rgb) in BUTTONS.iter().zip(want) {
+                let [a, r, g, b] = at(icon, size, *x, *y);
+                assert_eq!(
+                    (a, [r, g, b]),
+                    (255, rgb),
+                    "{icon:?} {name} button at {size}px"
+                );
+            }
+        }
     }
 
     #[test]
-    fn notification_icon_is_the_app_icon() {
-        assert_eq!(APP_ICON_NAME, "io.github.danielesc0911.lemusync");
+    fn synced_keeps_the_brand_colours() {
+        assert_buttons(TrayIcon::Synced, [BLUE, RED, AMBER, AMBER]);
+    }
+
+    #[test]
+    fn syncing_buttons_are_all_blue() {
+        assert_buttons(TrayIcon::Syncing, [BLUE; 4]);
+    }
+
+    #[test]
+    fn error_buttons_are_all_red() {
+        assert_buttons(TrayIcon::Error, [RED; 4]);
+    }
+
+    #[test]
+    fn attention_buttons_are_all_amber() {
+        assert_buttons(TrayIcon::Attention, [AMBER; 4]);
+    }
+
+    #[test]
+    fn paused_buttons_are_all_stone() {
+        assert_buttons(TrayIcon::Paused, [STONE; 4]);
+    }
+
+    #[test]
+    fn offline_buttons_are_hollow_rings() {
+        // The ring's centre shows the pad body, not a colour disc.
+        assert_buttons(TrayIcon::Offline, [BODY; 4]);
+    }
+
+    #[test]
+    fn corners_are_transparent() {
+        for icon in ALL {
+            for (size, bytes) in icon.pixmaps() {
+                assert_eq!(bytes[0], 0, "{icon:?} {size}px top-left alpha");
+            }
+        }
+    }
+
+    #[test]
+    fn notification_icon_is_the_installed_icon() {
+        let desktop =
+            include_str!("../../../../packaging/linux/io.github.danielesc0911.lemusync.desktop");
+        let icon = desktop
+            .lines()
+            .find_map(|l| l.strip_prefix("Icon="))
+            .unwrap();
+        assert_eq!(APP_ICON_NAME, icon.trim());
+
+        let nfpm = include_str!("../../../../packaging/linux/nfpm.yaml");
+        let dst = nfpm
+            .lines()
+            .filter_map(|l| l.trim().strip_prefix("dst:"))
+            .map(str::trim)
+            .find(|d| d.contains("/icons/hicolor/"))
+            .unwrap();
+        let stem = dst
+            .rsplit('/')
+            .next()
+            .unwrap()
+            .strip_suffix(".png")
+            .unwrap();
+        assert_eq!(APP_ICON_NAME, stem);
     }
 }

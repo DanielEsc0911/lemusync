@@ -11,7 +11,7 @@ Desktop is where most emulators run. The daemon gives true 24/7 sync with native
 | Arch | x64, arm64 | Apple Silicon + Intel (universal) | x86_64, arm64 |
 | Service | Task Scheduler logon task | LaunchAgent via `SMAppService` | systemd user unit |
 | Tray | Notification area | Menu bar extra | StatusNotifierItem / AppIndicator |
-| Notifications | Toasts with actions | `UNUserNotificationCenter` | freedesktop notifications with actions |
+| Notifications | Toasts with actions | `UNUserNotificationCenter` | freedesktop notifications with actions (app icon by theme name: shown only when installed via rpm/deb; dev, cargo and AppImage show the host's generic icon) |
 | Sleep inhibition | `SetThreadExecutionState` | IOPM assertion | logind `Inhibit` |
 | Process detection | Process list | Process list | `/proc` (Flatpak apps visible too) |
 | Keystore | Credential Manager | Keychain | Secret Service |

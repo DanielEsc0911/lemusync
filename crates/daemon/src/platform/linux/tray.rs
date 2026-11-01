@@ -21,7 +21,21 @@ impl Tray for LinuxTray {
 
 struct Item {
     view: Option<TrayView>,
+    /// The pixmaps of the current icon, built once per icon change: ksni reads `icon_pixmap`
+    /// on every `handle.update`, so rebuilding there would copy ~15 KB each time.
+    icons: Vec<ksni::Icon>,
     tx: mpsc::Sender<TrayAction>,
+}
+
+fn build_icons(icon: TrayIcon) -> Vec<ksni::Icon> {
+    icon.pixmaps()
+        .into_iter()
+        .map(|(size, data)| ksni::Icon {
+            width: size,
+            height: size,
+            data: data.to_vec(),
+        })
+        .collect()
 }
 
 fn item(label: &str, action: TrayAction) -> MenuItem<Item> {
@@ -48,23 +62,14 @@ impl ksni::Tray for Item {
         "LemuSync".into()
     }
 
-    // Empty: the brand pixmaps below are the icon (a theme name would win over them).
+    // Empty on purpose: the SNI spec says a host falls back to `IconPixmap` when `IconName` is
+    // empty, and a non-empty theme name would win over the brand pixmaps below.
     fn icon_name(&self) -> String {
         String::new()
     }
 
     fn icon_pixmap(&self) -> Vec<ksni::Icon> {
-        self.view
-            .as_ref()
-            .map_or(TrayIcon::Synced, |v| v.icon)
-            .pixmaps()
-            .into_iter()
-            .map(|(size, data)| ksni::Icon {
-                width: size,
-                height: size,
-                data: data.to_vec(),
-            })
-            .collect()
+        self.icons.clone()
     }
 
     fn tool_tip(&self) -> ToolTip {
@@ -129,13 +134,29 @@ impl ksni::Tray for Item {
 pub fn start_tray(tx: mpsc::Sender<TrayAction>) -> Box<dyn Tray> {
     let (views, mut rx) = watch::channel(None);
     tokio::spawn(async move {
-        let item = Item { view: None, tx };
+        let item = Item {
+            view: None,
+            icons: build_icons(TrayIcon::Synced),
+            tx,
+        };
         let Ok(handle) = item.assume_sni_available(true).spawn().await else {
             return; // No session bus: tray stays off (notifications and app still work).
         };
         while rx.changed().await.is_ok() {
             let view = rx.borrow_and_update().clone();
-            if handle.update(|t| t.view = view).await.is_none() {
+            let updated = handle
+                .update(|t| {
+                    if t.view == view {
+                        return; // Nothing changed: no icon rebuild, ksni sees no diff.
+                    }
+                    let icon = view.as_ref().map_or(TrayIcon::Synced, |v| v.icon);
+                    if t.view.as_ref().map_or(TrayIcon::Synced, |v| v.icon) != icon {
+                        t.icons = build_icons(icon);
+                    }
+                    t.view = view;
+                })
+                .await;
+            if updated.is_none() {
                 return;
             }
         }
