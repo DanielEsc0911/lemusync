@@ -5,12 +5,14 @@
 
 use std::collections::BTreeMap;
 
-use lemusync_api::{ErrorKind, Event, Status, StatusFacts, TransferPhase, TransferProgress};
+use lemusync_api::{
+    ErrorKind, Event, Status, StatusFacts, StatusState, TransferPhase, TransferProgress,
+};
 use lemusync_core::schedule::SyncOutcome;
 use lemusync_store::ErrorClass;
 use tokio::sync::{broadcast, watch};
 
-use crate::EngineError;
+use crate::{EngineError, redact};
 
 /// Events a slow subscriber may lag behind before it misses some (it then gets `Lagged`).
 pub const EVENT_BUFFER: usize = 256;
@@ -21,6 +23,8 @@ pub(crate) struct StatusModel {
     transfers: BTreeMap<(String, String, String), (TransferPhase, u64)>,
     status: watch::Sender<Status>,
     events: broadcast::Sender<Event>,
+    /// What set off the work now running, for the log line when `error` or `offline` ends.
+    cause: &'static str,
 }
 
 impl StatusModel {
@@ -33,7 +37,18 @@ impl StatusModel {
             transfers: BTreeMap::new(),
             status,
             events,
+            cause: "sync",
         }
+    }
+
+    /// What triggered the coming work (`manual`, `credentials`, `resume`…), logged when the
+    /// status leaves `error` or `offline`. Back to `sync` with [`StatusModel::clear_cause`].
+    pub fn set_cause(&mut self, cause: &'static str) {
+        self.cause = cause;
+    }
+
+    pub fn clear_cause(&mut self) {
+        self.cause = "sync";
     }
 
     pub fn status(&self) -> Status {
@@ -57,6 +72,18 @@ impl StatusModel {
     pub fn update(&mut self, f: impl FnOnce(&mut StatusFacts)) {
         f(&mut self.facts);
         let next = Status::from_facts(&self.facts);
+        let from = self.status.borrow().state;
+        if matches!(from, StatusState::Error | StatusState::Offline) && next.state != from {
+            tracing::info!(
+                "{}",
+                redact(&format!(
+                    "status left {} for {} ({})",
+                    state_name(from),
+                    state_name(next.state),
+                    self.cause
+                ))
+            );
+        }
         if *self.status.borrow() != next {
             self.status.send_replace(next.clone());
             self.emit(Event::StatusChanged(next));
@@ -96,6 +123,16 @@ impl StatusModel {
         });
     }
 
+    /// A manual or credential-triggered sync starts: `syncing` at once, before any request,
+    /// whatever showed before (an `error` included; the sync sets it again if it still holds).
+    pub fn sync_requested(&mut self) {
+        self.transfers.clear();
+        self.update(|f| {
+            f.error = None;
+            f.syncing = true;
+        });
+    }
+
     /// A sync (or check) starts: `scanning` until a transfer begins.
     pub fn sync_started(&mut self) {
         self.transfers.clear();
@@ -113,6 +150,15 @@ impl StatusModel {
             f.bytes = 0;
         });
     }
+}
+
+/// The state's wire name (`synced`, `error`…), for log lines.
+#[must_use]
+pub fn state_name(s: StatusState) -> String {
+    serde_json::to_value(s)
+        .ok()
+        .and_then(|v| v.as_str().map(str::to_owned))
+        .unwrap_or_default()
 }
 
 /// The scheduler outcome of a failed sync.
@@ -153,7 +199,6 @@ pub fn error_kind(e: &EngineError) -> Option<ErrorKind> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lemusync_api::StatusState;
     use lemusync_store::StoreError;
 
     fn progress(phase: TransferPhase, game: &str) -> TransferProgress {

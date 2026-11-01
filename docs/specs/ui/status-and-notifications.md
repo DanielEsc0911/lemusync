@@ -19,7 +19,7 @@ Emitted by the engine as `StatusChanged` / `SessionChanged` events.
 | `error` | kind (auth, quota, permission, config) | "Storage sign-in expired" / "La sesión del almacenamiento expiró" |
 | session overlay | game, player, device, started | "Playing BotW · Daniel" / "Jugando BotW · Daniel" |
 
-Priority when several apply: `error` > `attention` > `syncing` > `offline` > `paused` > `scanning` > `synced`.
+Priority when several apply: `error` > `attention` > `syncing` > `offline` > `paused` > `scanning` > `synced`. A manual sync (tray, CLI) or one started by new credentials clears the shown `error` and publishes `syncing` before its first storage request, so the tray changes at once; if the cause still holds the sync sets the `error` again.
 
 `Status::from_facts` applies this priority to the engine's raw facts (`StatusFacts`); the counts travel with every state.
 

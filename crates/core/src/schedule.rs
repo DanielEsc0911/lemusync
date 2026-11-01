@@ -71,6 +71,9 @@ pub enum Trigger {
     EmulatorExit(String),
     /// The user asked (CLI, tray). Overrides a pause and an `Auth` stop.
     Manual,
+    /// The credentials changed or were just accepted (`backend add`, a passing `doctor`
+    /// backend check). Ends an `Auth` stop; a pause still holds.
+    Credentials,
 }
 
 /// How a whole sync ended.
@@ -79,7 +82,8 @@ pub enum SyncOutcome {
     Ok,
     /// Network or server trouble that may go away: retry with backoff.
     Transient,
-    /// Credentials rejected: stop until `Manual` or `resume` (the daemon notifies).
+    /// Credentials rejected: stop until `Manual`, `Credentials` or `resume` (the daemon
+    /// notifies).
     Auth,
     /// Any other failure: no retry until the next trigger or rescan.
     Other,
@@ -157,6 +161,10 @@ impl Scheduler {
             Trigger::Resume | Trigger::NetworkBack => self.reset_backoff(),
             Trigger::Manual => {
                 self.manual = true;
+                self.stopped = false;
+                self.reset_backoff();
+            }
+            Trigger::Credentials => {
                 self.stopped = false;
                 self.reset_backoff();
             }
@@ -392,6 +400,22 @@ mod tests {
         }
         sch.on_trigger(Trigger::Manual, 20);
         assert_eq!(sch.next_action(20), Action::SyncNow);
+    }
+
+    #[test]
+    fn new_credentials_end_the_auth_stop_but_not_a_pause() {
+        let mut sch = Scheduler::new(ScheduleConfig::default());
+        started(&mut sch, 0);
+        sch.on_sync_done(SyncOutcome::Auth, 0, 0.5);
+        sch.on_trigger(Trigger::Credentials, 10);
+        assert_eq!(sch.next_action(10), Action::SyncNow);
+
+        let mut sch = Scheduler::new(ScheduleConfig::default());
+        started(&mut sch, 0);
+        sch.on_sync_done(SyncOutcome::Auth, 0, 0.5);
+        sch.pause(None);
+        sch.on_trigger(Trigger::Credentials, 10);
+        assert_eq!(sch.next_action(10), Action::Idle);
     }
 
     #[test]

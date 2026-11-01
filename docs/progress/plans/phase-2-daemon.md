@@ -239,8 +239,9 @@ Improve first, then set expectations (maintainer, 2026-11-01): the budgets stay 
 - A manual sync (tray, CLI) publishes the `syncing` status before its first request, from any state including `error`; the tray shows it within one frame of the click.
 - The daemon logs each finished sync (`info`: streams, outcome, duration) and leaving the `error` or `offline` state (`info`: from, to, what triggered it).
 
-- [ ] **Step 1: failing tests:** `Service` in the auth stop: a passing `doctor` → one sync, state leaves `error`; a credential change → the same; a failing `doctor` → still stopped; a manual sync from `error` emits `syncing` before the store sees a request; the log gets the finished-sync and state-change lines.
-- [ ] **Step 2:** implement; pass; clippy; specs; `just check`; commit `fix(daemon): leave the auth stop on new credentials and show manual syncs`.
+- [x] **Step 1: failing tests:** `Service` in the auth stop: a passing `doctor` → one sync, state leaves `error`; a credential change → the same; a failing `doctor` → still stopped; a manual sync from `error` emits `syncing` before the store sees a request; the log gets the finished-sync and state-change lines.
+- [x] **Step 2:** implement; pass; clippy; specs; `just check`; commit `fix(daemon): leave the auth stop on new credentials and show manual syncs`.
+**As built:** `core::schedule::Trigger::Credentials` ends the auth stop and resets backoff but keeps a pause. `Service` treats a `doctor` whose `backend` check passes, or a successful `backend add fs`/`s3`, as new credentials only while the status shows the auth `error`. `backend login` can't run through the daemon (D28), so it's covered by the daemon restart. `StatusModel::sync_requested` clears the shown `error` and sets `syncing` for a manual or credential sync; the tray needs no change (it renders the status). Log lines: `sync finished: …` and `status left <from> for <to> (<cause>)`. Tests: `store::Faults::deny_from` injects `Auth` refusals; `query.rs` untouched.
 - [ ] **Step 3: manual (Fedora PC):** break the key, wait for the error icon, fix the key, run `doctor`: the icon leaves the error state without a click. Click Sync: "syncing" shows at once.
 
 ## Verify
