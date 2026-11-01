@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemusync/main.dart';
 
+import 'support/fonts.dart';
+
 void main() {
+  setUpAll(loadBrandFonts);
+
   testWidgets('shows synced status in English', (tester) async {
     await tester.pumpWidget(const LemuSyncApp(locale: Locale('en')));
     await tester.pumpAndSettle();

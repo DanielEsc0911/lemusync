@@ -15,6 +15,7 @@ dependencies:
   flutter_rust_bridge: 2.13.0
   flutter_rust_bridge_hooks: 2.13.0
   intl: any
+  lucide_icons_flutter: 4.0.1
 
 dev_dependencies:
   flutter_test:
@@ -24,3 +25,18 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  fonts:
+    - family: Space Grotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk/SpaceGrotesk-Variable.ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter/Inter-Variable.ttf
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono/JetBrainsMono-Variable.ttf
+  assets:
+    - assets/fonts/SpaceGrotesk/OFL.txt
+    - assets/fonts/Inter/OFL.txt
+    - assets/fonts/JetBrainsMono/OFL.txt
+    - assets/licenses/lucide-ISC.txt

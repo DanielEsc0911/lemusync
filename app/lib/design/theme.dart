@@ -1,0 +1,171 @@
+import 'package:flutter/material.dart';
+
+import 'tokens/colors.g.dart';
+import 'tokens/opacity.g.dart';
+import 'tokens/shape.g.dart';
+import 'tokens/size.g.dart';
+import 'tokens/space.g.dart';
+import 'tokens/type.g.dart';
+
+/// Builds the Material theme of one color set. Every value is a token.
+ThemeData lsTheme(LsColors c) {
+  final scheme = ColorScheme(
+    brightness: c.brightness,
+    primary: c.accent,
+    onPrimary: c.onAccent,
+    secondary: c.accent,
+    onSecondary: c.onAccent,
+    error: c.danger,
+    onError: c.onDanger,
+    surface: c.surface,
+    onSurface: c.onSurface,
+    onSurfaceVariant: c.onSurfaceMuted,
+    outline: c.outline,
+    outlineVariant: c.bevelDark,
+    surfaceContainerLowest: c.surfaceSunken,
+    surfaceContainerLow: c.surfaceSunken,
+    surfaceContainer: c.surface,
+    surfaceContainerHigh: c.surfaceRaised,
+    surfaceContainerHighest: c.surfaceRaised,
+  );
+
+  TextStyle s(TextStyle base) => base.copyWith(color: c.onSurface);
+  final text = TextTheme(
+    displayLarge: s(LsType.display),
+    displayMedium: s(LsType.display),
+    displaySmall: s(LsType.display),
+    headlineLarge: s(LsType.headline),
+    headlineMedium: s(LsType.headline),
+    headlineSmall: s(LsType.headline),
+    titleLarge: s(LsType.title),
+    titleMedium: s(LsType.title),
+    titleSmall: s(LsType.title),
+    bodyLarge: s(LsType.body),
+    bodyMedium: s(LsType.body),
+    bodySmall: s(LsType.caption),
+    labelLarge: s(LsType.label),
+    labelMedium: s(LsType.label),
+    labelSmall: s(LsType.label),
+  );
+
+  const padding = EdgeInsets.symmetric(
+    horizontal: LsSpace.lg,
+    vertical: LsSpace.sm,
+  );
+  const minSize = Size.square(LsSize.target);
+  final focusSide = BorderSide(color: c.focus, width: LsSize.focusRing);
+
+  WidgetStateProperty<Color?> overlay(Color base) =>
+      WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return base.withValues(alpha: LsOpacity.pressed);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return base.withValues(alpha: LsOpacity.hover);
+        }
+        return null;
+      });
+
+  WidgetStateProperty<OutlinedBorder?> shapeWithFocus(BorderSide idle) =>
+      WidgetStateProperty.resolveWith(
+        (states) => RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(LsShape.radiusMd),
+          side: states.contains(WidgetState.focused) ? focusSide : idle,
+        ),
+      );
+
+  ButtonStyle button(Color overlayBase, BorderSide idle) => ButtonStyle(
+    minimumSize: const WidgetStatePropertyAll(minSize),
+    padding: const WidgetStatePropertyAll(padding),
+    elevation: const WidgetStatePropertyAll(0),
+    shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+    overlayColor: overlay(overlayBase),
+    shape: shapeWithFocus(idle),
+  );
+
+  OutlineInputBorder inputBorder(Color color, double width) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(LsShape.radiusMd),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: c.brightness,
+    colorScheme: scheme,
+    scaffoldBackgroundColor: c.surface,
+    canvasColor: c.surface,
+    focusColor: c.focus,
+    splashFactory: NoSplash.splashFactory,
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+    textTheme: text,
+    primaryTextTheme: text,
+    extensions: [c],
+    pageTransitionsTheme: PageTransitionsTheme(
+      builders: {
+        for (final p in TargetPlatform.values)
+          p: const FadeForwardsPageTransitionsBuilder(),
+      },
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: button(c.onAccent, BorderSide.none).copyWith(
+        backgroundColor: WidgetStatePropertyAll(c.accent),
+        foregroundColor: WidgetStatePropertyAll(c.onAccent),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: button(
+        c.onSurface,
+        BorderSide(color: c.outline, width: LsSize.bevel),
+      ).copyWith(foregroundColor: WidgetStatePropertyAll(c.onSurface)),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: button(
+        c.accent,
+        BorderSide.none,
+      ).copyWith(foregroundColor: WidgetStatePropertyAll(c.accent)),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: button(
+        c.onSurface,
+        BorderSide.none,
+      ).copyWith(foregroundColor: WidgetStatePropertyAll(c.onSurface)),
+    ),
+    cardTheme: CardThemeData(
+      color: c.surfaceRaised,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(LsShape.radiusMd),
+        side: BorderSide(color: c.outline, width: LsSize.bevel),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationThemeData(
+      filled: true,
+      fillColor: c.surfaceSunken,
+      contentPadding: padding,
+      border: inputBorder(c.outline, LsSize.bevel),
+      enabledBorder: inputBorder(c.outline, LsSize.bevel),
+      focusedBorder: inputBorder(c.focus, LsSize.focusRing),
+      errorBorder: inputBorder(c.danger, LsSize.bevel),
+      focusedErrorBorder: inputBorder(c.focus, LsSize.focusRing),
+    ),
+    tooltipTheme: TooltipThemeData(
+      decoration: BoxDecoration(
+        color: c.onSurface,
+        borderRadius: BorderRadius.circular(LsShape.radiusSm),
+      ),
+      textStyle: LsType.caption.copyWith(color: c.surface),
+      padding: const EdgeInsets.symmetric(
+        horizontal: LsSpace.md,
+        vertical: LsSpace.xs,
+      ),
+    ),
+    dividerTheme: DividerThemeData(
+      color: c.outline,
+      thickness: LsSize.bevel,
+      space: LsSize.bevel,
+    ),
+  );
+}
