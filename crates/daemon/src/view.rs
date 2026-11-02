@@ -109,6 +109,7 @@ pub fn status_text(st: &StatusInput, t: &I18n) -> String {
 #[must_use]
 pub fn tray_view(status: &StatusInput, session: Option<&SessionInput>, t: &I18n) -> TrayView {
     let icon = match status.state {
+        ViewState::Synced if session.is_some() => TrayIcon::Playing,
         ViewState::Synced => TrayIcon::Synced,
         ViewState::Scanning | ViewState::Syncing => TrayIcon::Syncing,
         ViewState::Paused => TrayIcon::Paused,
@@ -296,5 +297,26 @@ mod tests {
         ] {
             assert!(!label.starts_with("tray-"), "{label}");
         }
+    }
+
+    #[test]
+    fn a_session_shows_playing_only_when_everything_is_synced() {
+        let sn = SessionInput {
+            game: "BotW".into(),
+            player: "Daniel".into(),
+        };
+        let t = I18n::new("en");
+        let icon = |state, session| tray_view(&StatusInput::new(state), session, &t).icon;
+        assert_eq!(icon(ViewState::Synced, Some(&sn)), TrayIcon::Playing);
+        assert_eq!(icon(ViewState::Synced, None), TrayIcon::Synced);
+        assert_eq!(icon(ViewState::Syncing, Some(&sn)), TrayIcon::Syncing);
+        assert_eq!(icon(ViewState::Scanning, Some(&sn)), TrayIcon::Syncing);
+        assert_eq!(icon(ViewState::Paused, Some(&sn)), TrayIcon::Paused);
+        assert_eq!(icon(ViewState::Offline, Some(&sn)), TrayIcon::Offline);
+        assert_eq!(icon(ViewState::Attention, Some(&sn)), TrayIcon::Attention);
+        assert_eq!(
+            icon(ViewState::Error(ErrorKind::Auth), Some(&sn)),
+            TrayIcon::Error
+        );
     }
 }

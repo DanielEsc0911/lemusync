@@ -33,6 +33,7 @@ impl TrayIcon {
     pub fn pixmaps(self) -> [(i32, &'static [u8]); 3] {
         match self {
             Self::Synced => pixmaps!("synced"),
+            Self::Playing => pixmaps!("playing"),
             Self::Syncing => pixmaps!("syncing"),
             Self::Paused => pixmaps!("paused"),
             Self::Offline => pixmaps!("offline"),
@@ -46,8 +47,9 @@ impl TrayIcon {
 mod tests {
     use super::*;
 
-    const ALL: [TrayIcon; 6] = [
+    const ALL: [TrayIcon; 7] = [
         TrayIcon::Synced,
+        TrayIcon::Playing,
         TrayIcon::Syncing,
         TrayIcon::Paused,
         TrayIcon::Offline,
@@ -93,6 +95,7 @@ mod tests {
     const BLUE: [u8; 3] = [0x2F, 0x74, 0xD0]; // blue-500
     const RED: [u8; 3] = [0xD3, 0x40, 0x2F]; // red-500
     const AMBER: [u8; 3] = [0xE8, 0x9B, 0x2D]; // amber-500
+    const GREEN: [u8; 3] = [0x2F, 0x9E, 0x55]; // green-500
     const STONE: [u8; 3] = [0xA9, 0xA3, 0x9B]; // stone-400
 
     /// `[A, R, G, B]` at the centre of a button, for the pixmap of `size` px.
@@ -123,6 +126,19 @@ mod tests {
     #[test]
     fn synced_keeps_the_brand_colours() {
         assert_buttons(TrayIcon::Synced, [BLUE, RED, AMBER, AMBER]);
+    }
+
+    #[test]
+    fn playing_lights_both_eyes_green_and_tilts_the_stick() {
+        // Only the two eye buttons change; the stick moves (the shape cue).
+        assert_buttons(TrayIcon::Playing, [BLUE, RED, GREEN, GREEN]);
+        let (a, b) = (TrayIcon::Playing.pixmaps(), TrayIcon::Synced.pixmaps());
+        assert_ne!(a[0].1, b[0].1, "24px differs from synced");
+        // The stick's centre (68,128) holds the cap's light centre in synced; tilted, it moved.
+        assert_ne!(
+            at(TrayIcon::Playing, 48, 68, 128),
+            at(TrayIcon::Synced, 48, 68, 128)
+        );
     }
 
     #[test]

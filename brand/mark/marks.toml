@@ -30,7 +30,7 @@ colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "b
 [mark.controller]    # small family (<= 48 px): SNES-style pad, two amber buttons are the eyes
 parts = ["controller"]
 colors = { body = "stone-300", outline = "charcoal-950", light = "bone", btnTop = "blue-500", btnBottom = "red-500", btnLeft = "amber-500", btnRight = "amber-500" }
-params = { cy = 128, scale = 1, hollow = 0, btnR = 16 }   # hollow = 1: the four buttons are rings (stroke only)
+params = { cy = 128, scale = 1, hollow = 0, btnR = 16, stickTilt = 0 }   # hollow = 1: the four buttons are rings (stroke only); stickTilt: degrees the thumb-stick leans (pivot under its base)
 
 [mark.controllerSquare]   # iOS small sizes: full-bleed and opaque
 extends = "controller"
@@ -38,7 +38,7 @@ parts = ["bg", "controller"]
 colors = { bg = "charcoal-800" }
 params = { scale = 0.9 }
 
-[mark.tray]          # base for the six tray states, not an output itself: the state is the four button colors
+[mark.tray]          # base for the seven tray states, not an output itself: the state is the four button colors (playing also tilts the stick)
 extends = "controller"
 params = { btnR = 20 }
 
@@ -48,6 +48,11 @@ extends = "tray"
 [mark.tray-syncing]
 extends = "tray"
 colors = { btnTop = "blue-500", btnBottom = "blue-500", btnLeft = "blue-500", btnRight = "blue-500" }
+
+[mark.tray-playing]   # a play session on an otherwise synced install: eyes lit green, stick pushed (shape cue)
+extends = "tray"
+colors = { btnLeft = "green-500", btnRight = "green-500" }
+params = { stickTilt = 35 }
 
 [mark.tray-paused]
 extends = "tray"

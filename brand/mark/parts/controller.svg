@@ -9,10 +9,12 @@
 <circle cx="62" cy="148" r="52"/>
 <circle cx="194" cy="148" r="52"/>
 </g>
+<g transform="rotate({{param.stickTilt}} 68 170)">
 <circle cx="68" cy="128" r="40" fill="{{color.outline}}"/>
 <circle cx="68" cy="128" r="30" fill="{{color.light}}"/>
 <circle cx="68" cy="128" r="20" fill="{{color.outline}}"/>
 <circle cx="68" cy="128" r="9" fill="{{color.light}}"/>
+</g>
 <circle cx="188" cy="98" r="{{param.btnR}}" fill="{{color.btnTop}}" fill-opacity="{{param.btnFillA}}" stroke="{{color.btnTop}}" stroke-width="{{param.btnRing}}"/>
 <circle cx="188" cy="158" r="{{param.btnR}}" fill="{{color.btnBottom}}" fill-opacity="{{param.btnFillA}}" stroke="{{color.btnBottom}}" stroke-width="{{param.btnRing}}"/>
 <circle cx="158" cy="128" r="{{param.btnR}}" fill="{{color.btnLeft}}" fill-opacity="{{param.btnFillA}}" stroke="{{color.btnLeft}}" stroke-width="{{param.btnRing}}"/>

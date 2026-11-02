@@ -25,8 +25,9 @@ pub const SVGS: [(&str, &str); 3] = [
 ];
 
 /// Tray state → the mark that draws it.
-pub const TRAY: [(&str, &str); 6] = [
+pub const TRAY: [(&str, &str); 7] = [
     ("synced", "tray-synced"),
+    ("playing", "tray-playing"),
     ("syncing", "tray-syncing"),
     ("paused", "tray-paused"),
     ("offline", "tray-offline"),
@@ -258,12 +259,12 @@ mod tests {
     }
 
     #[test]
-    fn tray_files_cover_six_states_and_three_sizes() {
+    fn tray_files_cover_seven_states_and_three_sizes() {
         let n = targets()
             .iter()
             .filter(|t| matches!(t.format, Format::Argb32))
             .count();
-        assert_eq!(n, 18);
+        assert_eq!(n, 21);
     }
 
     #[test]

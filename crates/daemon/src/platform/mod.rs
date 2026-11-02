@@ -25,6 +25,7 @@ pub use other::{start_notifier, start_power, start_tray};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrayIcon {
     Synced,
+    Playing,
     Syncing,
     Paused,
     Offline,

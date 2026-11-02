@@ -531,7 +531,7 @@ fn tray_click(
     let label = item.label.clone();
     let stream = (player.clone(), emulator.clone(), game.clone());
     let out = own_tx.clone();
-    let lang = I18n::env_lang();
+    let lang = presence.map_or_else(I18n::env_lang, |p| p.i18n.lang());
     tokio::spawn(async move {
         if let Response::Error(e) = h.call(r).await {
             tracing::info!("tray play did not launch ({})", e.code);
