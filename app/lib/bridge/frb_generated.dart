@@ -8,10 +8,13 @@ import 'dart:convert';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+import 'api/daemon.dart';
 import 'api/probe.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'link/calls.dart';
+import 'link/model.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -66,7 +69,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -1860739179;
+  int get rustContentHash => 1924407446;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -78,9 +81,29 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  WatchHandle crateApiDaemonWatchHandleNew();
+
+  Future<void> crateApiDaemonWatchHandleStop({required WatchHandle that});
+
+  Stream<LinkEvent> crateApiDaemonWatchHandleWatch({required WatchHandle that});
+
   String crateApiProbeCoreVersion();
 
+  Future<GamesDto?> crateApiDaemonGames();
+
   Future<String> crateApiProbeHttpsStatus({required String host});
+
+  Future<Snapshot> crateApiDaemonSnapshot();
+
+  Future<SyncNow> crateApiDaemonSyncNow();
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_WatchHandle;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_WatchHandle;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_WatchHandlePtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -92,12 +115,107 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  String crateApiProbeCoreVersion() {
+  WatchHandle crateApiDaemonWatchHandleNew() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonWatchHandleNewConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonWatchHandleNewConstMeta =>
+      const TaskConstMeta(debugName: "WatchHandle_new", argNames: []);
+
+  @override
+  Future<void> crateApiDaemonWatchHandleStop({required WatchHandle that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonWatchHandleStopConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonWatchHandleStopConstMeta =>
+      const TaskConstMeta(debugName: "WatchHandle_stop", argNames: ["that"]);
+
+  @override
+  Stream<LinkEvent> crateApiDaemonWatchHandleWatch({
+    required WatchHandle that,
+  }) {
+    final sink = RustStreamSink<LinkEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+              that,
+              serializer,
+            );
+            sse_encode_StreamSink_link_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 3,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta: kCrateApiDaemonWatchHandleWatchConstMeta,
+          argValues: [that, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta get kCrateApiDaemonWatchHandleWatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "WatchHandle_watch",
+        argNames: ["that", "sink"],
+      );
+
+  @override
+  String crateApiProbeCoreVersion() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -114,6 +232,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "core_version", argNames: []);
 
   @override
+  Future<GamesDto?> crateApiDaemonGames() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_games_dto,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonGamesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonGamesConstMeta =>
+      const TaskConstMeta(debugName: "games", argNames: []);
+
+  @override
   Future<String> crateApiProbeHttpsStatus({required String host}) {
     return handler.executeNormal(
       NormalTask(
@@ -123,7 +268,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 6,
             port: port_,
           );
         },
@@ -141,6 +286,107 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiProbeHttpsStatusConstMeta =>
       const TaskConstMeta(debugName: "https_status", argNames: ["host"]);
 
+  @override
+  Future<Snapshot> crateApiDaemonSnapshot() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_snapshot,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonSnapshotConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonSnapshotConstMeta =>
+      const TaskConstMeta(debugName: "snapshot", argNames: []);
+
+  @override
+  Future<SyncNow> crateApiDaemonSyncNow() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_sync_now,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonSyncNowConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonSyncNowConstMeta =>
+      const TaskConstMeta(debugName: "sync_now", argNames: []);
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_WatchHandle => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_WatchHandle => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle;
+
+  @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return AnyhowException(raw as String);
+  }
+
+  @protected
+  WatchHandle
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return WatchHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  WatchHandle
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return WatchHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  WatchHandle
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return WatchHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  RustStreamSink<LinkEvent> dco_decode_StreamSink_link_event_Sse(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
   @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -148,9 +394,354 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  ConnectionState dco_decode_box_autoadd_connection_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_connection_state(raw);
+  }
+
+  @protected
+  ErrorKindDto dco_decode_box_autoadd_error_kind_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_error_kind_dto(raw);
+  }
+
+  @protected
+  GamesDto dco_decode_box_autoadd_games_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_games_dto(raw);
+  }
+
+  @protected
+  ProgressDto dco_decode_box_autoadd_progress_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_progress_dto(raw);
+  }
+
+  @protected
+  SessionDto dco_decode_box_autoadd_session_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_session_dto(raw);
+  }
+
+  @protected
+  Snapshot dco_decode_box_autoadd_snapshot(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_snapshot(raw);
+  }
+
+  @protected
+  StatusDto dco_decode_box_autoadd_status_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_status_dto(raw);
+  }
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_u_64(raw);
+  }
+
+  @protected
+  ConnectionState dco_decode_connection_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return const ConnectionState_Connecting();
+      case 1:
+        return ConnectionState_Online(daemonVersion: dco_decode_String(raw[1]));
+      case 2:
+        return const ConnectionState_NotRunning();
+      case 3:
+        return const ConnectionState_Unsupported();
+      case 4:
+        return const ConnectionState_Unsafe();
+      case 5:
+        return ConnectionState_Refused(message: dco_decode_String(raw[1]));
+      case 6:
+        return ConnectionState_Failed(
+          code: dco_decode_String(raw[1]),
+          message: dco_decode_String(raw[2]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  ErrorKindDto dco_decode_error_kind_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ErrorKindDto.values[raw as int];
+  }
+
+  @protected
+  GameEntry dco_decode_game_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return GameEntry(
+      emulator: dco_decode_String(arr[0]),
+      key: dco_decode_String(arr[1]),
+      name: dco_decode_opt_String(arr[2]),
+      launchable: dco_decode_bool(arr[3]),
+      streams: dco_decode_list_player_stream_dto(arr[4]),
+    );
+  }
+
+  @protected
+  GamesDto dco_decode_games_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return GamesDto(
+      games: dco_decode_list_game_entry(arr[0]),
+      recent: dco_decode_list_recent_dto(arr[1]),
+    );
+  }
+
+  @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  LinkEvent dco_decode_link_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LinkEvent_Connection(
+          dco_decode_box_autoadd_connection_state(raw[1]),
+        );
+      case 1:
+        return LinkEvent_Status(dco_decode_box_autoadd_status_dto(raw[1]));
+      case 2:
+        return LinkEvent_Session(
+          dco_decode_opt_box_autoadd_session_dto(raw[1]),
+        );
+      case 3:
+        return LinkEvent_Progress(dco_decode_box_autoadd_progress_dto(raw[1]));
+      case 4:
+        return LinkEvent_Snapshot(dco_decode_box_autoadd_snapshot(raw[1]));
+      case 5:
+        return LinkEvent_Games(dco_decode_box_autoadd_games_dto(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<GameEntry> dco_decode_list_game_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_game_entry).toList();
+  }
+
+  @protected
+  List<PlayerStreamDto> dco_decode_list_player_stream_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_player_stream_dto).toList();
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<RecentDto> dco_decode_list_recent_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_recent_dto).toList();
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  ErrorKindDto? dco_decode_opt_box_autoadd_error_kind_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_error_kind_dto(raw);
+  }
+
+  @protected
+  GamesDto? dco_decode_opt_box_autoadd_games_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_games_dto(raw);
+  }
+
+  @protected
+  SessionDto? dco_decode_opt_box_autoadd_session_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_session_dto(raw);
+  }
+
+  @protected
+  StatusDto? dco_decode_opt_box_autoadd_status_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_status_dto(raw);
+  }
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
+  }
+
+  @protected
+  PhaseDto dco_decode_phase_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PhaseDto.values[raw as int];
+  }
+
+  @protected
+  PlayerStreamDto dco_decode_player_stream_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PlayerStreamDto(
+      player: dco_decode_String(arr[0]),
+      lastVersionMs: dco_decode_opt_box_autoadd_u_64(arr[1]),
+    );
+  }
+
+  @protected
+  ProgressDto dco_decode_progress_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return ProgressDto(
+      player: dco_decode_String(arr[0]),
+      emulator: dco_decode_String(arr[1]),
+      game: dco_decode_String(arr[2]),
+      phase: dco_decode_phase_dto(arr[3]),
+      filesDone: dco_decode_u_32(arr[4]),
+      filesTotal: dco_decode_u_32(arr[5]),
+      bytesDone: dco_decode_u_64(arr[6]),
+      bytesTotal: dco_decode_u_64(arr[7]),
+    );
+  }
+
+  @protected
+  RecentDto dco_decode_recent_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return RecentDto(
+      emulator: dco_decode_String(arr[0]),
+      key: dco_decode_String(arr[1]),
+      name: dco_decode_opt_String(arr[2]),
+      player: dco_decode_String(arr[3]),
+      lastVersionMs: dco_decode_opt_box_autoadd_u_64(arr[4]),
+      launchable: dco_decode_bool(arr[5]),
+    );
+  }
+
+  @protected
+  SessionDto dco_decode_session_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return SessionDto(
+      game: dco_decode_String(arr[0]),
+      name: dco_decode_opt_String(arr[1]),
+      emulator: dco_decode_String(arr[2]),
+      player: dco_decode_String(arr[3]),
+      device: dco_decode_String(arr[4]),
+      startedMs: dco_decode_u_64(arr[5]),
+    );
+  }
+
+  @protected
+  Snapshot dco_decode_snapshot(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return Snapshot(
+      connection: dco_decode_connection_state(arr[0]),
+      status: dco_decode_opt_box_autoadd_status_dto(arr[1]),
+      session: dco_decode_opt_box_autoadd_session_dto(arr[2]),
+      device: dco_decode_opt_String(arr[3]),
+      players: dco_decode_list_String(arr[4]),
+    );
+  }
+
+  @protected
+  StateDto dco_decode_state_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return StateDto.values[raw as int];
+  }
+
+  @protected
+  StatusDto dco_decode_status_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    return StatusDto(
+      state: dco_decode_state_dto(arr[0]),
+      lastSyncMs: dco_decode_opt_box_autoadd_u_64(arr[1]),
+      uploads: dco_decode_u_32(arr[2]),
+      downloads: dco_decode_u_32(arr[3]),
+      bytes: dco_decode_u_64(arr[4]),
+      pausedUntilMs: dco_decode_opt_box_autoadd_u_64(arr[5]),
+      queued: dco_decode_u_32(arr[6]),
+      conflicts: dco_decode_u_32(arr[7]),
+      foreignLeases: dco_decode_u_32(arr[8]),
+      error: dco_decode_opt_box_autoadd_error_kind_dto(arr[9]),
+    );
+  }
+
+  @protected
+  SyncNow dco_decode_sync_now(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return const SyncNow_Done();
+      case 1:
+        return const SyncNow_NotRunning();
+      case 2:
+        return SyncNow_Failed(
+          code: dco_decode_String(raw[1]),
+          message: dco_decode_String(raw[2]),
+        );
+      case 3:
+        return const SyncNow_TimedOut();
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  int dco_decode_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -166,6 +757,63 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt dco_decode_usize(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final inner = sse_decode_String(deserializer);
+    return AnyhowException(inner);
+  }
+
+  @protected
+  WatchHandle
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return WatchHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  WatchHandle
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return WatchHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  WatchHandle
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return WatchHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  RustStreamSink<LinkEvent> sse_decode_StreamSink_link_event_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final inner = sse_decode_list_prim_u_8_strict(deserializer);
@@ -173,10 +821,453 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  ConnectionState sse_decode_box_autoadd_connection_state(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_connection_state(deserializer));
+  }
+
+  @protected
+  ErrorKindDto sse_decode_box_autoadd_error_kind_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_error_kind_dto(deserializer));
+  }
+
+  @protected
+  GamesDto sse_decode_box_autoadd_games_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_games_dto(deserializer));
+  }
+
+  @protected
+  ProgressDto sse_decode_box_autoadd_progress_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_progress_dto(deserializer));
+  }
+
+  @protected
+  SessionDto sse_decode_box_autoadd_session_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_session_dto(deserializer));
+  }
+
+  @protected
+  Snapshot sse_decode_box_autoadd_snapshot(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_snapshot(deserializer));
+  }
+
+  @protected
+  StatusDto sse_decode_box_autoadd_status_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_status_dto(deserializer));
+  }
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_64(deserializer));
+  }
+
+  @protected
+  ConnectionState sse_decode_connection_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return const ConnectionState_Connecting();
+      case 1:
+        final var_daemonVersion = sse_decode_String(deserializer);
+        return ConnectionState_Online(daemonVersion: var_daemonVersion);
+      case 2:
+        return const ConnectionState_NotRunning();
+      case 3:
+        return const ConnectionState_Unsupported();
+      case 4:
+        return const ConnectionState_Unsafe();
+      case 5:
+        final var_message = sse_decode_String(deserializer);
+        return ConnectionState_Refused(message: var_message);
+      case 6:
+        final var_code = sse_decode_String(deserializer);
+        final var_message = sse_decode_String(deserializer);
+        return ConnectionState_Failed(code: var_code, message: var_message);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  ErrorKindDto sse_decode_error_kind_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final inner = sse_decode_i_32(deserializer);
+    return ErrorKindDto.values[inner];
+  }
+
+  @protected
+  GameEntry sse_decode_game_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_emulator = sse_decode_String(deserializer);
+    final var_key = sse_decode_String(deserializer);
+    final var_name = sse_decode_opt_String(deserializer);
+    final var_launchable = sse_decode_bool(deserializer);
+    final var_streams = sse_decode_list_player_stream_dto(deserializer);
+    return GameEntry(
+      emulator: var_emulator,
+      key: var_key,
+      name: var_name,
+      launchable: var_launchable,
+      streams: var_streams,
+    );
+  }
+
+  @protected
+  GamesDto sse_decode_games_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_games = sse_decode_list_game_entry(deserializer);
+    final var_recent = sse_decode_list_recent_dto(deserializer);
+    return GamesDto(games: var_games, recent: var_recent);
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  LinkEvent sse_decode_link_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        final var_field0 = sse_decode_box_autoadd_connection_state(
+          deserializer,
+        );
+        return LinkEvent_Connection(var_field0);
+      case 1:
+        final var_field0 = sse_decode_box_autoadd_status_dto(deserializer);
+        return LinkEvent_Status(var_field0);
+      case 2:
+        final var_field0 = sse_decode_opt_box_autoadd_session_dto(deserializer);
+        return LinkEvent_Session(var_field0);
+      case 3:
+        final var_field0 = sse_decode_box_autoadd_progress_dto(deserializer);
+        return LinkEvent_Progress(var_field0);
+      case 4:
+        final var_field0 = sse_decode_box_autoadd_snapshot(deserializer);
+        return LinkEvent_Snapshot(var_field0);
+      case 5:
+        final var_field0 = sse_decode_box_autoadd_games_dto(deserializer);
+        return LinkEvent_Games(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<GameEntry> sse_decode_list_game_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <GameEntry>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_game_entry(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<PlayerStreamDto> sse_decode_list_player_stream_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <PlayerStreamDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_player_stream_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<RecentDto> sse_decode_list_recent_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <RecentDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_recent_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  ErrorKindDto? sse_decode_opt_box_autoadd_error_kind_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_error_kind_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  GamesDto? sse_decode_opt_box_autoadd_games_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_games_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  SessionDto? sse_decode_opt_box_autoadd_session_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_session_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  StatusDto? sse_decode_opt_box_autoadd_status_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_status_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  PhaseDto sse_decode_phase_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final inner = sse_decode_i_32(deserializer);
+    return PhaseDto.values[inner];
+  }
+
+  @protected
+  PlayerStreamDto sse_decode_player_stream_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_player = sse_decode_String(deserializer);
+    final var_lastVersionMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    return PlayerStreamDto(
+      player: var_player,
+      lastVersionMs: var_lastVersionMs,
+    );
+  }
+
+  @protected
+  ProgressDto sse_decode_progress_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_player = sse_decode_String(deserializer);
+    final var_emulator = sse_decode_String(deserializer);
+    final var_game = sse_decode_String(deserializer);
+    final var_phase = sse_decode_phase_dto(deserializer);
+    final var_filesDone = sse_decode_u_32(deserializer);
+    final var_filesTotal = sse_decode_u_32(deserializer);
+    final var_bytesDone = sse_decode_u_64(deserializer);
+    final var_bytesTotal = sse_decode_u_64(deserializer);
+    return ProgressDto(
+      player: var_player,
+      emulator: var_emulator,
+      game: var_game,
+      phase: var_phase,
+      filesDone: var_filesDone,
+      filesTotal: var_filesTotal,
+      bytesDone: var_bytesDone,
+      bytesTotal: var_bytesTotal,
+    );
+  }
+
+  @protected
+  RecentDto sse_decode_recent_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_emulator = sse_decode_String(deserializer);
+    final var_key = sse_decode_String(deserializer);
+    final var_name = sse_decode_opt_String(deserializer);
+    final var_player = sse_decode_String(deserializer);
+    final var_lastVersionMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    final var_launchable = sse_decode_bool(deserializer);
+    return RecentDto(
+      emulator: var_emulator,
+      key: var_key,
+      name: var_name,
+      player: var_player,
+      lastVersionMs: var_lastVersionMs,
+      launchable: var_launchable,
+    );
+  }
+
+  @protected
+  SessionDto sse_decode_session_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_game = sse_decode_String(deserializer);
+    final var_name = sse_decode_opt_String(deserializer);
+    final var_emulator = sse_decode_String(deserializer);
+    final var_player = sse_decode_String(deserializer);
+    final var_device = sse_decode_String(deserializer);
+    final var_startedMs = sse_decode_u_64(deserializer);
+    return SessionDto(
+      game: var_game,
+      name: var_name,
+      emulator: var_emulator,
+      player: var_player,
+      device: var_device,
+      startedMs: var_startedMs,
+    );
+  }
+
+  @protected
+  Snapshot sse_decode_snapshot(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_connection = sse_decode_connection_state(deserializer);
+    final var_status = sse_decode_opt_box_autoadd_status_dto(deserializer);
+    final var_session = sse_decode_opt_box_autoadd_session_dto(deserializer);
+    final var_device = sse_decode_opt_String(deserializer);
+    final var_players = sse_decode_list_String(deserializer);
+    return Snapshot(
+      connection: var_connection,
+      status: var_status,
+      session: var_session,
+      device: var_device,
+      players: var_players,
+    );
+  }
+
+  @protected
+  StateDto sse_decode_state_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final inner = sse_decode_i_32(deserializer);
+    return StateDto.values[inner];
+  }
+
+  @protected
+  StatusDto sse_decode_status_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_state = sse_decode_state_dto(deserializer);
+    final var_lastSyncMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    final var_uploads = sse_decode_u_32(deserializer);
+    final var_downloads = sse_decode_u_32(deserializer);
+    final var_bytes = sse_decode_u_64(deserializer);
+    final var_pausedUntilMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    final var_queued = sse_decode_u_32(deserializer);
+    final var_conflicts = sse_decode_u_32(deserializer);
+    final var_foreignLeases = sse_decode_u_32(deserializer);
+    final var_error = sse_decode_opt_box_autoadd_error_kind_dto(deserializer);
+    return StatusDto(
+      state: var_state,
+      lastSyncMs: var_lastSyncMs,
+      uploads: var_uploads,
+      downloads: var_downloads,
+      bytes: var_bytes,
+      pausedUntilMs: var_pausedUntilMs,
+      queued: var_queued,
+      conflicts: var_conflicts,
+      foreignLeases: var_foreignLeases,
+      error: var_error,
+    );
+  }
+
+  @protected
+  SyncNow sse_decode_sync_now(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return const SyncNow_Done();
+      case 1:
+        return const SyncNow_NotRunning();
+      case 2:
+        final var_code = sse_decode_String(deserializer);
+        final var_message = sse_decode_String(deserializer);
+        return SyncNow_Failed(code: var_code, message: var_message);
+      case 3:
+        return const SyncNow_TimedOut();
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint32();
+  }
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
   }
 
   @protected
@@ -191,21 +1282,270 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
+  BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
+    return deserializer.buffer.getBigUint64();
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
+  void sse_encode_AnyhowException(
+    AnyhowException self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
+    sse_encode_String(self.message, serializer);
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    WatchHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as WatchHandleImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    WatchHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as WatchHandleImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    WatchHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as WatchHandleImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_StreamSink_link_event_Sse(
+    RustStreamSink<LinkEvent> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_link_event,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
   }
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_connection_state(
+    ConnectionState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_connection_state(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_error_kind_dto(
+    ErrorKindDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_error_kind_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_games_dto(
+    GamesDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_games_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_progress_dto(
+    ProgressDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_progress_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_session_dto(
+    SessionDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_session_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_snapshot(
+    Snapshot self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_snapshot(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_status_dto(
+    StatusDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_status_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_connection_state(
+    ConnectionState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case ConnectionState_Connecting():
+        sse_encode_i_32(0, serializer);
+      case ConnectionState_Online(daemonVersion: final daemonVersion):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(daemonVersion, serializer);
+      case ConnectionState_NotRunning():
+        sse_encode_i_32(2, serializer);
+      case ConnectionState_Unsupported():
+        sse_encode_i_32(3, serializer);
+      case ConnectionState_Unsafe():
+        sse_encode_i_32(4, serializer);
+      case ConnectionState_Refused(message: final message):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(message, serializer);
+      case ConnectionState_Failed(code: final code, message: final message):
+        sse_encode_i_32(6, serializer);
+        sse_encode_String(code, serializer);
+        sse_encode_String(message, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_error_kind_dto(ErrorKindDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_game_entry(GameEntry self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.emulator, serializer);
+    sse_encode_String(self.key, serializer);
+    sse_encode_opt_String(self.name, serializer);
+    sse_encode_bool(self.launchable, serializer);
+    sse_encode_list_player_stream_dto(self.streams, serializer);
+  }
+
+  @protected
+  void sse_encode_games_dto(GamesDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_game_entry(self.games, serializer);
+    sse_encode_list_recent_dto(self.recent, serializer);
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_link_event(LinkEvent self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LinkEvent_Connection(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_connection_state(field0, serializer);
+      case LinkEvent_Status(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_status_dto(field0, serializer);
+      case LinkEvent_Session(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_opt_box_autoadd_session_dto(field0, serializer);
+      case LinkEvent_Progress(field0: final field0):
+        sse_encode_i_32(3, serializer);
+        sse_encode_box_autoadd_progress_dto(field0, serializer);
+      case LinkEvent_Snapshot(field0: final field0):
+        sse_encode_i_32(4, serializer);
+        sse_encode_box_autoadd_snapshot(field0, serializer);
+      case LinkEvent_Games(field0: final field0):
+        sse_encode_i_32(5, serializer);
+        sse_encode_box_autoadd_games_dto(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_game_entry(
+    List<GameEntry> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_game_entry(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_player_stream_dto(
+    List<PlayerStreamDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_player_stream_dto(item, serializer);
+    }
   }
 
   @protected
@@ -216,6 +1556,201 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_recent_dto(
+    List<RecentDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_recent_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_error_kind_dto(
+    ErrorKindDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_error_kind_dto(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_games_dto(
+    GamesDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_games_dto(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_session_dto(
+    SessionDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_session_dto(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_status_dto(
+    StatusDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_status_dto(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_phase_dto(PhaseDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_player_stream_dto(
+    PlayerStreamDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.player, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.lastVersionMs, serializer);
+  }
+
+  @protected
+  void sse_encode_progress_dto(ProgressDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.player, serializer);
+    sse_encode_String(self.emulator, serializer);
+    sse_encode_String(self.game, serializer);
+    sse_encode_phase_dto(self.phase, serializer);
+    sse_encode_u_32(self.filesDone, serializer);
+    sse_encode_u_32(self.filesTotal, serializer);
+    sse_encode_u_64(self.bytesDone, serializer);
+    sse_encode_u_64(self.bytesTotal, serializer);
+  }
+
+  @protected
+  void sse_encode_recent_dto(RecentDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.emulator, serializer);
+    sse_encode_String(self.key, serializer);
+    sse_encode_opt_String(self.name, serializer);
+    sse_encode_String(self.player, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.lastVersionMs, serializer);
+    sse_encode_bool(self.launchable, serializer);
+  }
+
+  @protected
+  void sse_encode_session_dto(SessionDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.game, serializer);
+    sse_encode_opt_String(self.name, serializer);
+    sse_encode_String(self.emulator, serializer);
+    sse_encode_String(self.player, serializer);
+    sse_encode_String(self.device, serializer);
+    sse_encode_u_64(self.startedMs, serializer);
+  }
+
+  @protected
+  void sse_encode_snapshot(Snapshot self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_connection_state(self.connection, serializer);
+    sse_encode_opt_box_autoadd_status_dto(self.status, serializer);
+    sse_encode_opt_box_autoadd_session_dto(self.session, serializer);
+    sse_encode_opt_String(self.device, serializer);
+    sse_encode_list_String(self.players, serializer);
+  }
+
+  @protected
+  void sse_encode_state_dto(StateDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_status_dto(StatusDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_state_dto(self.state, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.lastSyncMs, serializer);
+    sse_encode_u_32(self.uploads, serializer);
+    sse_encode_u_32(self.downloads, serializer);
+    sse_encode_u_64(self.bytes, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.pausedUntilMs, serializer);
+    sse_encode_u_32(self.queued, serializer);
+    sse_encode_u_32(self.conflicts, serializer);
+    sse_encode_u_32(self.foreignLeases, serializer);
+    sse_encode_opt_box_autoadd_error_kind_dto(self.error, serializer);
+  }
+
+  @protected
+  void sse_encode_sync_now(SyncNow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case SyncNow_Done():
+        sse_encode_i_32(0, serializer);
+      case SyncNow_NotRunning():
+        sse_encode_i_32(1, serializer);
+      case SyncNow_Failed(code: final code, message: final message):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(code, serializer);
+        sse_encode_String(message, serializer);
+      case SyncNow_TimedOut():
+        sse_encode_i_32(3, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint32(self);
+  }
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
   }
 
   @protected
@@ -230,14 +1765,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
+  void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
+    serializer.buffer.putBigUint64(self);
   }
+}
 
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
-  }
+@sealed
+class WatchHandleImpl extends RustOpaque implements WatchHandle {
+  // Not to be used by end users
+  WatchHandleImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  WatchHandleImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_WatchHandle,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_WatchHandle,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_WatchHandlePtr,
+  );
+
+  /// Ends the watch task at once. `notify_one` keeps the permit if the task is between
+  /// waits, so a stop is never lost.
+  Future<void> stop() =>
+      RustLib.instance.api.crateApiDaemonWatchHandleStop(that: this);
+
+  /// Starts watching the daemon; events go to `sink` until [`WatchHandle::stop`] or until
+  /// the listener is gone. Returns at once.
+  Stream<LinkEvent> watch() =>
+      RustLib.instance.api.crateApiDaemonWatchHandleWatch(that: this);
 }

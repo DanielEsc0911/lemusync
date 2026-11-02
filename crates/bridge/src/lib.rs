@@ -10,9 +10,7 @@ pub mod api;
 // style isn't ours, so lints are off for its output.
 #[allow(unsafe_code, clippy::all, clippy::pedantic, clippy::unwrap_used)]
 mod frb_generated;
-// The daemon link (plain Rust). Task 4 exposes it through FRB; until then nothing outside the
-// tests calls it.
-#[allow(dead_code, reason = "consumed by the FRB surface in Phase 3b Task 4")]
+// The daemon link (plain Rust); `api::daemon` exposes it to Dart.
 mod link;
 #[allow(unsafe_code)]
 mod native;

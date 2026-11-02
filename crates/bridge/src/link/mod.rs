@@ -36,6 +36,7 @@ impl Link {
     }
 
     /// An explicit socket path (tests).
+    #[cfg(test)]
     pub(crate) fn at(path: PathBuf) -> Link {
         Link { path: Some(path) }
     }

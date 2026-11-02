@@ -21,7 +21,7 @@ pub(crate) const GAMES_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// What a "sync now" came to.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum SyncNow {
+pub enum SyncNow {
     Done,
     NotRunning,
     Failed { code: String, message: String },

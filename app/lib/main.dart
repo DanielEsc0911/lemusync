@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'bridge/frb_generated.dart';
 import 'design/licenses.dart';
 import 'design/theme.dart';
 import 'design/tokens/colors.g.dart';
 import 'l10n/generated/app_localizations.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await RustLib.init();
   registerBrandLicenses();
   runApp(const LemuSyncApp());
 }

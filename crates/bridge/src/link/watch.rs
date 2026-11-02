@@ -1,7 +1,6 @@
 //! The event watcher: subscribe first, then snapshot, then follow events; reconnect with
 //! backoff; stop at once when told to (B3). Spec: docs/specs/ui/app-shell.md (Data flow).
 
-use std::pin::pin;
 use std::sync::Arc;
 
 use futures_util::future::BoxFuture;
@@ -103,7 +102,9 @@ async fn pump(
     mut last_sync: Option<u64>,
     emit: &mut impl FnMut(LinkEvent) -> bool,
 ) -> bool {
-    let mut events = pin!(events);
+    // `Box::pin`, not `pin!`: the codegen parses the macro-expanded crate and its parser
+    // cannot read the current `pin!` expansion (`super let`).
+    let mut events = Box::pin(events);
     let mut fetch: Option<Fetch<'_>> = Some(calls::games(link).boxed());
     let mut again = false;
     // Before any fetch worked on this connection, a failure gets exactly one retry (the

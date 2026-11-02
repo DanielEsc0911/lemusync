@@ -1,6 +1,6 @@
 # App shell
 
-> **Status:** Decided (design only, nothing built) · **Related:** [rules](../../rules.md) (F1, F2, F3, B2, B3, P5, P6), [architecture §IPC](../architecture.md#ipc), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D35, D40, D43, D44) · **Code:** `crates/engine/src/library.rs` (built, 3b Task 2: the game-library rule shared with the tray); `crates/bridge/src/link/` (built, 3b Task 3: calls, event watcher, backoff, DTOs; plain Rust, not yet exposed to Dart); planned `crates/bridge/src/api/daemon.rs`, `app/lib/app/`, `app/lib/screens/` (nothing is built yet; Phase 3b, [plan](../../progress/plans/phase-3b-shell.md))
+> **Status:** Decided (design only, nothing built) · **Related:** [rules](../../rules.md) (F1, F2, F3, B2, B3, P5, P6), [architecture §IPC](../architecture.md#ipc), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D35, D40, D43, D44) · **Code:** `crates/engine/src/library.rs` (built, 3b Task 2: the game-library rule shared with the tray); `crates/bridge/src/link/` (built, 3b Task 3: calls, event watcher, backoff, DTOs; plain Rust); `crates/bridge/src/api/daemon.rs` and `app/lib/app/daemon_link.dart` (built, 3b Task 4: the FRB surface and the Dart `DaemonLink`); planned `app/lib/app/` (controller), `app/lib/screens/` (nothing is built yet; Phase 3b, [plan](../../progress/plans/phase-3b-shell.md))
 
 ## Purpose
 How the desktop app reaches the daemon, what state it holds and which destinations it shows. Everything below is planned for Phase 3b and is marked as built only when the task that builds it lands.
@@ -17,6 +17,8 @@ The app is a client of `lemusyncd` ([D43](../../decisions.md#d43-the-desktop-app
 | `offline: refused` | The daemon rejected the handshake (another `api_version`) | "This app and the service don't match", update LemuSync, no Retry |
 | `offline: unsafe` | `IpcError::UnsafePath`: the socket or its folder is a link or belongs to another user | A security message with its own text, no Retry; never shown as "not running" |
 | `failed` | The connection works but a call got `Response::Error` or timed out | "The service returned an error" with the code, Retry, the line `lemusync logs` |
+
+`failed` and `offline: refused` carry the daemon's `message`, which can contain the user's own local paths (`NotGranted`, `Locked`, `Data`, `Io`). Accepted (lead ruling, B2): they are the same user's paths on their own machine, shown as the CLI shows them, not secrets. The screen leads with the localized text chosen by `code` and shows the raw `message` only as secondary detail; `message` is never logged anywhere that leaves the device.
 
 With a cached status or games and a connection that is not `online`, the last data stays under a banner "Showing the last known state". Reconnect backoff is 1 s, 2 s, 4 s … capped at 30 s, reset on success. The planned texts are in the plan's Task 8 table (English and Spanish, P6).
 
@@ -47,7 +49,7 @@ Planned for Linux first. Ctrl/Cmd+1 and 2 select the visible destinations (one d
 
 ## Verify
 Owner is the plan task that answers it; full text in the [plan](../../progress/plans/phase-3b-shell.md#verify).
-- `V-SHELL-1` (Task 3, answered from FRB's source, Dart check in Task 4): FRB's `async fn` runs on its own tokio runtime, but a sync fn with a `StreamSink` runs on a thread pool with none, so the watcher owns a 1-worker runtime (`link::runtime()`).
+- `V-SHELL-1` (Task 3, answered from FRB's source and confirmed from Dart in Task 4, 2026-11-01: `Handle::try_current()` is ok inside an `async fn`, not inside a sync fn with a `StreamSink`): FRB's `async fn` runs on its own tokio runtime, but a sync fn with a `StreamSink` runs on a thread pool with none, so the watcher owns a 1-worker runtime (`link::runtime()`).
 - `V-SHELL-2` (3d, SP11): the Flatpak permission for the daemon socket.
 - `V-SHELL-3` (Task 11): lag is invisible to clients; mitigated by refresh triggers.
 - `V-SHELL-4` (Task 9): derived per-game syncing status has no end marker.
@@ -56,8 +58,8 @@ Owner is the plan task that answers it; full text in the [plan](../../progress/p
 - `V-SHELL-7` (Task 10, Task 11): the single-instance raise on KDE Wayland and X11.
 - `V-SHELL-8` (Task 7, Task 11): shortcuts do not clash with the desktop environment.
 - `V-SHELL-9` (Task 11): 60 fps floor on Home and Games in profile mode.
-- `V-SHELL-10` (Task 4): FRB resolves DTOs re-exported through `api::daemon`.
-- `V-SHELL-11` (Task 4, Task 11): cancelling the Dart stream stops the Rust task promptly.
+- `V-SHELL-10` (Task 4, confirmed): FRB resolves DTOs re-exported through `api::daemon`; they are generated under `app/lib/bridge/link/`.
+- `V-SHELL-11` (Task 4 confirmed with a Dart run, Task 11): cancelling the Dart stream calls `WatchHandle.stop()` and the Rust task ends at once.
 - `V-SHELL-12` (Task 3, Task 11): the call timeouts are starting values.
 - `V-SHELL-13` (Task 8): what `lemusync doctor` prints for each error kind.
-- `V-SHELL-14` (Task 3): growth of `liblemusync_bridge.so` from the engine dependency.
+- `V-SHELL-14` (Task 3, Task 4): `liblemusync_bridge.so` grew from 2.11 MB to 4.60 MB with the engine reachable (release, measured Task 4).

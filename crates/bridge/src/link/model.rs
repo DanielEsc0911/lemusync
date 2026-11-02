@@ -7,7 +7,7 @@ use lemusync_engine::{LibraryEntry, RecentItem};
 
 /// Where the link to the daemon stands (app-shell §Connection).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum ConnectionState {
+pub enum ConnectionState {
     Connecting,
     Online {
         daemon_version: String,
@@ -29,7 +29,7 @@ pub(crate) enum ConnectionState {
 
 /// Same order as [`StatusState`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum StateDto {
+pub enum StateDto {
     Synced,
     Scanning,
     Syncing,
@@ -54,7 +54,7 @@ impl From<StatusState> for StateDto {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ErrorKindDto {
+pub enum ErrorKindDto {
     Auth,
     Quota,
     Permission,
@@ -75,7 +75,7 @@ impl From<ErrorKind> for ErrorKindDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct StatusDto {
+pub struct StatusDto {
     pub state: StateDto,
     pub last_sync_ms: Option<u64>,
     pub uploads: u32,
@@ -106,7 +106,7 @@ impl From<&Status> for StatusDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct SessionDto {
+pub struct SessionDto {
     pub game: String,
     pub name: Option<String>,
     pub emulator: String,
@@ -129,14 +129,14 @@ impl From<&Session> for SessionDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct PlayerStreamDto {
+pub struct PlayerStreamDto {
     pub player: String,
     pub last_version_ms: Option<u64>,
 }
 
 /// A game of the library. `launchable` is all Dart learns about the game file (B2).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct GameEntry {
+pub struct GameEntry {
     pub emulator: String,
     pub key: String,
     pub name: Option<String>,
@@ -164,7 +164,7 @@ impl From<&LibraryEntry> for GameEntry {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct RecentDto {
+pub struct RecentDto {
     pub emulator: String,
     pub key: String,
     pub name: Option<String>,
@@ -188,13 +188,13 @@ impl From<&RecentItem> for RecentDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct GamesDto {
+pub struct GamesDto {
     pub games: Vec<GameEntry>,
     pub recent: Vec<RecentDto>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum PhaseDto {
+pub enum PhaseDto {
     Checking,
     Uploading,
     Downloading,
@@ -211,7 +211,7 @@ impl From<TransferPhase> for PhaseDto {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ProgressDto {
+pub struct ProgressDto {
     pub player: String,
     pub emulator: String,
     pub game: String,
@@ -239,7 +239,7 @@ impl From<&TransferProgress> for ProgressDto {
 
 /// Everything one `Status` call tells (games arrive separately).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Snapshot {
+pub struct Snapshot {
     pub connection: ConnectionState,
     pub status: Option<StatusDto>,
     pub session: Option<SessionDto>,
@@ -261,7 +261,7 @@ impl Snapshot {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum LinkEvent {
+pub enum LinkEvent {
     Connection(ConnectionState),
     Status(StatusDto),
     Session(Option<SessionDto>),
