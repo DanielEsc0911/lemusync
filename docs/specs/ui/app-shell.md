@@ -1,6 +1,6 @@
 # App shell
 
-> **Status:** Decided (design only, nothing built) · **Related:** [rules](../../rules.md) (F1, F2, F3, B2, B3, P5, P6), [architecture §IPC](../architecture.md#ipc), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D35, D40, D43, D44) · **Code:** planned `crates/bridge/src/link/`, `crates/bridge/src/api/daemon.rs`, `app/lib/app/`, `app/lib/screens/` (nothing is built yet; Phase 3b, [plan](../../progress/plans/phase-3b-shell.md))
+> **Status:** Decided (design only, nothing built) · **Related:** [rules](../../rules.md) (F1, F2, F3, B2, B3, P5, P6), [architecture §IPC](../architecture.md#ipc), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D35, D40, D43, D44) · **Code:** `crates/engine/src/library.rs` (built, 3b Task 2: the game-library rule shared with the tray); planned `crates/bridge/src/link/`, `crates/bridge/src/api/daemon.rs`, `app/lib/app/`, `app/lib/screens/` (nothing is built yet; Phase 3b, [plan](../../progress/plans/phase-3b-shell.md))
 
 ## Purpose
 How the desktop app reaches the daemon, what state it holds and which destinations it shows. Everything below is planned for Phase 3b and is marked as built only when the task that builds it lands.

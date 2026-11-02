@@ -159,9 +159,6 @@ pub fn tray_request(a: &TrayAction, now_ms: u64) -> Option<Request> {
 /// Separates the parts of a "Play" item's id (unit separator: never in a name).
 const SEP: char = '\u{1f}';
 
-/// Most "Play" items in the tray.
-pub const RECENT_MAX: usize = 8;
-
 fn play_ref(player: &str, emulator: &str, game: &str) -> String {
     format!("{player}{SEP}{emulator}{SEP}{game}")
 }
@@ -178,46 +175,30 @@ fn parse_play_ref(r: &str) -> Option<(String, String, String)> {
 /// The tray's "Play" items, newest play first: every synced stream, so the user sees why one
 /// can't be played. A game this device has no file for (see `launchable`) is listed disabled,
 /// with a hint. Streams with no known last version go last, then by label. The player is in the
-/// label when there are several.
+/// label when there are several. The order and the cap are `lemusync_engine::recent`'s; this
+/// only builds the localised labels and the ids.
 #[must_use]
 pub fn recent_games(status: &StatusReport, games: &GamesReport, t: &I18n) -> Vec<RecentItem> {
     let many = status.players.len() > 1;
-    let mut items: Vec<(Option<u64>, RecentItem)> = status
-        .streams
-        .iter()
-        .map(|st| {
-            let known = games
-                .games
-                .iter()
-                .find(|g| g.emulator == st.emulator && g.key.eq_ignore_ascii_case(&st.game));
-            let launchable = known.is_some_and(|g| g.path.is_some());
-            let name = known
-                .and_then(|g| g.name.clone())
-                .or_else(|| st.name.clone())
-                .unwrap_or_else(|| st.game.clone());
+    lemusync_engine::recent(status, games)
+        .into_iter()
+        .map(|i| {
+            let name = i.name.unwrap_or_else(|| i.game.clone());
             let mut label = if many {
-                format!("{name} · {}", st.player)
+                format!("{name} · {}", i.player)
             } else {
                 name
             };
-            if !launchable {
+            if !i.launchable {
                 label = format!("{label} ({})", t.t("tray-recent-no-file", &[]));
             }
-            let item = RecentItem {
-                id: play_ref(&st.player, &st.emulator, &st.game),
+            RecentItem {
+                id: play_ref(&i.player, &i.emulator, &i.game),
                 label,
-                launchable,
-            };
-            (st.last_version_ms, item)
+                launchable: i.launchable,
+            }
         })
-        .collect();
-    items.sort_by(|(a, x), (b, y)| {
-        b.is_some()
-            .cmp(&a.is_some())
-            .then_with(|| b.cmp(a))
-            .then_with(|| x.label.cmp(&y.label))
-    });
-    items.into_iter().map(|(_, i)| i).take(RECENT_MAX).collect()
+        .collect()
 }
 
 /// A failed tray "Play" as a notice: a held lease and a conflict get their own (the lease one
@@ -665,6 +646,7 @@ async fn recv_opt<T>(rx: Option<&mut mpsc::Receiver<T>>) -> Option<T> {
 mod tests {
     use super::*;
     use lemusync_api::{ConflictInfo, LeaseInfo, StatusFacts};
+    use lemusync_engine::RECENT_MAX;
 
     #[test]
     fn every_status_state_maps_onto_the_view() {
@@ -880,6 +862,40 @@ mod tests {
         assert_eq!(
             recent_games(&st, &games, &I18n::new("es"))[1].label,
             "Bayonetta 2 · Ana (sin archivo del juego)"
+        );
+    }
+
+    #[test]
+    fn two_players_give_one_item_per_stream_newest_first() {
+        let (mut st, games) = recent_fixture();
+        st.players.push("Bea".into());
+        st.streams = vec![
+            lemusync_api::StreamStatus {
+                game: "aa".into(),
+                last_version_ms: Some(100),
+                player: "Bea".into(),
+                ..st.streams[0].clone()
+            },
+            lemusync_api::StreamStatus {
+                game: "aa".into(),
+                last_version_ms: Some(200),
+                ..st.streams[0].clone()
+            },
+        ];
+        let r = recent_games(&st, &games, &I18n::new("en"));
+        let got: Vec<(String, &str)> = r.iter().map(|i| (i.id.clone(), i.label.as_str())).collect();
+        assert_eq!(
+            got,
+            [
+                (play_ref("Ana", "cemu", "aa"), "Game aa · Ana"),
+                (play_ref("Bea", "cemu", "aa"), "Game aa · Bea"),
+            ]
+        );
+        st.players.pop();
+        st.streams.pop();
+        assert_eq!(
+            recent_games(&st, &games, &I18n::new("en"))[0].label,
+            "Game aa"
         );
     }
 
