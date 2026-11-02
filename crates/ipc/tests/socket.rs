@@ -193,3 +193,110 @@ async fn connect_with_nothing_listening_is_not_running() {
         Err(IpcError::NotRunning)
     ));
 }
+
+/// A daemon that handshakes, answers `Subscribe`, then writes `frames` as raw JSON values,
+/// so a test can send events this build's `Event` cannot decode.
+fn raw_events(path: &Path, frames: Vec<serde_json::Value>) {
+    let listener = tokio::net::UnixListener::bind(path).unwrap();
+    tokio::spawn(async move {
+        let (mut s, _) = listener.accept().await.unwrap();
+        let _: Option<Hello> = read_frame(&mut s).await.unwrap();
+        let reply = lemusync_api::HelloReply {
+            api_version: API_VERSION,
+            daemon_version: "9.9.9".into(),
+        };
+        write_frame(&mut s, &reply).await.unwrap();
+        let _: Option<Request> = read_frame(&mut s).await.unwrap();
+        write_frame(&mut s, &Response::Subscribed).await.unwrap();
+        for f in frames {
+            write_frame(&mut s, &f).await.unwrap();
+        }
+        // Hold the connection open: the stream must end because of the client's rules.
+        let _: Option<Request> = read_frame(&mut s).await.unwrap_or(None);
+    });
+}
+
+fn status_event() -> serde_json::Value {
+    serde_json::to_value(Event::StatusChanged(Status::from_facts(
+        &StatusFacts::default(),
+    )))
+    .unwrap()
+}
+
+async fn raw_stream(
+    frames: Vec<serde_json::Value>,
+) -> (
+    tempfile::TempDir,
+    impl futures_util::Stream<Item = Result<Event, IpcError>>,
+) {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("raw.sock");
+    raw_events(&path, frames);
+    let stream = Client::connect(&path, "test")
+        .await
+        .unwrap()
+        .subscribe()
+        .await
+        .unwrap();
+    (dir, stream)
+}
+
+#[tokio::test]
+async fn an_event_from_a_newer_daemon_is_skipped() {
+    let future = serde_json::json!({"event": "from_the_future", "data": {"x": 1}});
+    let (_dir, stream) = raw_stream(vec![future, status_event()]).await;
+    let mut stream = Box::pin(stream);
+    let first = tokio::time::timeout(std::time::Duration::from_secs(2), stream.next())
+        .await
+        .expect("an item in time");
+    assert!(
+        matches!(first, Some(Ok(Event::StatusChanged(_)))),
+        "{first:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_known_event_whose_payload_no_longer_fits_is_skipped() {
+    let bad = serde_json::json!({"event": "status_changed", "data": {"state": 12345}});
+    let (_dir, stream) = raw_stream(vec![bad, status_event()]).await;
+    let mut stream = Box::pin(stream);
+    let first = tokio::time::timeout(std::time::Duration::from_secs(2), stream.next())
+        .await
+        .expect("an item in time");
+    assert!(
+        matches!(first, Some(Ok(Event::StatusChanged(_)))),
+        "{first:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_frame_that_is_not_json_ends_the_stream_with_an_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("raw.sock");
+    let listener = tokio::net::UnixListener::bind(&path).unwrap();
+    tokio::spawn(async move {
+        use tokio::io::AsyncWriteExt;
+        let (mut s, _) = listener.accept().await.unwrap();
+        let _: Option<Hello> = read_frame(&mut s).await.unwrap();
+        let reply = lemusync_api::HelloReply {
+            api_version: API_VERSION,
+            daemon_version: "9.9.9".into(),
+        };
+        write_frame(&mut s, &reply).await.unwrap();
+        let _: Option<Request> = read_frame(&mut s).await.unwrap();
+        write_frame(&mut s, &Response::Subscribed).await.unwrap();
+        s.write_all(&5u32.to_be_bytes()).await.unwrap();
+        s.write_all(b"nope!").await.unwrap();
+        let _: Option<Request> = read_frame(&mut s).await.unwrap_or(None);
+    });
+    let mut stream = Box::pin(
+        Client::connect(&path, "test")
+            .await
+            .unwrap()
+            .subscribe()
+            .await
+            .unwrap(),
+    );
+    assert!(matches!(stream.next().await, Some(Err(IpcError::Json(_)))));
+    assert!(stream.next().await.is_none());
+}

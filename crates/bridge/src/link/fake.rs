@@ -21,6 +21,8 @@ pub(crate) enum Answer<T> {
     Silent,
     /// Answers once the test adds a permit.
     Held(Arc<Semaphore>, T),
+    /// An error for the first request (while the flag is unset), then the value.
+    FailOnce(Arc<std::sync::atomic::AtomicBool>, ErrorBody, T),
 }
 
 /// What the fake does, set before it starts.
@@ -218,6 +220,13 @@ async fn answer<T: Clone>(a: &Answer<T>, ok: impl FnOnce(T) -> Response) -> Opti
         Answer::Ok(v) => Some(ok(v.clone())),
         Answer::Error(b) => Some(Response::Error(b.clone())),
         Answer::Silent => std::future::pending().await,
+        Answer::FailOnce(done, body, v) => {
+            if done.swap(true, std::sync::atomic::Ordering::SeqCst) {
+                Some(ok(v.clone()))
+            } else {
+                Some(Response::Error(body.clone()))
+            }
+        }
         Answer::Held(gate, v) => {
             let _ = gate
                 .acquire()

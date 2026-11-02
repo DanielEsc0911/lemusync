@@ -106,6 +106,10 @@ async fn pump(
     let mut events = pin!(events);
     let mut fetch: Option<Fetch<'_>> = Some(calls::games(link).boxed());
     let mut again = false;
+    // Before any fetch worked on this connection, a failure gets exactly one retry (the
+    // first trigger may never be followed by another).
+    let mut fetched = false;
+    let mut retried = false;
     loop {
         let mut trigger = false;
         tokio::select! {
@@ -132,10 +136,18 @@ async fn pump(
             result = next_fetch(&mut fetch), if fetch.is_some() => {
                 fetch = None;
                 // A failed fetch emits nothing: the next trigger retries.
-                if let Ok(games) = result && !emit(LinkEvent::Games(games)) {
-                    return false;
+                let failed_first = result.is_err() && !fetched && !retried;
+                if let Ok(games) = result {
+                    fetched = true;
+                    if !emit(LinkEvent::Games(games)) {
+                        return false;
+                    }
                 }
-                if std::mem::take(&mut again) {
+                if failed_first {
+                    retried = true;
+                    again = false;
+                    fetch = Some(calls::games(link).boxed());
+                } else if std::mem::take(&mut again) {
                     fetch = Some(calls::games(link).boxed());
                 }
             }
@@ -346,6 +358,26 @@ mod tests {
         settle().await;
         assert_eq!(fake.count("games"), 1);
         (fake, stop, task, rx)
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_failed_first_games_fetch_is_retried_once() {
+        let fake = Fake::start(Script {
+            games: Answer::FailOnce(
+                Arc::new(std::sync::atomic::AtomicBool::new(false)),
+                error_body("busy"),
+                games_report(),
+            ),
+            ..Script::default()
+        });
+        let stop = Arc::new(Notify::new());
+        let (task, mut rx) = start(fake.link.clone(), &stop);
+        // No `last_sync_ms` change happens: only the retry can produce `Games`.
+        collect_until(&mut rx, is_games).await;
+        settle().await;
+        assert_eq!(fake.count("games"), 2);
+        stop.notify_one();
+        task.await.expect("join");
     }
 
     #[tokio::test(start_paused = true)]
