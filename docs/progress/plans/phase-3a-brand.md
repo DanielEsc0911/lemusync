@@ -579,8 +579,8 @@ Art direction (good enough, not final; recognisable at 24 px): a ring-tailed lem
 
 **Files:** modify `brand/mark/{marks.toml,parts/controller.svg}`, `xtask/src/brand/targets.rs`, `crates/daemon/src/{view.rs,run.rs}`, `crates/daemon/src/platform/{mod.rs,icons.rs}`, generated `crates/daemon/assets/tray/playing-*.argb` and `brand/out/controller.svg`, `docs/specs/ui/{status-and-notifications,brand}.md`, `docs/specs/reliability.md`, `docs/progress/README.md`.
 
-- [x] **Step 1: tests first** (red: did not compile, no `TrayIcon::Playing`): `a_session_shows_playing_only_when_everything_is_synced` (view), `playing_lights_both_eyes_green_and_tilts_the_stick` (icons, `ALL` has 7), xtask `tray_files_cover_seven_states_and_three_sizes`.
-- [x] **Step 2: implement:** param `stickTilt` (default 0, 35 in `tray-playing`), green-500 eyes, `TrayIcon::Playing`; priority error > attention > offline > paused > syncing > playing > synced. The failed-Play notice now speaks the Presence's language.
+- [x] **Step 1: tests first** (red: did not compile, no `TrayIcon::Playing`): `a_session_shows_playing_only_when_everything_is_synced` (view), `playing_lights_both_eyes_green_and_leans_the_stick` (icons, `ALL` has 7), xtask `tray_files_cover_seven_states_and_three_sizes`.
+- [x] **Step 2: implement:** params `stickAngle`/`stickPush`/`stickSquash` (defaults 0/0/1; -45/10/0.8 in `tray-playing`: the socket ring stays, only the cap leans out), green-500 eyes, `TrayIcon::Playing`; the tray follows the status priority (error > attention > syncing > offline > paused > scanning > synced) and playing replaces only synced. The failed-Play notice now speaks the Presence's language.
 - [x] **Step 3:** docs, daemon size 18 112 192 bytes (+20 096). `just check`. **Commit** `feat(daemon): show a playing state in the tray`.
 
 ## Verify

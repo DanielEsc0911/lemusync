@@ -9,8 +9,8 @@
 <circle cx="62" cy="148" r="52"/>
 <circle cx="194" cy="148" r="52"/>
 </g>
-<g transform="rotate({{param.stickTilt}} 68 170)">
 <circle cx="68" cy="128" r="40" fill="{{color.outline}}"/>
+<g transform="translate(68 128) rotate({{param.stickAngle}}) translate({{param.stickPush}} 0) scale({{param.stickSquash}} 1) translate(-68 -128)">
 <circle cx="68" cy="128" r="30" fill="{{color.light}}"/>
 <circle cx="68" cy="128" r="20" fill="{{color.outline}}"/>
 <circle cx="68" cy="128" r="9" fill="{{color.light}}"/>

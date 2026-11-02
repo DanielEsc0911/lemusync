@@ -129,16 +129,16 @@ mod tests {
     }
 
     #[test]
-    fn playing_lights_both_eyes_green_and_tilts_the_stick() {
+    fn playing_lights_both_eyes_green_and_leans_the_stick() {
         // Only the two eye buttons change; the stick moves (the shape cue).
         assert_buttons(TrayIcon::Playing, [BLUE, RED, GREEN, GREEN]);
         let (a, b) = (TrayIcon::Playing.pixmaps(), TrayIcon::Synced.pixmaps());
         assert_ne!(a[0].1, b[0].1, "24px differs from synced");
-        // The stick's centre (68,128) holds the cap's light centre in synced; tilted, it moved.
-        assert_ne!(
-            at(TrayIcon::Playing, 48, 68, 128),
-            at(TrayIcon::Synced, 48, 68, 128)
-        );
+        // The socket (outer ring, 36 units left of the stick centre) stays put; the cap
+        // (a point inside the old cap, 25 units below the centre) leans away from it.
+        let (p, s) = (TrayIcon::Playing, TrayIcon::Synced);
+        assert_eq!(at(p, 48, 32, 128), at(s, 48, 32, 128), "socket ring stays");
+        assert_ne!(at(p, 48, 60, 153), at(s, 48, 60, 153), "cap leans out");
     }
 
     #[test]

@@ -11,8 +11,8 @@
 <circle cx="62" cy="148" r="52"/>
 <circle cx="194" cy="148" r="52"/>
 </g>
-<g transform="rotate(0 68 170)">
 <circle cx="68" cy="128" r="40" fill="#141211"/>
+<g transform="translate(68 128) rotate(0) translate(0 0) scale(1 1) translate(-68 -128)">
 <circle cx="68" cy="128" r="30" fill="#FBFAF7"/>
 <circle cx="68" cy="128" r="20" fill="#141211"/>
 <circle cx="68" cy="128" r="9" fill="#FBFAF7"/>

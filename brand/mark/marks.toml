@@ -30,7 +30,7 @@ colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "b
 [mark.controller]    # small family (<= 48 px): SNES-style pad, two amber buttons are the eyes
 parts = ["controller"]
 colors = { body = "stone-300", outline = "charcoal-950", light = "bone", btnTop = "blue-500", btnBottom = "red-500", btnLeft = "amber-500", btnRight = "amber-500" }
-params = { cy = 128, scale = 1, hollow = 0, btnR = 16, stickTilt = 0 }   # hollow = 1: the four buttons are rings (stroke only); stickTilt: degrees the thumb-stick leans (pivot under its base)
+params = { cy = 128, scale = 1, hollow = 0, btnR = 16, stickAngle = 0, stickPush = 0, stickSquash = 1 }   # hollow = 1: the four buttons are rings (stroke only); the stick cap leans out of its fixed socket: stickAngle = lean direction in degrees (0 = right, -90 = up), stickPush = how far the cap moves, stickSquash = cap width along the lean (1 = round)
 
 [mark.controllerSquare]   # iOS small sizes: full-bleed and opaque
 extends = "controller"
@@ -38,7 +38,7 @@ parts = ["bg", "controller"]
 colors = { bg = "charcoal-800" }
 params = { scale = 0.9 }
 
-[mark.tray]          # base for the seven tray states, not an output itself: the state is the four button colors (playing also tilts the stick)
+[mark.tray]          # base for the seven tray states, not an output itself: the state is the four button colors (playing also leans the stick cap)
 extends = "controller"
 params = { btnR = 20 }
 
@@ -49,10 +49,10 @@ extends = "tray"
 extends = "tray"
 colors = { btnTop = "blue-500", btnBottom = "blue-500", btnLeft = "blue-500", btnRight = "blue-500" }
 
-[mark.tray-playing]   # a play session on an otherwise synced install: eyes lit green, stick pushed (shape cue)
+[mark.tray-playing]   # a play session on an otherwise synced install: eyes lit green, cap leans out of its socket (shape cue)
 extends = "tray"
 colors = { btnLeft = "green-500", btnRight = "green-500" }
-params = { stickTilt = 35 }
+params = { stickAngle = -45, stickPush = 10, stickSquash = 0.8 }
 
 [mark.tray-paused]
 extends = "tray"
