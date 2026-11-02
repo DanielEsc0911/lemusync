@@ -38,6 +38,7 @@ Read this file, then only the docs your task needs. Headings are stable: grep th
 | [specs/i18n.md](specs/i18n.md) | English/Spanish, string sources per layer, terminology, parity checks | Decided |
 | [specs/ui/brand.md](specs/ui/brand.md) | Direction, palette roles, lemur mark, the generator pipeline and its outputs | Decided |
 | [specs/ui/design-system.md](specs/ui/design-system.md) | Visual parity, tokens, components, motion, accessibility, frame budgets | Draft |
+| [specs/ui/app-shell.md](specs/ui/app-shell.md) | How the desktop app reaches the daemon: connection states, data flow, app state, destinations as built | Decided |
 | [specs/ui/navigation.md](specs/ui/navigation.md) | Destinations, adaptive containers, every user flow, deep links | Draft |
 | [specs/ui/status-and-notifications.md](specs/ui/status-and-notifications.md) | One status model → tray, Live Updates, Live Activities, toasts | Draft |
 
