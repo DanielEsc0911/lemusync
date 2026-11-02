@@ -16,7 +16,7 @@ Same order, names and icons everywhere:
 | 4 | **Devices** | Devices in the repo, last seen, sessions; this device's settings |
 | 5 | **Settings** | Players · Storage · Emulators · Notifications · Language · Advanced · About |
 
-Destinations appear only once they work end to end (F2); until Phase 3d the desktop app shows Home and Games (maintainer, 2026-11-01). As of 3b (planned): Home and Games are built. The order of the five stays this table's; a destination is shown from the phase that builds it. See [app-shell](app-shell.md#destinations-as-built-3b).
+Destinations appear only once they work end to end (F2); until Phase 3d the desktop app shows Home and Games ([D44](../../decisions.md#d44-destinations-appear-only-once-they-work-end-to-end-2026-11-01)). As of 3b (planned): Home and Games are built. The order of the five stays this table's; a destination is shown from the phase that builds it. This is a staging order, the same on every platform at any build (F3 holds). See [app-shell](app-shell.md#destinations-as-built-3b).
 
 ## Adaptive containers
 | Size class (width) | Container | Detail views |
