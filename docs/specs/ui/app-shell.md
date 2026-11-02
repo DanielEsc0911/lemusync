@@ -62,4 +62,4 @@ Owner is the plan task that answers it; full text in the [plan](../../progress/p
 - `V-SHELL-11` (Task 4 confirmed with a Dart run, Task 11): cancelling the Dart stream calls `WatchHandle.stop()` and the Rust task ends at once.
 - `V-SHELL-12` (Task 3, Task 11): the call timeouts are starting values.
 - `V-SHELL-13` (Task 8): what `lemusync doctor` prints for each error kind.
-- `V-SHELL-14` (Task 3, Task 4): `liblemusync_bridge.so` grew from 2.11 MB to 4.60 MB with the engine reachable (release, measured Task 4).
+- `V-SHELL-14` (Task 3, Task 4): `liblemusync_bridge.so` grew from 2.11 MB to 4.60 MB with the engine reachable (release, measured Task 4). Breakdown 2026-11-01: `crc_fast`, `core`, `lemusync_api` and `rustls` are the largest symbol groups; `lemusync_engine` is 7 KB.

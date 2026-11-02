@@ -33,8 +33,11 @@ class _FakeHandle implements WatchHandle {
   final StreamController<dto.LinkEvent> source;
   int stops = 0;
 
+  /// Replaces the source's stream when a test needs a custom one.
+  Stream<dto.LinkEvent>? stream;
+
   @override
-  Stream<dto.LinkEvent> watch() => source.stream;
+  Stream<dto.LinkEvent> watch() => stream ?? source.stream;
 
   @override
   Future<void> stop() async => stops++;
@@ -89,4 +92,93 @@ void main() {
     ).events();
     expect(made, 0);
   });
+
+  test('cancel still stops the handle when the inner cancel throws', () async {
+    final handle = _FakeHandle(StreamController<dto.LinkEvent>())
+      ..stream = _ThrowOnCancel();
+    final link = FrbDaemonLink(newHandle: () => handle);
+    final sub = link.events().listen((_) {});
+    await pumpEventQueue();
+    await sub.cancel().then((_) {}, onError: (_) {});
+    expect(handle.stops, 1);
+  });
+
+  test('a stream error reaches the listener', () async {
+    final source = StreamController<dto.LinkEvent>();
+    final link = FrbDaemonLink(newHandle: () => _FakeHandle(source));
+    final errors = <Object>[];
+    final sub = link.events().listen((_) {}, onError: errors.add);
+    source.addError('boom');
+    await pumpEventQueue();
+    expect(errors, ['boom']);
+    await sub.cancel();
+    await source.close();
+  });
+
+  test('the handle stream finishing closes the returned stream', () async {
+    final source = StreamController<dto.LinkEvent>();
+    final link = FrbDaemonLink(newHandle: () => _FakeHandle(source));
+    var done = false;
+    link.events().listen((_) {}, onDone: () => done = true);
+    await source.close();
+    await pumpEventQueue();
+    expect(done, isTrue);
+  });
+
+  test(
+    'cancelling in the turn it was listened stops that handle once',
+    () async {
+      var made = 0;
+      late _FakeHandle handle;
+      final link = FrbDaemonLink(
+        newHandle: () {
+          made++;
+          return handle = _FakeHandle(StreamController<dto.LinkEvent>());
+        },
+      );
+      final sub = link.events().listen((_) {});
+      await sub.cancel();
+      expect(made, 1);
+      expect(handle.stops, 1);
+    },
+  );
+
+  test('two events() calls make two independent handles', () async {
+    final handles = <_FakeHandle>[];
+    final link = FrbDaemonLink(
+      newHandle: () {
+        final h = _FakeHandle(StreamController<dto.LinkEvent>());
+        handles.add(h);
+        return h;
+      },
+    );
+    final a = link.events().listen((_) {});
+    final b = link.events().listen((_) {});
+    await pumpEventQueue();
+    expect(handles, hasLength(2));
+    await a.cancel();
+    expect(handles[0].stops, 1);
+    expect(handles[1].stops, 0);
+    await b.cancel();
+    expect(handles[1].stops, 1);
+  });
+}
+
+/// A stream whose subscription throws when cancelled.
+class _ThrowOnCancel extends Stream<dto.LinkEvent> {
+  @override
+  StreamSubscription<dto.LinkEvent> listen(
+    void Function(dto.LinkEvent event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) => _ThrowingSub();
+}
+
+class _ThrowingSub implements StreamSubscription<dto.LinkEvent> {
+  @override
+  Future<void> cancel() => Future.error(StateError('cancel failed'));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
 }

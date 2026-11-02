@@ -47,8 +47,11 @@ final class FrbDaemonLink implements DaemonLink {
       // Dart stopped listening: end the Rust task now (V-SHELL-11). The Rust
       // side only notices a closed sink on its next emit.
       onCancel: () async {
-        await inner?.cancel();
-        await handle?.stop();
+        try {
+          await inner?.cancel();
+        } finally {
+          await handle?.stop();
+        }
       },
     );
     return controller.stream;

@@ -1,5 +1,6 @@
 // SP3b probe (not part of the app): runs the generated bridge against the
 // socket under $LEMUSYNC_TEST_ROOT/run, never the user's own daemon.
+// Run from `app/`.
 //
 //   cargo build -p lemusync-bridge   (from the repo root)
 //   LEMUSYNC_TEST_ROOT=$(mktemp -d) dart run tool/sp3b_probe.dart
