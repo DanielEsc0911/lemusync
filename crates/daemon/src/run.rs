@@ -419,14 +419,18 @@ async fn wait_for_lease(
 }
 
 /// Fetches the tray's "Play" items.
-async fn fetch_recent(handle: ServiceHandle, out: mpsc::Sender<Vec<RecentItem>>) {
+async fn fetch_recent(
+    handle: ServiceHandle,
+    lang: &'static str,
+    out: mpsc::Sender<Vec<RecentItem>>,
+) {
     let (Response::Status(st), Response::Games(g)) = (
         handle.call(Request::Status).await,
         handle.call(Request::Games).await,
     ) else {
         return;
     };
-    let items = recent_games(&st, &g, &I18n::from_env()); // not `Send`: gone before the await
+    let items = recent_games(&st, &g, &I18n::new(lang)); // not `Send`: gone before the await
     let _ = out.send(items).await;
 }
 
@@ -549,6 +553,7 @@ pub async fn run(
     let (quit_tx, mut quit_rx) = mpsc::channel(1);
     let ipc = tokio::spawn(serve(server, handle.clone(), quit_tx));
     let mut events = handle.subscribe();
+    let lang = i18n.lang();
     let (mut tray_rx, mut notice_rx) = (None, None);
     let mut presence = desktop.map(|d| {
         tray_rx = Some(d.tray_actions);
@@ -572,7 +577,7 @@ pub async fn run(
     let (recent_tx, mut recent_rx) = mpsc::channel(4);
     if let Some(p) = &presence {
         p.show();
-        tokio::spawn(fetch_recent(handle.clone(), recent_tx.clone()));
+        tokio::spawn(fetch_recent(handle.clone(), lang, recent_tx.clone()));
     }
     let mut last_sync = None;
     tokio::pin!(shutdown);
@@ -584,17 +589,16 @@ pub async fn run(
                 Ok(e) => {
                     if let Some(p) = &mut presence {
                         p.on_event(&e);
-                        // A session ended: that game is now the most recent, even if its
-                        // upload is still pending.
+                        // A session ended (launcher mode may have uploaded by now).
                         if matches!(e, Event::SessionChanged(None)) {
-                            tokio::spawn(fetch_recent(handle.clone(), recent_tx.clone()));
+                            tokio::spawn(fetch_recent(handle.clone(), lang, recent_tx.clone()));
                         }
                         // A finished sync may have added games: refresh the "Play" items.
                         if let Event::StatusChanged(s) = &e
                             && s.last_sync_ms != last_sync
                         {
                             last_sync = s.last_sync_ms;
-                            tokio::spawn(fetch_recent(handle.clone(), recent_tx.clone()));
+                            tokio::spawn(fetch_recent(handle.clone(), lang, recent_tx.clone()));
                         }
                     }
                 }

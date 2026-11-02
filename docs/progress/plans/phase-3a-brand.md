@@ -570,8 +570,8 @@ Art direction (good enough, not final; recognisable at 24 px): a ring-tailed lem
 
 **Interfaces:** `Engine::game_name(emulator, game)` and `games::name_in(&names, emulator, game)` (case-insensitive on the key) replace every `names.get(&(emu, game))`; `StreamStatus.last_version_ms: Option<u64>` (additive, omitted when none, from `VersionId::unix_ms` of the stream's base); `RecentItem { id, label, launchable }` replaces the `(id, label)` tuple.
 
-- [x] **Step 1: failing tests:** `a_game_name_is_found_in_any_case_of_the_key`, the watch-mode session carries the catalog name (`watch_mode_takes_the_lease_uploads_after_exit_and_releases`), `stream_status_last_version_is_additive`, `play_items_are_newest_first_and_unlaunchable_ones_are_disabled`, `play_items_stop_at_the_cap`, `only_a_launchable_menu_item_plays`, `an_unlaunchable_recent_game_is_a_disabled_item`.
-- [x] **Step 2: implement:** watch-mode `Session.name` filled (was `None`, so the tooltip showed the title id); recent games ordered by last play, uncataloged streams kept and disabled with `tray-recent-no-file`; refresh also on `SessionChanged(None)`.
+- [x] **Step 1: tests:** observed red first: the watch-mode engine test (`watch_mode_takes_the_lease_uploads_after_exit_and_releases`, name missing) and `a_game_name_is_found_in_any_case_of_the_key` (added in the review fix; red with a plain exact `get` in `name_in`). Written together with the code, not seen red: `stream_status_last_version_is_additive`, `play_items_are_newest_first_and_unlaunchable_ones_are_disabled`, `play_items_stop_at_the_cap`, `only_a_launchable_menu_item_plays`, `an_unlaunchable_recent_game_is_a_disabled_item`.
+- [x] **Step 2: implement:** watch-mode `Session.name` filled (was `None`, so the tooltip showed the title id); recent games ordered by the last version this device synced (`last_version_ms`, newest first; a session that changes no save doesn't reorder), uncataloged streams kept and disabled with `tray-recent-no-file`; refresh after each sync and on `SessionChanged(None)` (it covers a launcher-mode session that already uploaded; in watch mode the exit upload comes later and the `last_sync_ms` refresh covers it).
 - [x] **Step 3:** docs (tray spec, game names), board row. `just check`. **Commit** `fix(daemon): name the game in every session and order recent games by last play`.
 - Not in scope: learning a game's path from the emulator's command line or caches (needs a spike).
 
@@ -580,6 +580,7 @@ Art direction (good enough, not final; recognisable at 24 px): a ring-tailed lem
 - `V-BRAND-1` (after Task 4, first CI run): resvg bytes identical on the Fedora PC and `ubuntu-latest`. If not, `--check` compares decoded pixels with a small tolerance instead; record it as a decision.
 - `V-BRAND-2` (Task 10 Step 4): tray pixmaps sharp on KDE Plasma 6; GNOME + AppIndicator later.
 - `V-BRAND-3` (after Task 6, first CI run): Flutter goldens from Fedora match on `ubuntu-latest`.
+- `V-TRAY-1` (Task 11, maintainer): watch-mode play reorders Recent games after the exit upload, on the maintainer's PC.
 
 ## Self-review
 

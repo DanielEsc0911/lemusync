@@ -7,6 +7,8 @@ const ES: &str = include_str!("../../../locales/es/lemusync.ftl");
 
 pub struct I18n {
     bundle: FluentBundle<FluentResource>,
+    #[allow(dead_code)] // read by `lang`, which only the daemon calls
+    lang: &'static str,
 }
 
 impl I18n {
@@ -25,14 +27,20 @@ impl I18n {
     }
 
     pub fn new(lang: &str) -> Self {
-        let (text, id) = if lang == "es" { (ES, "es") } else { (EN, "en") };
+        let (text, id): (_, &'static str) = if lang == "es" { (ES, "es") } else { (EN, "en") };
         let langid: unic_langid::LanguageIdentifier = id.parse().unwrap_or_default();
         let mut bundle = FluentBundle::new(vec![langid]);
         bundle.set_use_isolating(false);
         let resource =
             FluentResource::try_new(text.to_owned()).unwrap_or_else(|(partial, _)| partial);
         bundle.add_resource_overriding(resource);
-        Self { bundle }
+        Self { bundle, lang: id }
+    }
+
+    /// `es` or `en`: the language this bundle speaks (the daemon reads it; the CLI does not).
+    #[allow(dead_code)]
+    pub fn lang(&self) -> &'static str {
+        self.lang
     }
 
     /// The message, or `None` if the key doesn't exist.
