@@ -2166,9 +2166,15 @@ name = "lemusync-bridge"
 version = "0.0.1-alpha.1"
 dependencies = [
  "flutter_rust_bridge",
+ "futures-util",
  "jni",
+ "lemusync-api",
+ "lemusync-engine",
+ "lemusync-ipc",
  "rustls",
  "rustls-platform-verifier",
+ "tempfile",
+ "tokio",
  "uniffi",
 ]
 

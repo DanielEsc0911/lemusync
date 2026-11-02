@@ -19,6 +19,6 @@
 | [phase-1b-play](plans/phase-1b-play.md) | 1 | Done (M1b reached 2026-10-21; SC5 network follow-ups done 2026-10-27; V-ACC-4 deferred) | 2026-10-27 |
 | [phase-2-daemon](plans/phase-2-daemon.md) | 2 | In progress (Tasks 1–7, 9, 10 done; Task 8 Step 3 is the maintainer's; Tasks 14 (friendly `doctor` failures) and 15 (auth-stop recovery) done, Task 15 Step 3 is the maintainer's; next Task 16 (budgets); Task 11 deferred until the UI (D40); Task 12 decided: document portal (D41), spike SP11; Task 13 Linux soak running; Linux first, D36) | 2026-11-01 |
 | [phase-3a-brand](plans/phase-3a-brand.md) | 3 | In progress (Tasks 1–12 done, Task 9 awaiting maintainer review; V-BRAND-2 pending) | 2026-11-01 |
-| [phase-3b-shell](plans/phase-3b-shell.md) | 3 | In progress (Tasks 1–2 done) | 2026-11-01 |
+| [phase-3b-shell](plans/phase-3b-shell.md) | 3 | In progress (Tasks 1–3 done) | 2026-11-01 |
 
 Status values: Not started · In progress · Blocked (reason) · Done (awaiting cleanup).

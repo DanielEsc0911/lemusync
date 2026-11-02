@@ -1,6 +1,6 @@
 # App shell
 
-> **Status:** Decided (design only, nothing built) · **Related:** [rules](../../rules.md) (F1, F2, F3, B2, B3, P5, P6), [architecture §IPC](../architecture.md#ipc), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D35, D40, D43, D44) · **Code:** `crates/engine/src/library.rs` (built, 3b Task 2: the game-library rule shared with the tray); planned `crates/bridge/src/link/`, `crates/bridge/src/api/daemon.rs`, `app/lib/app/`, `app/lib/screens/` (nothing is built yet; Phase 3b, [plan](../../progress/plans/phase-3b-shell.md))
+> **Status:** Decided (design only, nothing built) · **Related:** [rules](../../rules.md) (F1, F2, F3, B2, B3, P5, P6), [architecture §IPC](../architecture.md#ipc), [navigation](navigation.md), [status-and-notifications](status-and-notifications.md), [decisions](../../decisions.md) (D35, D40, D43, D44) · **Code:** `crates/engine/src/library.rs` (built, 3b Task 2: the game-library rule shared with the tray); `crates/bridge/src/link/` (built, 3b Task 3: calls, event watcher, backoff, DTOs; plain Rust, not yet exposed to Dart); planned `crates/bridge/src/api/daemon.rs`, `app/lib/app/`, `app/lib/screens/` (nothing is built yet; Phase 3b, [plan](../../progress/plans/phase-3b-shell.md))
 
 ## Purpose
 How the desktop app reaches the daemon, what state it holds and which destinations it shows. Everything below is planned for Phase 3b and is marked as built only when the task that builds it lands.
@@ -21,10 +21,10 @@ The app is a client of `lemusyncd` ([D43](../../decisions.md#d43-the-desktop-app
 With a cached status or games and a connection that is not `online`, the last data stays under a banner "Showing the last known state". Reconnect backoff is 1 s, 2 s, 4 s … capped at 30 s, reset on success. The planned texts are in the plan's Task 8 table (English and Spanish, P6).
 
 ## Data flow
-- Planned. Calls (`Status`, `Games`, `Sync`) use one fresh short connection each, every one with a timeout. One long-lived connection holds the event subscription.
+- Built in `crates/bridge/src/link/` (Task 3). Calls (`Status`, `Games`, `Sync`) use one fresh short connection each, every one with a timeout. One long-lived connection holds the event subscription.
 - On every (re)connect the bridge subscribes first, then fetches `Status` (emitted as a `Snapshot` without games), then `Games` on its own connection (emitted as a separate `Games` update). An event between the snapshot and the subscription cannot be lost, and a `Games` call waiting behind a sync never stalls events.
 - On subscribe the daemon sends a `StatusChanged` first but no `SessionChanged`, so the snapshot's session seeds the play overlay.
-- Events used: `StatusChanged`, `SessionChanged`, `TransferProgress`. `ConflictDetected`, `LeaseWarning`, `Error`, `RemoteNewer` and connection retries are ignored in 3b; their facts reach Home through the `Status` counts. The decoder skips unknown events so a newer daemon never breaks an older app.
+- Events used: `StatusChanged`, `SessionChanged`, `TransferProgress`. `ConflictDetected`, `LeaseWarning`, `Error`, `RemoteNewer` and connection retries are ignored in 3b; their facts reach Home through the `Status` counts. The decoder is meant to skip unknown events so a newer daemon never breaks an older app; as built, `lemusync_ipc::Client::subscribe` ends the stream on an event it cannot decode, so the watcher reconnects (1 s backoff, fresh snapshot) instead. A tolerant decode in `crates/ipc` is open.
 - The game list is fetched on connect, on app resume, when `last_sync_ms` changes and on `SessionChanged(None)`. There is no polling while connected.
 - The bridge hands Dart bridge-owned DTOs (no wire types, no serde, no secrets). Paths stay in Rust: Dart gets `launchable: bool` only (B2).
 
@@ -47,7 +47,7 @@ Planned for Linux first. Ctrl/Cmd+1 and 2 select the visible destinations (one d
 
 ## Verify
 Owner is the plan task that answers it; full text in the [plan](../../progress/plans/phase-3b-shell.md#verify).
-- `V-SHELL-1` (Task 3): whether FRB 2.13.0 provides a tokio runtime that `tokio::net::UnixStream` can use.
+- `V-SHELL-1` (Task 3, answered from FRB's source, Dart check in Task 4): FRB's `async fn` runs on its own tokio runtime, but a sync fn with a `StreamSink` runs on a thread pool with none, so the watcher owns a 1-worker runtime (`link::runtime()`).
 - `V-SHELL-2` (3d, SP11): the Flatpak permission for the daemon socket.
 - `V-SHELL-3` (Task 11): lag is invisible to clients; mitigated by refresh triggers.
 - `V-SHELL-4` (Task 9): derived per-game syncing status has no end marker.
