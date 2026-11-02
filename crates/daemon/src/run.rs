@@ -900,6 +900,31 @@ mod tests {
     }
 
     #[test]
+    fn equal_times_order_by_name_then_player() {
+        let (mut st, games) = recent_fixture();
+        st.players.push("Bea".into());
+        let base = st.streams[0].clone();
+        let mk = |p: &str, g: &str, ms| lemusync_api::StreamStatus {
+            player: p.into(),
+            game: g.into(),
+            last_version_ms: ms,
+            ..base.clone()
+        };
+        for ms in [Some(5), None] {
+            st.streams = vec![
+                mk("Bea", "bb", ms),
+                mk("Ana", "bb", ms),
+                mk("Ana", "aa", ms),
+            ];
+            let labels: Vec<String> = recent_games(&st, &games, &I18n::new("en"))
+                .into_iter()
+                .map(|i| i.label)
+                .collect();
+            assert_eq!(labels, ["Game aa · Ana", "Game bb · Ana", "Game bb · Bea"]);
+        }
+    }
+
+    #[test]
     fn play_items_stop_at_the_cap() {
         let (mut st, games) = recent_fixture();
         let first = st.streams[0].clone();

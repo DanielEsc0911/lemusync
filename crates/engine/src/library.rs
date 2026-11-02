@@ -17,7 +17,7 @@ pub struct PlayerStream {
     pub last_version_ms: Option<u64>,
 }
 
-/// A game of the catalog with the streams synced for it.
+/// A game of the catalog, or a synced game the catalog does not know, with its streams.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LibraryEntry {
     pub emulator: String,
@@ -58,7 +58,8 @@ fn newest_first(a: Option<u64>, b: Option<u64>) -> std::cmp::Ordering {
     b.cmp(&a)
 }
 
-/// The library: one entry per catalog game, ordered by its newest stream, then never-synced
+/// The library: one entry per catalog game, plus one per synced game the catalog does not
+/// know (not launchable), ordered by its newest stream, then never-synced
 /// games by `(emulator, key)`.
 #[must_use]
 pub fn library(status: &StatusReport, games: &GamesReport) -> Vec<LibraryEntry> {
@@ -86,6 +87,41 @@ pub fn library(status: &StatusReport, games: &GamesReport) -> Vec<LibraryEntry> 
             }
         })
         .collect();
+    // Synced streams the catalog does not know (for example a Cemu `.wua` title): one
+    // non-launchable entry per `(emulator, game)`, so the library lists what the tray lists.
+    let mut groups: Vec<(String, String, Vec<&StreamStatus>)> = Vec::new();
+    for st in status
+        .streams
+        .iter()
+        .filter(|st| catalog_game(games, st).is_none())
+    {
+        let game = st.game.to_ascii_lowercase();
+        match groups
+            .iter_mut()
+            .find(|(e, g, _)| *e == st.emulator && *g == game)
+        {
+            Some((_, _, members)) => members.push(st),
+            None => groups.push((st.emulator.clone(), game, vec![st])),
+        }
+    }
+    entries.extend(groups.into_iter().map(|(emulator, _, members)| {
+        let mut streams: Vec<PlayerStream> = members
+            .iter()
+            .map(|st| PlayerStream {
+                player: st.player.clone(),
+                game: st.game.clone(),
+                last_version_ms: st.last_version_ms,
+            })
+            .collect();
+        streams.sort_by(|a, b| newest_first(a.last_version_ms, b.last_version_ms));
+        LibraryEntry {
+            emulator,
+            key: members[0].game.clone(),
+            name: members.iter().find_map(|st| st.name.clone()),
+            launchable: false,
+            streams,
+        }
+    }));
     let newest = |e: &LibraryEntry| e.streams.first().and_then(|s| s.last_version_ms);
     entries.sort_by(|a, b| {
         newest_first(newest(a), newest(b))
@@ -226,9 +262,18 @@ mod tests {
     }
 
     #[test]
-    fn a_stream_without_a_catalog_game_makes_no_entry() {
-        let st = status(&["Ana"], vec![stream("Ana", "ghost", Some(1))]);
-        assert_eq!(library(&st, &games(vec![])).len(), 0);
+    fn an_uncataloged_stream_makes_a_non_launchable_entry_named_from_the_stream() {
+        let mut ana = stream("Ana", "Ghost", Some(1));
+        ana.name = Some("Bayonetta 2".into());
+        let bea = stream("Bea", "ghost", Some(2));
+        let st = status(&["Ana", "Bea"], vec![ana, bea]);
+        let lib = library(&st, &games(vec![]));
+        assert_eq!(lib.len(), 1);
+        assert_eq!(lib[0].key, "Ghost");
+        assert_eq!(lib[0].name.as_deref(), Some("Bayonetta 2"));
+        assert!(!lib[0].launchable);
+        let players: Vec<&str> = lib[0].streams.iter().map(|s| s.player.as_str()).collect();
+        assert_eq!(players, ["Bea", "Ana"]);
     }
 
     #[test]

@@ -39,7 +39,7 @@ Planned. One `AppController` (a `ChangeNotifier`, no new package) holds an immut
 Planned. Home and Games are real; Activity, Devices and Settings are not shown at all until Phase 3d builds them: no placeholder screen, no "coming soon" (F2). The visible destinations keep [navigation §Destinations](navigation.md#destinations) order on every platform (F3), and 3d inserts the new ones where that table puts them. Decided by the maintainer on 2026-11-01.
 
 - **Home:** status hero, play overlay, last-sync line, attention banners with read-only CLI lines, recent games.
-- **Games:** read-only library grid. There is no Play in 3b: Play needs the lease and conflict prompts, which are Phase 3c flows. The one write is **Sync now**.
+- **Games:** read-only library grid of the catalog games plus synced games the catalog does not know (those without a game file, marked). There is no Play in 3b: Play needs the lease and conflict prompts, which are Phase 3c flows. The one write is **Sync now**.
 - Layout by width: bottom bar, rail or sidebar at 600 dp and 1200 dp (size tokens, not literals).
 
 ## Desktop window
