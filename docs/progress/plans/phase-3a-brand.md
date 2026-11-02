@@ -564,6 +564,17 @@ Art direction (good enough, not final; recognisable at 24 px): a ring-tailed lem
 - [x] **Step 3:** docs: status-and-notifications §Desktop tray (pixmaps, notification icon), desktop.md, brand.md (Code adds `crates/daemon/src/platform/icons.rs`), design-system and brand Status → Partial; board row "In progress (Tasks 1–10 done, Task 9 awaiting maintainer review; V-BRAND-2 pending)". `just check`. **Commit** `feat(daemon): show the brand glyph in the tray`.
 - [ ] **Step 4: manual (maintainer, Fedora KDE):** install the build, look at the tray in each state you can trigger (synced; syncing with `lemusync sync`; paused with `lemusync pause`; error by breaking the key) and at a notification; record V-BRAND-2 for KDE in brand.md.
 
+### Task 11: the tray names the game in every session and "Recent games" is recent
+
+**Files:** modify `crates/engine/src/{games,query,resolve,session,service}.rs`, `crates/api/src/lib.rs`, `crates/daemon/src/{run,view}.rs`, `crates/daemon/src/platform/{mod.rs,linux/tray.rs}`, `locales/{en,es}/lemusync.ftl`, `docs/specs/ui/status-and-notifications.md`, `docs/specs/config-and-cli.md`, `docs/progress/README.md`.
+
+**Interfaces:** `Engine::game_name(emulator, game)` and `games::name_in(&names, emulator, game)` (case-insensitive on the key) replace every `names.get(&(emu, game))`; `StreamStatus.last_version_ms: Option<u64>` (additive, omitted when none, from `VersionId::unix_ms` of the stream's base); `RecentItem { id, label, launchable }` replaces the `(id, label)` tuple.
+
+- [x] **Step 1: failing tests:** `a_game_name_is_found_in_any_case_of_the_key`, the watch-mode session carries the catalog name (`watch_mode_takes_the_lease_uploads_after_exit_and_releases`), `stream_status_last_version_is_additive`, `play_items_are_newest_first_and_unlaunchable_ones_are_disabled`, `play_items_stop_at_the_cap`, `only_a_launchable_menu_item_plays`, `an_unlaunchable_recent_game_is_a_disabled_item`.
+- [x] **Step 2: implement:** watch-mode `Session.name` filled (was `None`, so the tooltip showed the title id); recent games ordered by last play, uncataloged streams kept and disabled with `tray-recent-no-file`; refresh also on `SessionChanged(None)`.
+- [x] **Step 3:** docs (tray spec, game names), board row. `just check`. **Commit** `fix(daemon): name the game in every session and order recent games by last play`.
+- Not in scope: learning a game's path from the emulator's command line or caches (needs a spike).
+
 ## Verify
 
 - `V-BRAND-1` (after Task 4, first CI run): resvg bytes identical on the Fedora PC and `ubuntu-latest`. If not, `--check` compares decoded pixels with a small tolerance instead; record it as a decision.

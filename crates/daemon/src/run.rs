@@ -22,8 +22,8 @@ use tokio::sync::{broadcast, mpsc};
 use crate::i18n::{I18n, s as fs};
 use crate::notices::{Coalescer, NoticeEvent, notice};
 use crate::platform::{
-    IdleGuard, NoticeId, Notifier, Power, SleepEdge, Tray, TrayAction, start_notifier, start_power,
-    start_tray,
+    IdleGuard, NoticeId, Notifier, Power, RecentItem, SleepEdge, Tray, TrayAction, start_notifier,
+    start_power, start_tray,
 };
 use crate::view::{ErrorKind, SessionInput, StatusInput, ViewState, tray_view};
 
@@ -175,30 +175,49 @@ fn parse_play_ref(r: &str) -> Option<(String, String, String)> {
         .then(|| (p.to_owned(), e.to_owned(), g.to_owned()))
 }
 
-/// The tray's "Play" items: every synced stream whose game this device can launch (a known
-/// path), as `(id, label)`. The player is in the label when there are several.
+/// The tray's "Play" items, newest play first: every synced stream, so the user sees why one
+/// can't be played. A game this device has no file for (see `launchable`) is listed disabled,
+/// with a hint. Streams with no known last version go last, then by label. The player is in the
+/// label when there are several.
 #[must_use]
-pub fn recent_games(status: &StatusReport, games: &GamesReport) -> Vec<(String, String)> {
+pub fn recent_games(status: &StatusReport, games: &GamesReport, t: &I18n) -> Vec<RecentItem> {
     let many = status.players.len() > 1;
-    status
+    let mut items: Vec<(Option<u64>, RecentItem)> = status
         .streams
         .iter()
-        .filter_map(|st| {
-            let g = games.games.iter().find(|g| {
-                g.emulator == st.emulator
-                    && g.key.eq_ignore_ascii_case(&st.game)
-                    && g.path.is_some()
-            })?;
-            let name = g.name.clone().unwrap_or_else(|| g.key.clone());
-            let label = if many {
+        .map(|st| {
+            let known = games
+                .games
+                .iter()
+                .find(|g| g.emulator == st.emulator && g.key.eq_ignore_ascii_case(&st.game));
+            let launchable = known.is_some_and(|g| g.path.is_some());
+            let name = known
+                .and_then(|g| g.name.clone())
+                .or_else(|| st.name.clone())
+                .unwrap_or_else(|| st.game.clone());
+            let mut label = if many {
                 format!("{name} · {}", st.player)
             } else {
                 name
             };
-            Some((play_ref(&st.player, &st.emulator, &st.game), label))
+            if !launchable {
+                label = format!("{label} ({})", t.t("tray-recent-no-file", &[]));
+            }
+            let item = RecentItem {
+                id: play_ref(&st.player, &st.emulator, &st.game),
+                label,
+                launchable,
+            };
+            (st.last_version_ms, item)
         })
-        .take(RECENT_MAX)
-        .collect()
+        .collect();
+    items.sort_by(|(a, x), (b, y)| {
+        b.is_some()
+            .cmp(&a.is_some())
+            .then_with(|| b.cmp(a))
+            .then_with(|| x.label.cmp(&y.label))
+    });
+    items.into_iter().map(|(_, i)| i).take(RECENT_MAX).collect()
 }
 
 /// A failed tray "Play" as a notice: a held lease and a conflict get their own (the lease one
@@ -400,14 +419,15 @@ async fn wait_for_lease(
 }
 
 /// Fetches the tray's "Play" items.
-async fn fetch_recent(handle: ServiceHandle, out: mpsc::Sender<Vec<(String, String)>>) {
+async fn fetch_recent(handle: ServiceHandle, out: mpsc::Sender<Vec<RecentItem>>) {
     let (Response::Status(st), Response::Games(g)) = (
         handle.call(Request::Status).await,
         handle.call(Request::Games).await,
     ) else {
         return;
     };
-    let _ = out.send(recent_games(&st, &g)).await;
+    let items = recent_games(&st, &g, &I18n::from_env()); // not `Send`: gone before the await
+    let _ = out.send(items).await;
 }
 
 /// Desktop state the loop keeps between events.
@@ -420,7 +440,7 @@ struct Presence {
     session: Option<Session>,
     coalesce: Coalescer,
     idle: Option<IdleGuard>,
-    recent: Vec<(String, String)>,
+    recent: Vec<RecentItem>,
     /// Foreign-lease notices that offer "Wait": the stream and the game's label.
     waitable: HashMap<NoticeId, (Stream, String)>,
 }
@@ -471,6 +491,11 @@ impl Presence {
     }
 }
 
+/// The menu item `id` names, if a click on it may launch the game.
+fn playable<'a>(recent: &'a [RecentItem], id: &str) -> Option<&'a RecentItem> {
+    recent.iter().find(|i| i.launchable && i.id == id)
+}
+
 /// Sends the request a tray click means. A failed "Play" comes back as a notice.
 fn tray_click(
     a: &TrayAction,
@@ -495,9 +520,11 @@ fn tray_click(
         tokio::spawn(async move { h.call(r).await });
         return;
     };
-    let label = presence
-        .and_then(|p| p.recent.iter().find(|(i, _)| i == id))
-        .map_or_else(|| game.clone(), |(_, l)| l.clone());
+    // Only a launchable item of the current menu plays; a stale or disabled one does nothing.
+    let Some(item) = presence.and_then(|p| playable(&p.recent, id)) else {
+        return;
+    };
+    let label = item.label.clone();
     let stream = (player.clone(), emulator.clone(), game.clone());
     let out = own_tx.clone();
     let lang = I18n::env_lang();
@@ -557,6 +584,11 @@ pub async fn run(
                 Ok(e) => {
                     if let Some(p) = &mut presence {
                         p.on_event(&e);
+                        // A session ended: that game is now the most recent, even if its
+                        // upload is still pending.
+                        if matches!(e, Event::SessionChanged(None)) {
+                            tokio::spawn(fetch_recent(handle.clone(), recent_tx.clone()));
+                        }
                         // A finished sync may have added games: refresh the "Play" items.
                         if let Event::StatusChanged(s) = &e
                             && s.last_sync_ms != last_sync
@@ -778,16 +810,16 @@ mod tests {
         );
     }
 
-    #[test]
-    fn play_items_are_the_launchable_synced_games() {
+    fn recent_fixture() -> (StatusReport, GamesReport) {
         use lemusync_api::{GameInfo, GameSource, StreamStatus};
-        let stream = |p: &str, g: &str| StreamStatus {
+        let stream = |p: &str, g: &str, ms: Option<u64>| StreamStatus {
             player: p.into(),
             emulator: "cemu".into(),
             game: g.into(),
             name: None,
             account: None,
             base: None,
+            last_version_ms: ms,
         };
         let game = |k: &str, path: Option<&str>| GameInfo {
             emulator: "cemu".into(),
@@ -797,7 +829,7 @@ mod tests {
             source: GameSource::Config,
             aliases: vec![],
         };
-        let mut st = StatusReport {
+        let st = StatusReport {
             api_version: 1,
             device: "pc".into(),
             device_id: "d".into(),
@@ -805,17 +837,75 @@ mod tests {
             backend: None,
             grants: vec![],
             players: vec!["Ana".into()],
-            streams: vec![stream("Ana", "AA"), stream("Ana", "bb")],
+            streams: vec![
+                stream("Ana", "AA", Some(10)),
+                stream("Ana", "bb", None),
+                stream("Ana", "cc", Some(30)),
+                stream("Ana", "dd", Some(20)),
+            ],
             daemon: None,
         };
         let games = GamesReport {
             api_version: 1,
-            games: vec![game("aa", Some("/g/a")), game("bb", None)],
+            games: vec![
+                game("aa", Some("/g/a")),
+                game("bb", Some("/g/b")),
+                game("cc", Some("/g/c")),
+            ],
         };
-        let r = recent_games(&st, &games);
-        assert_eq!(r, vec![(play_ref("Ana", "cemu", "AA"), "Game aa".into())]);
+        (st, games)
+    }
+
+    #[test]
+    fn play_items_are_newest_first_and_unlaunchable_ones_are_disabled() {
+        let t = I18n::new("en");
+        let (mut st, games) = recent_fixture();
+        let r = recent_games(&st, &games, &t);
+        let labels: Vec<&str> = r.iter().map(|i| i.label.as_str()).collect();
+        // Newest first, never-synced last; "dd" is not in the catalog: its key, disabled.
+        assert_eq!(
+            labels,
+            ["Game cc", "dd (no game file)", "Game aa", "Game bb"]
+        );
+        let launchable: Vec<bool> = r.iter().map(|i| i.launchable).collect();
+        assert_eq!(launchable, [true, false, true, true]);
+        assert_eq!(r[0].id, play_ref("Ana", "cemu", "cc"));
+        // The stream's own name beats the key; the player shows when there are several.
+        st.streams[3].name = Some("Bayonetta 2".into());
         st.players.push("Bea".into());
-        assert_eq!(recent_games(&st, &games)[0].1, "Game aa · Ana");
+        assert_eq!(
+            recent_games(&st, &games, &I18n::new("es"))[1].label,
+            "Bayonetta 2 · Ana (sin archivo del juego)"
+        );
+    }
+
+    #[test]
+    fn play_items_stop_at_the_cap() {
+        let (mut st, games) = recent_fixture();
+        let first = st.streams[0].clone();
+        st.streams = (0..20u64)
+            .map(|n| lemusync_api::StreamStatus {
+                game: format!("g{n}"),
+                last_version_ms: Some(n),
+                ..first.clone()
+            })
+            .collect();
+        let r = recent_games(&st, &games, &I18n::new("en"));
+        assert_eq!(r.len(), RECENT_MAX);
+        assert_eq!(r[0].id, play_ref("Ana", "cemu", "g19"));
+    }
+
+    #[test]
+    fn only_a_launchable_menu_item_plays() {
+        let item = |id: &str, launchable| RecentItem {
+            id: id.into(),
+            label: id.into(),
+            launchable,
+        };
+        let menu = vec![item("a", true), item("b", false)];
+        assert!(playable(&menu, "a").is_some());
+        assert!(playable(&menu, "b").is_none());
+        assert!(playable(&menu, "gone").is_none());
     }
 
     #[test]

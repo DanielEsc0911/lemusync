@@ -287,6 +287,25 @@ impl Engine {
             .filter_map(|g| Some(((g.emulator, g.key), g.name?)))
             .collect()
     }
+
+    /// The name of one game, when known. The key is matched in any case (catalog keys are
+    /// lowercase; stream keys come from the repo as written).
+    #[must_use]
+    pub fn game_name(&self, emulator: &str, game: &str) -> Option<String> {
+        name_in(&self.game_names(), emulator, game)
+    }
+}
+
+/// `names[(emulator, game)]`, matching the key in any case. For callers that look up many.
+#[must_use]
+pub fn name_in(
+    names: &BTreeMap<(String, String), String>,
+    emulator: &str,
+    game: &str,
+) -> Option<String> {
+    names
+        .get(&(emulator.to_owned(), game.to_lowercase()))
+        .cloned()
 }
 
 #[cfg(test)]

@@ -7,7 +7,7 @@
 use fluent_bundle::FluentValue;
 
 use crate::i18n::{I18n, s};
-use crate::platform::{TrayIcon, TrayMenuText, TrayView};
+use crate::platform::{RecentItem, TrayIcon, TrayMenuText, TrayView};
 
 /// Why sync stopped with an error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,8 +44,8 @@ pub struct StatusInput {
     pub foreign_leases: u32,
     /// Sync is paused (also true when another state wins the icon).
     pub paused: bool,
-    /// `(game ref, label)`, newest first.
-    pub recent: Vec<(String, String)>,
+    /// Newest first.
+    pub recent: Vec<RecentItem>,
 }
 
 impl StatusInput {
@@ -267,7 +267,11 @@ mod tests {
     #[test]
     fn session_overlay_and_menu() {
         let st = StatusInput {
-            recent: vec![("cemu/101c9400".into(), "BotW".into())],
+            recent: vec![RecentItem {
+                id: "cemu/101c9400".into(),
+                label: "BotW".into(),
+                launchable: true,
+            }],
             ..StatusInput::new(ViewState::Paused)
         };
         let sn = SessionInput {

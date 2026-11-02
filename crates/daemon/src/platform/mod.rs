@@ -32,6 +32,17 @@ pub enum TrayIcon {
     Error,
 }
 
+/// One entry of the "Recent games" submenu.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecentItem {
+    /// The game reference a click on it plays.
+    pub id: String,
+    /// Localised label (with the player when there are several).
+    pub label: String,
+    /// False when this device has no file to launch the game with: shown, but disabled.
+    pub launchable: bool,
+}
+
 /// Everything the tray shows, already localised (built by `view::tray_view`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrayView {
@@ -39,8 +50,8 @@ pub struct TrayView {
     pub tooltip: String,
     pub status_line: String,
     pub paused: bool,
-    /// `(game ref, label)` for the "Recent games ▸ Play" submenu.
-    pub recent: Vec<(String, String)>,
+    /// The "Recent games ▸ Play" submenu, newest first.
+    pub recent: Vec<RecentItem>,
     /// Localised menu labels.
     pub menu: TrayMenuText,
 }
