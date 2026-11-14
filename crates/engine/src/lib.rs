@@ -135,7 +135,7 @@ impl Engine {
         let config = if let Some(c) = LocalConfig::load(&path)? {
             c
         } else {
-            let name = sysinfo::System::host_name().unwrap_or_else(|| "device".into());
+            let name = sysinfo::System::host_name().unwrap_or_else(|_| "device".into());
             let c = LocalConfig::new(DeviceId(new_version_id()?), &name);
             c.save(&path)?;
             c
