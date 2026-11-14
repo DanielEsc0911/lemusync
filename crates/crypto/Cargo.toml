@@ -19,11 +19,11 @@ zeroize = { workspace = true }
 getrandom = { workspace = true }
 thiserror = { workspace = true }
 
-# The Secret Service transport session (src/secret_service.rs). Versions already in the tree
-# through `keyring`'s `crypto-rust`, so nothing new is downloaded.
+# The Secret Service transport session (src/secret_service.rs). RustCrypto crates move together:
+# aes, cbc, hkdf and sha2 must share one `cipher`/`digest` generation, so bump them as a set.
 [target.'cfg(target_os = "linux")'.dependencies]
-aes = "0.8.4"
-cbc = { version = "0.1.2", features = ["alloc", "block-padding"] }
-hkdf = "0.12.4"
+aes = "0.9.4"
+cbc = { version = "0.2.1", features = ["alloc", "block-padding"] }
+hkdf = "0.13.0"
 num-bigint = "0.4.8"
-sha2 = "0.10.9"
+sha2 = { workspace = true }
