@@ -4,6 +4,14 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      # aes, cbc, hkdf, sha2 and friends share `cipher`/`digest`; one alone never compiles.
+      rustcrypto:
+        patterns: ["aes", "cbc", "cipher", "digest", "hkdf", "hmac", "sha2", "chacha20poly1305"]
+    ignore:
+      # zbus 6 needs a manual port of the Secret Service and portal code.
+      - dependency-name: zbus
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

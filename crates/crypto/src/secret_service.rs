@@ -4,7 +4,7 @@
 //! <https://specifications.freedesktop.org/secret-service-spec/latest/transfer-secrets.html>
 
 use aes::cipher::block_padding::Pkcs7;
-use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{BlockModeDecrypt, BlockModeEncrypt, KeyIvInit};
 use num_bigint::BigUint;
 use zeroize::Zeroizing;
 
@@ -86,8 +86,9 @@ impl TransportKey {
     /// `Random` if the OS CSPRNG fails.
     pub fn encrypt(&self, plain: &[u8]) -> Result<(Vec<u8>, Vec<u8>), CryptoError> {
         let iv = random_bytes::<16>()?;
-        let ct =
-            Enc::new(self.0.as_ref().into(), &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(plain);
+        let ct = Enc::new_from_slices(&*self.0, &iv)
+            .map_err(|_| CryptoError::Malformed)?
+            .encrypt_padded_vec::<Pkcs7>(plain);
         Ok((iv.to_vec(), ct))
     }
 
@@ -95,8 +96,9 @@ impl TransportKey {
     /// `Malformed` for an IV that isn't 16 bytes, `Decrypt` for bad padding.
     pub fn decrypt(&self, iv: &[u8], ct: &[u8]) -> Result<Zeroizing<Vec<u8>>, CryptoError> {
         let iv: [u8; 16] = iv.try_into().map_err(|_| CryptoError::Malformed)?;
-        Dec::new(self.0.as_ref().into(), &iv.into())
-            .decrypt_padded_vec_mut::<Pkcs7>(ct)
+        Dec::new_from_slices(&*self.0, &iv)
+            .map_err(|_| CryptoError::Malformed)?
+            .decrypt_padded_vec::<Pkcs7>(ct)
             .map(Zeroizing::new)
             .map_err(|_| CryptoError::Decrypt)
     }
