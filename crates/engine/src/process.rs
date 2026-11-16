@@ -82,7 +82,13 @@ impl OsProbe {
         #[cfg(not(target_os = "linux"))]
         {
             use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, UpdateKind};
-            let sys = inner.0.get_or_insert_with(sysinfo::System::new);
+            if inner.0.is_none() {
+                // Can't read the process table yet: report nothing and try again next poll.
+                inner.0 = sysinfo::System::new().ok();
+            }
+            let Some(sys) = inner.0.as_mut() else {
+                return Vec::new();
+            };
             sys.refresh_processes_specifics(
                 ProcessesToUpdate::All,
                 true,
