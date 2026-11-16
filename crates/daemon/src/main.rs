@@ -78,12 +78,15 @@ fn start(headless: bool, t: &I18n) -> Result<(), String> {
         .build()
         .map_err(|e| failed(t, &e))?;
     let engine_thread = rt.block_on(async {
+        // Signal handlers go in before the socket exists: a client that sees the socket may
+        // send SIGTERM at once, and an unhandled one kills the process instead of stopping it.
+        let stop = signals();
         let path = lemusync_ipc::socket::default_path().map_err(|e| failed(t, &e))?;
         let server = lemusync_ipc::Server::bind(&path).map_err(|e| failed(t, &e))?;
         let (service, handle) = Service::new(engine, ServiceConfig::default());
         let thread = service.spawn().map_err(|e| failed(t, &e))?;
         let desktop = (!headless).then(Desktop::start);
-        run(handle, server, desktop, I18n::from_env(), signals()).await;
+        run(handle, server, desktop, I18n::from_env(), stop).await;
         Ok::<_, String>(thread)
     })?;
     // The engine (and its state lock) goes once the service thread ends.
@@ -92,22 +95,33 @@ fn start(headless: bool, t: &I18n) -> Result<(), String> {
     Ok(())
 }
 
-/// Resolves on `SIGTERM` or `SIGINT`.
-async fn signals() {
+/// Installs the `SIGTERM`/`SIGINT` handlers now and returns a future that resolves on either.
+/// Must be called inside the runtime.
+fn signals() -> impl std::future::Future<Output = ()> {
     #[cfg(unix)]
     {
         use tokio::signal::unix::{SignalKind, signal};
-        let Ok(mut term) = signal(SignalKind::terminate()) else {
-            let _ = tokio::signal::ctrl_c().await;
-            return;
-        };
-        tokio::select! {
-            _ = term.recv() => {}
-            _ = tokio::signal::ctrl_c() => {}
+        let term = signal(SignalKind::terminate()).ok();
+        let int = signal(SignalKind::interrupt()).ok();
+        async move {
+            let recv = |s: Option<tokio::signal::unix::Signal>| async move {
+                match s {
+                    Some(mut s) => {
+                        s.recv().await;
+                    }
+                    None => std::future::pending::<()>().await,
+                }
+            };
+            tokio::select! {
+                () = recv(term) => {}
+                () = recv(int) => {}
+            }
         }
     }
     #[cfg(not(unix))]
     {
-        let _ = tokio::signal::ctrl_c().await;
+        async {
+            let _ = tokio::signal::ctrl_c().await;
+        }
     }
 }
