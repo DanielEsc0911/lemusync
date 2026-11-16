@@ -10,6 +10,8 @@ pub mod api;
 // style isn't ours, so lints are off for its output.
 #[allow(unsafe_code, clippy::all, clippy::pedantic, clippy::unwrap_used)]
 mod frb_generated;
+// The daemon link (plain Rust); `api::daemon` exposes it to Dart.
+mod link;
 #[allow(unsafe_code)]
 mod native;
 

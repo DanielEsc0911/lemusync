@@ -13,6 +13,7 @@ mod games;
 mod grants;
 mod launch;
 mod lease;
+mod library;
 mod local_config;
 mod locations;
 mod play;
@@ -54,6 +55,7 @@ pub use games::GameEntry;
 pub use lease::{Acquire, LeaseHandle};
 pub use lemusync_core::VersionId;
 pub use lemusync_store::redact;
+pub use library::{LibraryEntry, PlayerStream, RECENT_MAX, RecentItem, library, recent};
 pub use local_config::{
     BackendConfig, ConflictPolicy, DeviceSection, EmulatorOverride, LeaseSettings, LocalConfig,
 };

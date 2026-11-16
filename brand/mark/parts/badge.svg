@@ -1,0 +1,3 @@
+<clipPath id="badge-clip"><rect x="{{param.badgeInset}}" y="{{param.badgeInset}}" width="{{param.badgeSize}}" height="{{param.badgeSize}}" rx="{{param.badgeRadius}}"/></clipPath>
+<rect x="{{param.badgeInset}}" y="{{param.badgeInset}}" width="{{param.badgeSize}}" height="{{param.badgeSize}}" rx="{{param.badgeRadius}}" fill="{{color.badge}}"/>
+<rect x="{{param.badgeInset}}" y="{{param.badgeInset}}" width="{{param.badgeSize}}" height="6" fill="{{color.bevel}}" clip-path="url(#badge-clip)"/>

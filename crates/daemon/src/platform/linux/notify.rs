@@ -30,11 +30,7 @@ impl Notifier for LinuxNotifier {
                 note.appname("LemuSync")
                     .summary(&n.title)
                     .body(&n.body)
-                    .icon(match n.kind {
-                        NoticeKind::Attention => "dialog-warning-symbolic",
-                        NoticeKind::Error => "dialog-error-symbolic",
-                        NoticeKind::Info => "emblem-synchronizing-symbolic",
-                    })
+                    .icon(crate::platform::APP_ICON_NAME)
                     .urgency(match n.kind {
                         NoticeKind::Attention => Urgency::Critical,
                         NoticeKind::Error => Urgency::Normal,

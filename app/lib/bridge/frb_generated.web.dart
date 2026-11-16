@@ -11,8 +11,11 @@ import 'dart:convert';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
+import 'api/daemon.dart';
 import 'api/probe.dart';
 import 'frb_generated.dart';
+import 'link/calls.dart';
+import 'link/model.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -22,11 +25,147 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     required super.portManager,
   });
 
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_WatchHandlePtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle;
+
+  @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
+  WatchHandle
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    dynamic raw,
+  );
+
+  @protected
+  WatchHandle
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    dynamic raw,
+  );
+
+  @protected
+  WatchHandle
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    dynamic raw,
+  );
+
+  @protected
+  RustStreamSink<LinkEvent> dco_decode_StreamSink_link_event_Sse(dynamic raw);
+
   @protected
   String dco_decode_String(dynamic raw);
 
   @protected
+  bool dco_decode_bool(dynamic raw);
+
+  @protected
+  ConnectionState dco_decode_box_autoadd_connection_state(dynamic raw);
+
+  @protected
+  ErrorKindDto dco_decode_box_autoadd_error_kind_dto(dynamic raw);
+
+  @protected
+  GamesDto dco_decode_box_autoadd_games_dto(dynamic raw);
+
+  @protected
+  ProgressDto dco_decode_box_autoadd_progress_dto(dynamic raw);
+
+  @protected
+  SessionDto dco_decode_box_autoadd_session_dto(dynamic raw);
+
+  @protected
+  Snapshot dco_decode_box_autoadd_snapshot(dynamic raw);
+
+  @protected
+  StatusDto dco_decode_box_autoadd_status_dto(dynamic raw);
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
+
+  @protected
+  ConnectionState dco_decode_connection_state(dynamic raw);
+
+  @protected
+  ErrorKindDto dco_decode_error_kind_dto(dynamic raw);
+
+  @protected
+  GameEntry dco_decode_game_entry(dynamic raw);
+
+  @protected
+  GamesDto dco_decode_games_dto(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  LinkEvent dco_decode_link_event(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<GameEntry> dco_decode_list_game_entry(dynamic raw);
+
+  @protected
+  List<PlayerStreamDto> dco_decode_list_player_stream_dto(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<RecentDto> dco_decode_list_recent_dto(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  ErrorKindDto? dco_decode_opt_box_autoadd_error_kind_dto(dynamic raw);
+
+  @protected
+  GamesDto? dco_decode_opt_box_autoadd_games_dto(dynamic raw);
+
+  @protected
+  SessionDto? dco_decode_opt_box_autoadd_session_dto(dynamic raw);
+
+  @protected
+  StatusDto? dco_decode_opt_box_autoadd_status_dto(dynamic raw);
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+
+  @protected
+  PhaseDto dco_decode_phase_dto(dynamic raw);
+
+  @protected
+  PlayerStreamDto dco_decode_player_stream_dto(dynamic raw);
+
+  @protected
+  ProgressDto dco_decode_progress_dto(dynamic raw);
+
+  @protected
+  RecentDto dco_decode_recent_dto(dynamic raw);
+
+  @protected
+  SessionDto dco_decode_session_dto(dynamic raw);
+
+  @protected
+  Snapshot dco_decode_snapshot(dynamic raw);
+
+  @protected
+  StateDto dco_decode_state_dto(dynamic raw);
+
+  @protected
+  StatusDto dco_decode_status_dto(dynamic raw);
+
+  @protected
+  SyncNow dco_decode_sync_now(dynamic raw);
+
+  @protected
+  int dco_decode_u_32(dynamic raw);
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -35,10 +174,159 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void dco_decode_unit(dynamic raw);
 
   @protected
+  BigInt dco_decode_usize(dynamic raw);
+
+  @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
+  WatchHandle
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  WatchHandle
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  WatchHandle
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<LinkEvent> sse_decode_StreamSink_link_event_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  ConnectionState sse_decode_box_autoadd_connection_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ErrorKindDto sse_decode_box_autoadd_error_kind_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  GamesDto sse_decode_box_autoadd_games_dto(SseDeserializer deserializer);
+
+  @protected
+  ProgressDto sse_decode_box_autoadd_progress_dto(SseDeserializer deserializer);
+
+  @protected
+  SessionDto sse_decode_box_autoadd_session_dto(SseDeserializer deserializer);
+
+  @protected
+  Snapshot sse_decode_box_autoadd_snapshot(SseDeserializer deserializer);
+
+  @protected
+  StatusDto sse_decode_box_autoadd_status_dto(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  ConnectionState sse_decode_connection_state(SseDeserializer deserializer);
+
+  @protected
+  ErrorKindDto sse_decode_error_kind_dto(SseDeserializer deserializer);
+
+  @protected
+  GameEntry sse_decode_game_entry(SseDeserializer deserializer);
+
+  @protected
+  GamesDto sse_decode_games_dto(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  LinkEvent sse_decode_link_event(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<GameEntry> sse_decode_list_game_entry(SseDeserializer deserializer);
+
+  @protected
+  List<PlayerStreamDto> sse_decode_list_player_stream_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<RecentDto> sse_decode_list_recent_dto(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  ErrorKindDto? sse_decode_opt_box_autoadd_error_kind_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  GamesDto? sse_decode_opt_box_autoadd_games_dto(SseDeserializer deserializer);
+
+  @protected
+  SessionDto? sse_decode_opt_box_autoadd_session_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  StatusDto? sse_decode_opt_box_autoadd_status_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  PhaseDto sse_decode_phase_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayerStreamDto sse_decode_player_stream_dto(SseDeserializer deserializer);
+
+  @protected
+  ProgressDto sse_decode_progress_dto(SseDeserializer deserializer);
+
+  @protected
+  RecentDto sse_decode_recent_dto(SseDeserializer deserializer);
+
+  @protected
+  SessionDto sse_decode_session_dto(SseDeserializer deserializer);
+
+  @protected
+  Snapshot sse_decode_snapshot(SseDeserializer deserializer);
+
+  @protected
+  StateDto sse_decode_state_dto(SseDeserializer deserializer);
+
+  @protected
+  StatusDto sse_decode_status_dto(SseDeserializer deserializer);
+
+  @protected
+  SyncNow sse_decode_sync_now(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -47,13 +335,124 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+  BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
+  void sse_encode_AnyhowException(
+    AnyhowException self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    WatchHandle self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    WatchHandle self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    WatchHandle self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_link_event_Sse(
+    RustStreamSink<LinkEvent> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_connection_state(
+    ConnectionState self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_error_kind_dto(
+    ErrorKindDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_games_dto(
+    GamesDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_progress_dto(
+    ProgressDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_session_dto(
+    SessionDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_snapshot(Snapshot self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_status_dto(
+    StatusDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_connection_state(
+    ConnectionState self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_error_kind_dto(ErrorKindDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_game_entry(GameEntry self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_games_dto(GamesDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_link_event(LinkEvent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_game_entry(
+    List<GameEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_player_stream_dto(
+    List<PlayerStreamDto> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -62,22 +461,107 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_recent_dto(
+    List<RecentDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_error_kind_dto(
+    ErrorKindDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_games_dto(
+    GamesDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_session_dto(
+    SessionDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_status_dto(
+    StatusDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_phase_dto(PhaseDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_player_stream_dto(
+    PlayerStreamDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_progress_dto(ProgressDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_recent_dto(RecentDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_session_dto(SessionDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_snapshot(Snapshot self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_state_dto(StateDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_status_dto(StatusDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sync_now(SyncNow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
+  void sse_encode_usize(BigInt self, SseSerializer serializer);
 }
 
 // Section: wire_class
 
 class RustLibWire implements BaseWire {
   RustLibWire.fromExternalLibrary(ExternalLibrary lib);
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+        ptr,
+      );
 }
 
 @JS('wasm_bindgen')
@@ -85,4 +569,14 @@ external RustLibWasmModule get wasmModule;
 
 @JS()
 @anonymous
-extension type RustLibWasmModule._(JSObject _) implements JSObject {}
+extension type RustLibWasmModule._(JSObject _) implements JSObject {
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    int ptr,
+  );
+}

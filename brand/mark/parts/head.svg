@@ -1,0 +1,5 @@
+<circle cx="86" cy="94" r="24" fill="{{color.fur}}"/>
+<circle cx="170" cy="94" r="24" fill="{{color.fur}}"/>
+<circle cx="86" cy="96" r="14" fill="{{color.ring}}"/>
+<circle cx="170" cy="96" r="14" fill="{{color.ring}}"/>
+<ellipse cx="128" cy="138" rx="62" ry="55" fill="{{color.fur}}"/>

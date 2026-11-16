@@ -23,7 +23,8 @@ Each phase ends with a demo of its exit criteria on real devices. Scenario IDs (
 
 ## Phase 3: Flutter app (desktop)
 - **Goal:** the beautiful, parity-locked UI.
-- **Deliverables:** design exploration (brand, fonts, icon set); design system tokens + components; navigation shell; every flow in [navigation](../specs/ui/navigation.md); FRB bridge over IPC; goldens; performance tests; accessibility pass.
+- **Deliverables:** brand, fonts and icon set ([D42](../decisions.md#d42-the-brand-is-90s-console-hardware-generated-from-one-source-2026-11-01)); design system tokens + components; navigation shell; every flow in [navigation](../specs/ui/navigation.md); FRB bridge over IPC; goldens; performance tests; accessibility pass.
+- **Plans:** 3a brand and design system ([phase-3a-brand](plans/phase-3a-brand.md)); 3b app shell and live status ([phase-3b-shell](plans/phase-3b-shell.md): router, the destinations that work (Home and Games), the bridge as IPC client, Home `StatusHero` from the event stream, Games read-only); 3c flows (first run, join, play, conflicts, restore, leases); 3d Settings, Activity, Devices, theme override, performance and accessibility pass, Flatpak (SP11) and packaging, leading to M3. Each later plan is written when the previous one's results are known.
 - **Exit (M3):** a new user goes from install to first synced save in under 3 minutes unaided. Goldens pass for every size class, theme and locale. Frame budgets met.
 
 ## Phase 4: Android

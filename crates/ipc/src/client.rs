@@ -140,8 +140,9 @@ impl Client {
         Err(IpcError::Unsupported)
     }
 
-    /// Sends `Subscribe` and turns the connection into a stream of events. The stream ends
-    /// when the daemon closes; after an error it yields nothing more.
+    /// Sends `Subscribe` and turns the connection into a stream of events. Events this
+    /// version cannot decode are skipped. The stream ends when the daemon closes; after an
+    /// error it yields nothing more.
     ///
     /// # Errors
     /// [`IpcError::Rejected`] or [`IpcError::Protocol`] when the daemon doesn't answer
@@ -169,7 +170,20 @@ impl Client {
 
     #[cfg(unix)]
     async fn next_event(&mut self) -> Result<Option<Event>, IpcError> {
-        crate::frame::read_frame(&mut self.stream).await
+        // Within one API version a newer daemon may add events (or fields an old payload
+        // lacks): a frame that is JSON but not an `Event` we know is skipped. A body that
+        // is not JSON, an oversized frame and I/O errors stay fatal.
+        loop {
+            let Some(value) =
+                crate::frame::read_frame::<serde_json::Value, _>(&mut self.stream).await?
+            else {
+                return Ok(None);
+            };
+            if let Ok(event) = serde_json::from_value::<Event>(value) {
+                return Ok(Some(event));
+            }
+            tracing::debug!("skipped an event this version does not know");
+        }
     }
 
     #[cfg(not(unix))]

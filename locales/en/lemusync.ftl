@@ -395,6 +395,7 @@ tray-pause-1h = For 1 hour
 tray-pause-until-resume = Until I resume
 tray-resume = Resume sync
 tray-recent = Recent games
+tray-recent-no-file = no game file
 tray-quit = Quit
 
 ## Daemon: notifications

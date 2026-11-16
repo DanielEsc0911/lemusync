@@ -1,0 +1,6 @@
+<circle cx="104" cy="135" r="14" fill="{{color.eye}}"/>
+<circle cx="152" cy="135" r="14" fill="{{color.eye}}"/>
+<circle cx="104" cy="136" r="7.5" fill="{{color.pupil}}"/>
+<circle cx="152" cy="136" r="7.5" fill="{{color.pupil}}"/>
+<circle cx="99.5" cy="130.5" r="3.4" fill="{{color.ring}}"/>
+<circle cx="147.5" cy="130.5" r="3.4" fill="{{color.ring}}"/>

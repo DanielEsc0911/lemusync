@@ -4,6 +4,7 @@ use lemusync_api::{
     API_VERSION, Check, DoctorReport, HistoryEntry, HistoryReport, StatusReport, StreamAction,
     StreamReport, StreamStatus,
 };
+use lemusync_core::VersionId;
 use lemusync_core::heads::{Graph, heads};
 
 use crate::discover::save_folder;
@@ -39,19 +40,17 @@ impl Engine {
                 players.push(p.name.clone());
                 for (emu, game) in config.games_of(*pid) {
                     let stream = self.repo_ref()?.stream_id(*pid, &emu, &game);
-                    let base = self
-                        .state
-                        .stream(&stream)?
-                        .and_then(|r| r.base)
-                        .map(|b| b.to_string());
+                    let base_id = self.state.stream(&stream)?.and_then(|r| r.base);
+                    let base = base_id.map(|b| b.to_string());
                     let account = config.account_of(device, *pid, &emu).map(str::to_owned);
                     streams.push(StreamStatus {
                         player: p.name.clone(),
-                        name: names.get(&(emu.clone(), game.clone())).cloned(),
+                        name: crate::games::name_in(&names, &emu, &game),
                         emulator: emu,
                         game,
                         account,
                         base,
+                        last_version_ms: base_id.map(VersionId::unix_ms),
                     });
                 }
             }
@@ -155,9 +154,7 @@ impl Engine {
         backups.reverse();
         Ok(HistoryReport {
             api_version: API_VERSION,
-            name: self
-                .game_names()
-                .remove(&(emulator.to_owned(), game.to_lowercase())),
+            name: self.game_name(emulator, game),
             versions: entries,
             backups,
         })

@@ -17,9 +17,14 @@ lint:
     cargo xtask layers
     cargo xtask docs-check
     cargo xtask i18n-check
+    cargo xtask brand --check
     cd app && flutter gen-l10n
     cd app && dart format --output=none --set-exit-if-changed lib test
     cd app && flutter analyze
+
+# Regenerate every brand output from brand/
+brand:
+    cargo xtask brand
 
 # Rust and Flutter tests
 test:

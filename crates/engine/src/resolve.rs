@@ -89,7 +89,7 @@ impl Engine {
                     .collect();
                 out.push(ConflictInfo {
                     player: p.name.clone(),
-                    name: names.get(&(emulator.clone(), game.clone())).cloned(),
+                    name: crate::games::name_in(&names, &emulator, &game),
                     emulator,
                     game,
                     heads,

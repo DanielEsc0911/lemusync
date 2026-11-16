@@ -8,6 +8,9 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use tokio::sync::mpsc;
 
+mod icons;
+pub use icons::APP_ICON_NAME;
+
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "linux")]
@@ -22,6 +25,7 @@ pub use other::{start_notifier, start_power, start_tray};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrayIcon {
     Synced,
+    Playing,
     Syncing,
     Paused,
     Offline,
@@ -29,19 +33,15 @@ pub enum TrayIcon {
     Error,
 }
 
-impl TrayIcon {
-    /// The freedesktop symbolic icon name used on Linux.
-    #[must_use]
-    pub fn freedesktop_name(self) -> &'static str {
-        match self {
-            Self::Synced => "emblem-ok-symbolic",
-            Self::Syncing => "emblem-synchronizing-symbolic",
-            Self::Paused => "media-playback-pause-symbolic",
-            Self::Offline => "network-offline-symbolic",
-            Self::Attention => "dialog-warning-symbolic",
-            Self::Error => "dialog-error-symbolic",
-        }
-    }
+/// One entry of the "Recent games" submenu.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecentItem {
+    /// The game reference a click on it plays.
+    pub id: String,
+    /// Localised label (with the player when there are several).
+    pub label: String,
+    /// False when this device has no file to launch the game with: shown, but disabled.
+    pub launchable: bool,
 }
 
 /// Everything the tray shows, already localised (built by `view::tray_view`).
@@ -51,8 +51,8 @@ pub struct TrayView {
     pub tooltip: String,
     pub status_line: String,
     pub paused: bool,
-    /// `(game ref, label)` for the "Recent games ▸ Play" submenu.
-    pub recent: Vec<(String, String)>,
+    /// The "Recent games ▸ Play" submenu, newest first.
+    pub recent: Vec<RecentItem>,
     /// Localised menu labels.
     pub menu: TrayMenuText,
 }
@@ -297,19 +297,5 @@ mod tests {
         };
         assert_eq!(notifier.notify(n.clone()), NoticeId(1));
         assert_eq!(notifier.notify(n), NoticeId(2));
-    }
-
-    #[test]
-    fn icons_are_symbolic() {
-        for icon in [
-            TrayIcon::Synced,
-            TrayIcon::Syncing,
-            TrayIcon::Paused,
-            TrayIcon::Offline,
-            TrayIcon::Attention,
-            TrayIcon::Error,
-        ] {
-            assert!(icon.freedesktop_name().ends_with("-symbolic"));
-        }
     }
 }
