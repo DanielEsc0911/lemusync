@@ -14,7 +14,7 @@ Cite rules by ID. Full text, rationale and how each is enforced: `docs/rules.md`
 **Backend (unbreakable)**
 - **B1 Scalable architecture.** Layered crates, dependencies point down only. One responsibility per file. Formats are versioned.
 - **B2 Security first.** E2E encryption. No inbound ports. Profiles and remote data are data, never code. Writes stay inside user-granted folders.
-- **B3 Reliable 24/7.** Never lose or corrupt a save. Survive sleep, crashes and bad networks. Stay light.
+- **B3 Reliable 24/7.** Never lose or corrupt a save. Survive sleep, crashes and bad networks. Stay light. Updates never break a working install or config.
 
 **Product**
 - **P1** KISS and YAGNI.
