@@ -163,7 +163,8 @@ async fn pump(
     }
 }
 
-#[cfg(test)]
+// The link tests drive a fake daemon over a Unix socket; Windows IPC is Phase 2 Task 11.
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
     use crate::link::calls::GAMES_TIMEOUT;

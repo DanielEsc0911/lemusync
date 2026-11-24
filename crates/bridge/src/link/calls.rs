@@ -192,7 +192,8 @@ pub(crate) async fn sync_now(link: &Link) -> SyncNow {
     }
 }
 
-#[cfg(test)]
+// The link tests drive a fake daemon over a Unix socket; Windows IPC is Phase 2 Task 11.
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
     use crate::link::fake::{Answer, Fake, Script, error_body, games_report, status_report};
@@ -285,8 +286,6 @@ mod tests {
         );
     }
 
-    // The fake daemon listens on a Unix socket; the Windows named-pipe path is Phase 2 Task 11.
-    #[cfg(unix)]
     #[tokio::test]
     async fn a_handshake_refusal_carries_the_message() {
         // A server that answers Hello with an api_version error.
