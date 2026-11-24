@@ -1,0 +1,22 @@
+<g transform="translate(128 {{param.cy}}) scale({{param.scale}}) translate(-128 -133)">
+<g fill="{{color.outline}}" stroke="{{color.outline}}" stroke-width="16" stroke-linejoin="round">
+<rect x="22" y="66" width="212" height="110" rx="50"/>
+<circle cx="62" cy="148" r="52"/>
+<circle cx="194" cy="148" r="52"/>
+</g>
+<g fill="{{color.body}}">
+<rect x="22" y="66" width="212" height="110" rx="50"/>
+<circle cx="62" cy="148" r="52"/>
+<circle cx="194" cy="148" r="52"/>
+</g>
+<circle cx="68" cy="128" r="40" fill="{{color.outline}}"/>
+<g transform="translate(68 128) rotate({{param.stickAngle}}) translate({{param.stickPush}} 0) scale({{param.stickSquash}} 1) translate(-68 -128)">
+<circle cx="68" cy="128" r="30" fill="{{color.light}}"/>
+<circle cx="68" cy="128" r="20" fill="{{color.outline}}"/>
+<circle cx="68" cy="128" r="9" fill="{{color.light}}"/>
+</g>
+<circle cx="188" cy="98" r="{{param.btnR}}" fill="{{color.btnTop}}" fill-opacity="{{param.btnFillA}}" stroke="{{color.btnTop}}" stroke-width="{{param.btnRing}}"/>
+<circle cx="188" cy="158" r="{{param.btnR}}" fill="{{color.btnBottom}}" fill-opacity="{{param.btnFillA}}" stroke="{{color.btnBottom}}" stroke-width="{{param.btnRing}}"/>
+<circle cx="158" cy="128" r="{{param.btnR}}" fill="{{color.btnLeft}}" fill-opacity="{{param.btnFillA}}" stroke="{{color.btnLeft}}" stroke-width="{{param.btnRing}}"/>
+<circle cx="218" cy="128" r="{{param.btnR}}" fill="{{color.btnRight}}" fill-opacity="{{param.btnFillA}}" stroke="{{color.btnRight}}" stroke-width="{{param.btnRing}}"/>
+</g>

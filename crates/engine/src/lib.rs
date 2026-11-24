@@ -13,6 +13,7 @@ mod games;
 mod grants;
 mod launch;
 mod lease;
+mod library;
 mod local_config;
 mod locations;
 mod play;
@@ -54,6 +55,7 @@ pub use games::GameEntry;
 pub use lease::{Acquire, LeaseHandle};
 pub use lemusync_core::VersionId;
 pub use lemusync_store::redact;
+pub use library::{LibraryEntry, PlayerStream, RECENT_MAX, RecentItem, library, recent};
 pub use local_config::{
     BackendConfig, ConflictPolicy, DeviceSection, EmulatorOverride, LeaseSettings, LocalConfig,
 };
@@ -65,7 +67,7 @@ pub use remote::only_player;
 pub use remote_play::{PROMPT_TIMEOUT, PlayCall, PlayFrame};
 #[cfg(target_os = "linux")]
 pub use secret_service::{SECRETS_NAME, SecretServiceStore};
-#[cfg(not(target_os = "linux"))]
+#[cfg(any(target_os = "macos", windows))]
 pub use secrets::KeyringSecrets;
 pub use secrets::{DisabledSecrets, MemorySecrets, SecretStore, os_secrets};
 pub use service::{Service, ServiceConfig, ServiceHandle};

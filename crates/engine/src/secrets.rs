@@ -8,7 +8,7 @@ use zeroize::Zeroizing;
 
 use crate::EngineError;
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(any(target_os = "macos", windows))]
 const SERVICE: &str = "lemusync";
 
 pub trait SecretStore: Send + Sync {
@@ -50,22 +50,46 @@ pub fn os_secrets() -> Arc<dyn SecretStore> {
     {
         Arc::new(crate::secret_service::SecretServiceStore::session())
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(any(target_os = "macos", windows))]
     {
         Arc::new(KeyringSecrets)
+    }
+    // Android Keystore and iOS Keychain arrive with Phases 4 and 5; until then every call fails.
+    #[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
+    {
+        Arc::new(NoKeystore)
+    }
+}
+
+/// Platforms without a keystore client yet (Android, iOS): every call is a `Secrets` error.
+#[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
+struct NoKeystore;
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
+impl SecretStore for NoKeystore {
+    fn get(&self, _: &str) -> Result<Option<Zeroizing<String>>, EngineError> {
+        Err(EngineError::Secrets("no_keystore_on_this_platform".into()))
+    }
+
+    fn set(&self, _: &str, _: &str) -> Result<(), EngineError> {
+        Err(EngineError::Secrets("no_keystore_on_this_platform".into()))
+    }
+
+    fn delete(&self, _: &str) -> Result<(), EngineError> {
+        Err(EngineError::Secrets("no_keystore_on_this_platform".into()))
     }
 }
 
 /// Keychain and Credential Manager through `keyring`.
-#[cfg(not(target_os = "linux"))]
+#[cfg(any(target_os = "macos", windows))]
 pub struct KeyringSecrets;
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(any(target_os = "macos", windows))]
 fn keyring_err(e: &keyring::Error) -> EngineError {
     EngineError::Secrets(lemusync_store::redact(&e.to_string()))
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(any(target_os = "macos", windows))]
 impl SecretStore for KeyringSecrets {
     fn get(&self, name: &str) -> Result<Option<Zeroizing<String>>, EngineError> {
         let entry = keyring::Entry::new(SERVICE, name).map_err(|e| keyring_err(&e))?;
@@ -169,7 +193,7 @@ mod tests {
 
     // Linux: the Secret Service client is tested only on a throwaway bus
     // (`scripts/isolated-secret-service.sh`, crates/engine/tests/secret_service.rs).
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(any(target_os = "macos", windows))]
     #[test]
     #[ignore = "writes one `lemusync` item to the real Keychain/Credential Manager; run by hand only"]
     fn keyring_round_trip() {

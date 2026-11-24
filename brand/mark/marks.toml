@@ -1,0 +1,72 @@
+# Lemur mark compositions. Colors name palette primitives from brand/tokens.toml.
+# Params are numbers substituted into {{param.x}}; "tail" is built in (drawn from [tail]).
+# [mark.<name>.tail] overrides any [tail] key for that mark (and its children). Colors: ring, stripe,
+# arrow (default stripe), tailHalo (+ param haloWidth). Derived params for parts: tailCx, tailCy, tailR,
+# tailWidth, tailStartX/Y, tailEndX/Y.
+schema = 1
+
+[tail]
+cx = 128
+cy = 136
+r = 96
+start_deg = 115      # 0 = 3 o'clock, clockwise
+sweep_deg = 290      # the gap is the sync loop's opening
+width = 22
+rings = 7            # dark bands on the light tail
+
+[mark.app]
+parts = ["badge", "tail", "head", "mask", "eyes"]
+colors = { badge = "charcoal-800", bevel = "charcoal-700", fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "bone", eye = "amber-500", pupil = "charcoal-950" }
+params = { badgeInset = 16, badgeSize = 224, badgeRadius = 56 }
+
+[mark.appSquare]     # iOS: full-bleed and opaque; the OS rounds the corners
+extends = "app"
+params = { badgeInset = 0, badgeSize = 256, badgeRadius = 0 }
+
+[mark.glyph]         # in-app: no badge, transparent background
+parts = ["tail", "head", "mask", "eyes"]
+colors = { fur = "stone-400", ring = "bone", stripe = "charcoal-950", arrow = "bone", eye = "amber-500", pupil = "charcoal-950" }
+
+[mark.controller]    # small family (<= 48 px): SNES-style pad, two amber buttons are the eyes
+parts = ["controller"]
+colors = { body = "stone-300", outline = "charcoal-950", light = "bone", btnTop = "blue-500", btnBottom = "red-500", btnLeft = "amber-500", btnRight = "amber-500" }
+params = { cy = 128, scale = 1, hollow = 0, btnR = 16, stickAngle = 0, stickPush = 0, stickSquash = 1 }   # hollow = 1: the four buttons are rings (stroke only); the stick cap leans out of its fixed socket: stickAngle = lean direction in degrees (0 = right, -90 = up), stickPush = how far the cap moves, stickSquash = cap width along the lean (1 = round)
+
+[mark.controllerSquare]   # iOS small sizes: full-bleed and opaque
+extends = "controller"
+parts = ["bg", "controller"]
+colors = { bg = "charcoal-800" }
+params = { scale = 0.9 }
+
+[mark.tray]          # base for the seven tray states, not an output itself: the state is the four button colors (playing also leans the stick cap)
+extends = "controller"
+params = { btnR = 20 }
+
+[mark.tray-synced]
+extends = "tray"
+
+[mark.tray-syncing]
+extends = "tray"
+colors = { btnTop = "blue-500", btnBottom = "blue-500", btnLeft = "blue-500", btnRight = "blue-500" }
+
+[mark.tray-playing]   # a play session on an otherwise synced install: eyes lit green, cap leans out of its socket (shape cue)
+extends = "tray"
+colors = { btnLeft = "green-500", btnRight = "green-500" }
+params = { stickAngle = -45, stickPush = 10, stickSquash = 0.8 }
+
+[mark.tray-paused]
+extends = "tray"
+colors = { btnTop = "stone-400", btnBottom = "stone-400", btnLeft = "stone-400", btnRight = "stone-400" }
+
+[mark.tray-offline]   # shape cue: rings, not discs
+extends = "tray"
+colors = { btnTop = "charcoal-950", btnBottom = "charcoal-950", btnLeft = "charcoal-950", btnRight = "charcoal-950" }
+params = { hollow = 1, btnR = 16 }
+
+[mark.tray-attention]
+extends = "tray"
+colors = { btnTop = "amber-500", btnBottom = "amber-500", btnLeft = "amber-500", btnRight = "amber-500" }
+
+[mark.tray-error]
+extends = "tray"
+colors = { btnTop = "red-500", btnBottom = "red-500", btnLeft = "red-500", btnRight = "red-500" }

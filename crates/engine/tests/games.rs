@@ -51,6 +51,10 @@ async fn a_detected_game_s_name_shows_in_status_and_history_only_where_installed
     let status = a.engine.status().await.unwrap();
     let st = status.streams.iter().find(|s| s.game == GAME).unwrap();
     assert_eq!(st.name.as_deref(), Some("Synthetic Game"));
+    // Recency is the base version's embedded time.
+    let base: lemusync_core::VersionId = st.base.as_deref().unwrap().parse().unwrap();
+    assert_eq!(st.last_version_ms, Some(base.unix_ms()));
+    assert!(base.unix_ms() > 0);
     let history = a.engine.history("P", "cemu", GAME).await.unwrap();
     assert_eq!(history.name.as_deref(), Some("Synthetic Game"));
 
@@ -58,6 +62,7 @@ async fn a_detected_game_s_name_shows_in_status_and_history_only_where_installed
     let status = b.engine.status().await.unwrap();
     let st = status.streams.iter().find(|s| s.game == GAME).unwrap();
     assert_eq!(st.name, None);
+    assert_eq!(st.last_version_ms, None);
     let json = serde_json::to_value(st).unwrap();
     assert!(json.get("name").is_none(), "{json}");
 }

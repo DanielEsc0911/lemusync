@@ -24,6 +24,13 @@ flutter_rust_bridge = "=2.13.0"
 uniffi = "0.32.2"
 rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
 rustls-platform-verifier = "0.7.1"
+lemusync-api = { path = "../api" }
+lemusync-engine = { path = "../engine" }
+lemusync-ipc = { path = "../ipc" }
+futures-util = { workspace = true }
+# `rt-multi-thread` and `net` beyond the plan's list: `link` owns a 1-worker runtime for the
+# event stream (V-SHELL-1) and the IPC client uses Unix sockets.
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time", "sync", "macros"] }
 
 # Same version rustls-platform-verifier uses; needed to hand it the JVM.
 [target.'cfg(target_os = "android")'.dependencies]
@@ -32,6 +39,10 @@ jni = { version = "0.22", default-features = false }
 # The workspace forbids `unsafe_code`. Generated FFI glue needs it, so this
 # crate is the one exception (docs/specs/architecture.md, Layers). Everything
 # else matches `[workspace.lints]`.
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "test-util"] }
+
 [lints.rust]
 unsafe_code = "deny"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

@@ -1,6 +1,6 @@
 # Desktop: Windows, macOS, Linux
 
-> **Status:** Draft · **Related:** [rules](../../rules.md) (B3, P4), [architecture §Process model](../architecture.md#process-model), [reliability](../reliability.md#always-on-247), [status-and-notifications](../ui/status-and-notifications.md#desktop-tray-and-menu-bar), [emulator-profiles](../emulator-profiles.md), [security](../security.md) · **Code:** `crates/daemon` (`lemusyncd`: `src/main.rs`, run loop `src/run.rs`, logs `src/logging.rs`; Linux tray, notifications, power: `crates/daemon/src/platform/linux/`; systemd user unit: `crates/cli/src/service.rs`; other OSes no-op until Phase 2 Task 11), `packaging/` (planned)
+> **Status:** Draft · **Related:** [rules](../../rules.md) (B3, P4), [architecture §Process model](../architecture.md#process-model), [reliability](../reliability.md#always-on-247), [status-and-notifications](../ui/status-and-notifications.md#desktop-tray-and-menu-bar), [emulator-profiles](../emulator-profiles.md), [security](../security.md) · **Code:** `crates/daemon` (`lemusyncd`: `src/main.rs`, run loop `src/run.rs`, logs `src/logging.rs`; Linux tray, notifications, power: `crates/daemon/src/platform/linux/`, brand tray pixmaps: `platform/icons.rs`; systemd user unit: `crates/cli/src/service.rs`; other OSes no-op until Phase 2 Task 11), `packaging/` (planned)
 
 ## Purpose
 Desktop is where most emulators run. The daemon gives true 24/7 sync with native tray and notifications. The Flutter app is a client of it.
@@ -11,7 +11,7 @@ Desktop is where most emulators run. The daemon gives true 24/7 sync with native
 | Arch | x64, arm64 | Apple Silicon + Intel (universal) | x86_64, arm64 |
 | Service | Task Scheduler logon task | LaunchAgent via `SMAppService` | systemd user unit |
 | Tray | Notification area | Menu bar extra | StatusNotifierItem / AppIndicator |
-| Notifications | Toasts with actions | `UNUserNotificationCenter` | freedesktop notifications with actions |
+| Notifications | Toasts with actions | `UNUserNotificationCenter` | freedesktop notifications with actions (app icon by theme name: shown only when installed via rpm/deb; dev, cargo and AppImage show the host's generic icon) |
 | Sleep inhibition | `SetThreadExecutionState` | IOPM assertion | logind `Inhibit` |
 | Process detection | Process list | Process list | `/proc` (Flatpak apps visible too) |
 | Keystore | Credential Manager | Keychain | Secret Service |

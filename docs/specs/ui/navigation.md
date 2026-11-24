@@ -1,6 +1,6 @@
 # Navigation
 
-> **Status:** Draft · **Related:** [rules](../../rules.md) (F3, P5, B2), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [players-and-accounts](../players-and-accounts.md), [sync-model](../sync-model.md), [security](../security.md) · **Code:** `app/lib/app/router.dart` (planned)
+> **Status:** Draft · **Related:** [rules](../../rules.md) (F3, P5, B2), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [players-and-accounts](../players-and-accounts.md), [sync-model](../sync-model.md), [security](../security.md) · **Code:** `app/lib/app/destination.dart`, `app/lib/app/app_shell.dart` (planned, Phase 3b)
 
 ## Purpose
 The single source of truth for where everything is and how every flow goes, the same on every platform (F3).
@@ -15,6 +15,8 @@ Same order, names and icons everywhere:
 | 3 | **Activity** | Timeline of syncs, conflicts, restores, errors; filters |
 | 4 | **Devices** | Devices in the repo, last seen, sessions; this device's settings |
 | 5 | **Settings** | Players · Storage · Emulators · Notifications · Language · Advanced · About |
+
+Destinations appear only once they work end to end (F2); until Phase 3d the desktop app shows Home and Games ([D44](../../decisions.md#d44-destinations-appear-only-once-they-work-end-to-end-2026-11-01)). As of 3b (planned): Home and Games are built. The order of the five stays this table's; a destination is shown from the phase that builds it. This is a staging order, the same on every platform at any build (F3 holds). See [app-shell](app-shell.md#destinations-as-built-3b).
 
 ## Adaptive containers
 | Size class (width) | Container | Detail views |

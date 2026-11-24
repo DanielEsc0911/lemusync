@@ -394,6 +394,7 @@ tray-pause-1h = Por 1 hora
 tray-pause-until-resume = Hasta que la reanude
 tray-resume = Reanudar sincronización
 tray-recent = Juegos recientes
+tray-recent-no-file = sin archivo del juego
 tray-quit = Salir
 
 ## Daemon: notificaciones

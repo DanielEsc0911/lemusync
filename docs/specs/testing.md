@@ -15,7 +15,7 @@ Prove the rules automatically: no lost saves, identical UI, smooth frames, same 
 | Profile fixtures | `profiles/fixtures/` | Each profile's scan finds exactly the expected streams |
 | Fuzz | `cargo-fuzz` (nightly CI, timeboxed) | Manifest decode, profile parse, path validation, IPC frames, lease decode |
 | Widget | `flutter test` | Components and screens with fake engine |
-| Golden | `flutter test --update-goldens` (reviewed) | Each screen × size class (compact/medium/expanded) × light/dark × en/es. Rendered on Linux CI with bundled fonts for determinism |
+| Golden | `flutter test --update-goldens` (reviewed) | Each screen × size class (compact/medium/expanded) × light/dark × en/es. Rendered on Linux CI with bundled fonts for determinism. Tagged `golden` (`app/dart_test.yaml`), skipped off Linux; use `goldenMatrix` (`app/test/support/golden.dart`: light/dark × en/es × sizes, `pump()` only). The design gallery (`app/test/gallery/`) has widget tests (all themes, three sizes, theme and locale switch) and a golden of the top of the page |
 | Integration | `integration_test` on Android emulator, iOS simulator, desktop | Every flow in [navigation](ui/navigation.md) per size class |
 | Performance | `flutter drive --profile` + timeline summary; Rust `criterion` (`crates/engine/benches/budgets.rs`, `just bench`) | Frame budgets ([design-system](ui/design-system.md#performance)), daemon budgets ([reliability](reliability.md#budgets)) |
 | Native | Kotlin unit/instrumented, XCTest | Services, notifications, Live Activities, App Intents |

@@ -36,7 +36,9 @@ Read this file, then only the docs your task needs. Headings are stable: grep th
 |---|---|---|
 | [specs/config-and-cli.md](specs/config-and-cli.md) | Config files and locations, CLI commands, JSON output, exit codes | Draft |
 | [specs/i18n.md](specs/i18n.md) | English/Spanish, string sources per layer, terminology, parity checks | Decided |
+| [specs/ui/brand.md](specs/ui/brand.md) | Direction, palette roles, lemur mark, the generator pipeline and its outputs | Decided |
 | [specs/ui/design-system.md](specs/ui/design-system.md) | Visual parity, tokens, components, motion, accessibility, frame budgets | Draft |
+| [specs/ui/app-shell.md](specs/ui/app-shell.md) | How the desktop app reaches the daemon: connection states, data flow, app state, destinations as built | Decided |
 | [specs/ui/navigation.md](specs/ui/navigation.md) | Destinations, adaptive containers, every user flow, deep links | Draft |
 | [specs/ui/status-and-notifications.md](specs/ui/status-and-notifications.md) | One status model → tray, Live Updates, Live Activities, toasts | Draft |
 
@@ -66,7 +68,7 @@ Read this file, then only the docs your task needs. Headings are stable: grep th
 | Sync logic, versions, conflicts, locks | sync-model → reliability → security §Cryptography |
 | Add or fix an emulator | emulator-profiles → players-and-accounts → the platform spec |
 | Add a storage provider | storage-backends → security §Credentials |
-| UI screen or component | ui/design-system → ui/navigation → i18n |
+| UI screen or component | ui/design-system → ui/brand (tokens, mark) → ui/navigation → i18n |
 | Tray, notifications, live surfaces | ui/status-and-notifications → the platform spec |
 | Background or service behaviour | reliability → the platform spec |
 | CLI or config | config-and-cli → i18n §Rust strings |

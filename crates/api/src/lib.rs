@@ -304,6 +304,10 @@ pub struct StreamStatus {
     pub account: Option<String>,
     /// Base folder of the local saves, when known.
     pub base: Option<String>,
+    /// When this device last synced a version of the stream (Unix ms, from the base version's
+    /// id), if it has one. Orders "recent games"; absent from older daemons.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_version_ms: Option<u64>,
 }
 
 /// Where a game in the catalog was found (config-and-cli §Commands, `games`).
@@ -544,6 +548,24 @@ pub struct ErrorBody {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stream_status_last_version_is_additive() {
+        let old = r#"{"player":"A","emulator":"cemu","game":"g","account":null,"base":null}"#;
+        let s: StreamStatus = serde_json::from_str(old).unwrap();
+        assert_eq!(s.last_version_ms, None);
+        assert!(
+            !serde_json::to_string(&s)
+                .unwrap()
+                .contains("last_version_ms")
+        );
+        let s = StreamStatus {
+            last_version_ms: Some(5),
+            ..s
+        };
+        let back: StreamStatus = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
+        assert_eq!(back.last_version_ms, Some(5));
+    }
 
     #[test]
     fn sync_report_json_is_stable() {

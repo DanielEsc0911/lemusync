@@ -96,7 +96,7 @@ impl Engine {
                 .await
                 .unwrap_or_else(|| newest.device.to_string());
             out.push(RemoteNewer {
-                name: names.get(&(t.emulator.clone(), t.game.clone())).cloned(),
+                name: crate::games::name_in(&names, &t.emulator, &t.game),
                 player: t.player_name,
                 emulator: t.emulator,
                 game: t.game,

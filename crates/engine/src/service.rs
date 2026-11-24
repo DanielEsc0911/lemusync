@@ -873,10 +873,7 @@ async fn play(
     };
     let args = remote::os_args(&call.args);
     let launcher = core.launcher.clone();
-    let name = engine
-        .game_names()
-        .get(&(call.emulator.clone(), call.game.to_lowercase()))
-        .cloned();
+    let name = engine.game_name(&call.emulator, &call.game);
     let session = Session {
         game: call.game.clone(),
         name,
@@ -972,7 +969,7 @@ async fn session_action(
             if core.session.is_none() {
                 let session = Session {
                     game: t.game.clone(),
-                    name: None,
+                    name: engine.game_name(&t.emulator, &t.game),
                     emulator: t.emulator.clone(),
                     player: t.player_name.clone(),
                     device: engine.local_config().device.name.clone(),

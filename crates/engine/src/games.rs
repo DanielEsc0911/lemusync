@@ -287,6 +287,25 @@ impl Engine {
             .filter_map(|g| Some(((g.emulator, g.key), g.name?)))
             .collect()
     }
+
+    /// The name of one game, when known. The key is matched in any case (catalog keys are
+    /// lowercase; stream keys come from the repo as written).
+    #[must_use]
+    pub fn game_name(&self, emulator: &str, game: &str) -> Option<String> {
+        name_in(&self.game_names(), emulator, game)
+    }
+}
+
+/// `names[(emulator, game)]`, matching the key in any case. For callers that look up many.
+#[must_use]
+pub fn name_in(
+    names: &BTreeMap<(String, String), String>,
+    emulator: &str,
+    game: &str,
+) -> Option<String> {
+    names
+        .get(&(emulator.to_owned(), game.to_lowercase()))
+        .cloned()
 }
 
 #[cfg(test)]
@@ -518,6 +537,25 @@ mod tests {
                 .map(String::as_str),
             Some("Gamma")
         );
+    }
+
+    #[test]
+    fn a_game_name_is_found_in_any_case_of_the_key() {
+        let dir = tempfile::tempdir().unwrap();
+        let listed = dir.path().join("listed");
+        game(&listed.join("A"), "0005000010101C00", "Alpha");
+        let e = cemu_engine(dir.path(), &listed);
+        // The catalog stores the key lowercase; stream keys arrive as written in the repo.
+        assert!(
+            e.game_names()
+                .contains_key(&("cemu".to_owned(), "10101c00".to_owned()))
+        );
+        assert_eq!(e.game_name("cemu", "10101C00").as_deref(), Some("Alpha"));
+        assert_eq!(
+            name_in(&e.game_names(), "cemu", "10101C00").as_deref(),
+            Some("Alpha")
+        );
+        assert_eq!(e.game_name("cemu", "10101d00"), None);
     }
 
     #[test]

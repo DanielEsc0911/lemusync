@@ -1,12 +1,74 @@
 {
   "@@locale": "en",
   "appTitle": "LemuSync",
-  "@appTitle": { "description": "Product name. Never translated." },
+  "@appTitle": {
+    "description": "Product name. Never translated."
+  },
   "statusSynced": "All saves synced",
-  "@statusSynced": { "description": "Home status when nothing is pending." },
+  "@statusSynced": {
+    "description": "Home status when nothing is pending."
+  },
   "statusUploading": "{count, plural, =1{Uploading 1 change} other{Uploading {count} changes}}",
   "@statusUploading": {
     "description": "Status while uploads are in flight.",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statusScanning": "Checking for changes",
+  "@statusScanning": {
+    "description": "Status label while looking for changed saves."
+  },
+  "statusSyncing": "Syncing",
+  "@statusSyncing": {
+    "description": "Status label while saves are being synced."
+  },
+  "statusPaused": "Sync paused",
+  "@statusPaused": {
+    "description": "Status label when the user paused syncing."
+  },
+  "statusOffline": "Offline",
+  "@statusOffline": {
+    "description": "Status label when storage or network is unreachable."
+  },
+  "statusAttention": "Needs your attention",
+  "@statusAttention": {
+    "description": "Status label when something needs a decision from the user."
+  },
+  "statusError": "Something went wrong",
+  "@statusError": {
+    "description": "Status label when a sync failed."
+  },
+  "actionRetry": "Try again",
+  "@actionRetry": {
+    "description": "Default label of the button that retries a failed action."
+  },
+  "statusDownloading": "{count, plural, =1{Downloading 1 change} other{Downloading {count} changes}}",
+  "@statusDownloading": {
+    "description": "Status while downloads are in flight.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "actionSyncNow": "Sync now",
+  "@actionSyncNow": {
+    "description": "Button that starts a sync right away."
+  },
+  "gamePlay": "Play",
+  "@gamePlay": {
+    "description": "Tooltip and label of the button that launches a game."
+  },
+  "gameLastSynced": "Synced {when}",
+  "@gameLastSynced": {
+    "description": "Caption on a game card. {when} is a preformatted time such as \"2 min ago\".",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
   }
 }

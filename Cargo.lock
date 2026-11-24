@@ -180,6 +180,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arrayref"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76a2e8124351fda1ef8aaaa3bbd7ebbcb486bbcd4225aca0aa0d84bb2db8fecb"
+
+[[package]]
 name = "arrayvec"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -391,7 +397,7 @@ dependencies = [
  "addr2line",
  "cfg-if",
  "libc",
- "miniz_oxide",
+ "miniz_oxide 0.8.9",
  "object",
  "rustc-demangle",
  "windows-link",
@@ -864,6 +870,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc32fast"
+version = "1.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ba106e844045ddc02c20768ac4b0b7cb45f2cc2ecbd833ac9f5dacb183c2055"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "criterion"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -968,6 +983,12 @@ dependencies = [
  "once_cell",
  "parking_lot_core",
 ]
+
+[[package]]
+name = "data-url"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
 
 [[package]]
 name = "dbus"
@@ -1181,6 +1202,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "euclid"
+version = "0.22.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1a05365e3b1c6d1650318537c7460c6923f1abdd272ad6842baa2b509957a06"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "event-listener"
 version = "5.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1219,10 +1249,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
 
 [[package]]
+name = "fdeflate"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c"
+dependencies = [
+ "simd-adler32",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484"
+
+[[package]]
+name = "flate2"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+dependencies = [
+ "crc32fast",
+ "miniz_oxide 0.9.1",
+ "zlib-rs",
+]
+
+[[package]]
+name = "float-cmp"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
 
 [[package]]
 name = "fluent-bundle"
@@ -1693,6 +1749,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ico"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d75e94d66081e4d8dcd098bd8dc5254800fea14a26389b298410158d834de167"
+dependencies = [
+ "byteorder",
+ "png",
+]
+
+[[package]]
 name = "icu_collections"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1795,6 +1861,12 @@ dependencies = [
  "icu_normalizer",
  "icu_properties",
 ]
+
+[[package]]
+name = "imagesize"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65b27460c2c92b037f3f94c538ed9a3342f3fdf923606781629ccb35f82d042a"
 
 [[package]]
 name = "indexmap"
@@ -2063,6 +2135,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "kurbo"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b60dfc32f652b926df6192e55525b16d186c69d47876c3ead4da5cc9f8450e2"
+dependencies = [
+ "arrayvec",
+ "euclid",
+ "polycool",
+ "smallvec",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2082,9 +2166,15 @@ name = "lemusync-bridge"
 version = "0.0.1-alpha.1"
 dependencies = [
  "flutter_rust_bridge",
+ "futures-util",
  "jni",
+ "lemusync-api",
+ "lemusync-engine",
+ "lemusync-ipc",
  "rustls",
  "rustls-platform-verifier",
+ "tempfile",
+ "tokio",
  "uniffi",
 ]
 
@@ -2349,6 +2439,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
  "adler2",
+ "simd-adler32",
+]
+
+[[package]]
+name = "miniz_oxide"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b63fbc4a50860e98e7b2aa7804ded1db5cbc3aff9193adaff57a6931bf7c4b4c"
+dependencies = [
+ "adler2",
+ "simd-adler32",
 ]
 
 [[package]]
@@ -2874,6 +2975,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "pico-args"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5be167a7af36ee22fe3115051bc51f6e6c7054c9348e28deb4f49bd6f705a315"
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2903,6 +3010,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
+name = "png"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60769b8b31b2a9f263dae2776c37b1b28ae246943cf719eb6946a1db05128a61"
+dependencies = [
+ "bitflags 2.13.2",
+ "crc32fast",
+ "fdeflate",
+ "flate2",
+ "miniz_oxide 0.8.9",
+]
+
+[[package]]
 name = "polling"
 version = "3.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2924,6 +3044,15 @@ checksum = "6e2d0073b297041425c7c3df6eb4792d598a15323fe63346852b092eca02904c"
 dependencies = [
  "cpufeatures 0.3.1",
  "universal-hash",
+]
+
+[[package]]
+name = "polycool"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50596ddc09eb5ad5f75cacd40209568e66df71baf86e1499a0e99c4cff12a5a6"
+dependencies = [
+ "arrayvec",
 ]
 
 [[package]]
@@ -3198,6 +3327,30 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
+]
+
+[[package]]
+name = "resvg"
+version = "0.49.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1572844b6727a1bf842190e9947641a68ac44bed83f50afb4bd1407a2564bee8"
+dependencies = [
+ "bytemuck",
+ "log",
+ "pico-args",
+ "rgb",
+ "svgtypes",
+ "tiny-skia",
+ "usvg",
+]
+
+[[package]]
+name = "rgb"
+version = "0.8.53"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47b34b781b31e5d73e9fbc8689c70551fd1ade9a19e3e28cfec8580a79290cc4"
+dependencies = [
+ "bytemuck",
 ]
 
 [[package]]
@@ -3657,6 +3810,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "simd-adler32"
+version = "0.3.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
+
+[[package]]
 name = "simd_cesu8"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3671,6 +3830,15 @@ name = "simdutf8"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
+
+[[package]]
+name = "simplecss"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a9c6883ca9c3c7c90e888de77b7a5c849c779d25d74a1269b0218b14e8b136c"
+dependencies = [
+ "log",
+]
 
 [[package]]
 name = "siphasher"
@@ -3735,6 +3903,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "strict-num"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6637bab7722d379c8b41ba849228d680cc12d0a45ba1fa2b48f2a30577a06731"
+dependencies = [
+ "float-cmp",
+]
+
+[[package]]
 name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3745,6 +3922,16 @@ name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+
+[[package]]
+name = "svgtypes"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "695b5790b3131dafa99b3bbfd25a216edb3d216dad9ca208d4657bfb8f2abc3d"
+dependencies = [
+ "kurbo",
+ "siphasher",
+]
 
 [[package]]
 name = "syn"
@@ -3900,6 +4087,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c9d3793400a45f954c52e73d068316d76b6f4e36977e3fcebb13a2721e80237"
 dependencies = [
  "crunchy",
+]
+
+[[package]]
+name = "tiny-skia"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47ffee5eaaf5527f630fb0e356b90ebdec84d5d18d937c5e440350f88c5a91ea"
+dependencies = [
+ "arrayref",
+ "arrayvec",
+ "bytemuck",
+ "cfg-if",
+ "log",
+ "png",
+ "tiny-skia-path",
+]
+
+[[package]]
+name = "tiny-skia-path"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edca365c3faccca67d06593c5980fa6c57687de727a03131735bb85f01fdeeb9"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "strict-num",
 ]
 
 [[package]]
@@ -4322,6 +4535,25 @@ dependencies = [
  "idna",
  "percent-encoding",
  "serde",
+]
+
+[[package]]
+name = "usvg"
+version = "0.49.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d09b73ee83641d390ad7ffd9000f347b16eb128e437675b6ff277ea5c7fcf22c"
+dependencies = [
+ "data-url",
+ "imagesize",
+ "kurbo",
+ "log",
+ "pico-args",
+ "roxmltree",
+ "simplecss",
+ "siphasher",
+ "strict-num",
+ "svgtypes",
+ "tiny-skia-path",
 ]
 
 [[package]]
@@ -4846,7 +5078,14 @@ dependencies = [
 name = "xtask"
 version = "0.0.0"
 dependencies = [
+ "ico",
+ "png",
+ "resvg",
+ "serde",
  "serde_json",
+ "sha2 0.11.1",
+ "tempfile",
+ "toml",
 ]
 
 [[package]]
@@ -5140,6 +5379,12 @@ dependencies = [
  "quote",
  "syn 3.0.6",
 ]
+
+[[package]]
+name = "zlib-rs"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b268e58e7c693d7c271f93ffc4ba3b380412554231c85bf61ca7af91042a4112"
 
 [[package]]
 name = "zmij"

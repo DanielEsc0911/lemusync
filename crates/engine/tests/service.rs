@@ -12,7 +12,7 @@ use std::time::Duration;
 use common::{Pc, SAVE, map};
 use lemusync_api::{Event, Request, Response, StatusState, StreamAction};
 use lemusync_core::schedule::ScheduleConfig;
-use lemusync_engine::{Engine, MapChoice, Service, ServiceConfig, ServiceHandle};
+use lemusync_engine::{Engine, Locations, MapChoice, Service, ServiceConfig, ServiceHandle};
 use lemusync_store::Faults;
 use tokio::sync::broadcast::Receiver;
 use tokio::time::{Instant, timeout};
@@ -190,6 +190,19 @@ async fn status_and_pause_are_answered_while_a_sync_is_stuck() {
 async fn watch_mode_takes_the_lease_uploads_after_exit_and_releases() {
     let root = tempfile::tempdir().unwrap();
     let a = pc(root.path()).await;
+    // The game is in the catalog, so the session carries its name (not the title id).
+    let dir = a.root.join("games/zelda");
+    std::fs::create_dir_all(dir.join("meta")).unwrap();
+    std::fs::write(
+        dir.join("meta/meta.xml"),
+        "<menu><title_id>00050000101C9400</title_id><longname_en>Zelda</longname_en></menu>",
+    )
+    .unwrap();
+    let mut conf = a.engine.local_config().clone();
+    conf.emulators.entry("cemu".into()).or_default().game_dirs = vec![a.root.join("games")];
+    conf.save(&Locations::under(&a.root).config_dir.join("config.toml"))
+        .unwrap();
+    let a = a.reopen();
     let file = save_file(&a);
     let probe = Arc::clone(&a.probe);
     let svc = start(a.engine, cfg());
@@ -213,6 +226,7 @@ async fn watch_mode_takes_the_lease_uploads_after_exit_and_releases() {
         (session.player.as_str(), session.game.as_str()),
         ("Ana", "101c9400")
     );
+    assert_eq!(session.name.as_deref(), Some("Zelda"));
     let Response::LeaseStatus(leases) = svc.handle.call(Request::LeaseStatus).await else {
         panic!("lease status")
     };

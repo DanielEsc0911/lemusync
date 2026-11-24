@@ -2,5 +2,16 @@
   "@@locale": "es",
   "appTitle": "LemuSync",
   "statusSynced": "Todas las partidas están sincronizadas",
-  "statusUploading": "{count, plural, =1{Subiendo 1 cambio} other{Subiendo {count} cambios}}"
+  "statusUploading": "{count, plural, =1{Subiendo 1 cambio} other{Subiendo {count} cambios}}",
+  "statusScanning": "Buscando cambios",
+  "statusSyncing": "Sincronizando",
+  "statusPaused": "Sincronización en pausa",
+  "statusOffline": "Sin conexión",
+  "statusAttention": "Necesita tu atención",
+  "statusError": "Algo salió mal",
+  "actionRetry": "Reintentar",
+  "statusDownloading": "{count, plural, =1{Descargando 1 cambio} other{Descargando {count} cambios}}",
+  "actionSyncNow": "Sincronizar ahora",
+  "gamePlay": "Jugar",
+  "gameLastSynced": "Sincronizado {when}"
 }
