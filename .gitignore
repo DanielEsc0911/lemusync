@@ -27,3 +27,6 @@ Thumbs.db
 # Android signing keys (maintainer-only, never committed)
 *.jks
 *.keystore
+
+# Agent worktrees (local only)
+/.claude/worktrees/
