@@ -14,6 +14,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - The project is renamed from LeemuSync to LemuSync (lemur + emu + sync). Binaries, app id, env vars, local folders and the remote storage prefix change with no migration ([D33](docs/decisions.md#d33-the-project-is-named-lemusync-2026-10-27)).
 
 ### Added
+- Play mode (M1b): `lemusync play` takes a lease on the game's save so two devices don't write the same one, with `lease status` and `lease release --force`; a forced double-open becomes a conflict you list with `conflicts` and settle with `resolve`; `accounts create` makes a Cemu account for a player; `kill -9` and network cuts at every journal step leave no corruption.
 - Game aliases: `lemusync games alias <game> <alias>` / `games unalias <alias>` or `config set aliases.<alias> <emulator>/<key>`, so `lemusync play botw` works; `games` shows them.
 - `lemusync games` lists the games installed on this device with their names; `play` finds a game's path by itself (Cemu's own game folders, or `emulators.<id>.game_dirs`), and `status`, `history`, `conflicts` and `play` show game names next to their ids.
 - `lemusync config path|list|get|set|unset` reads and changes `config.toml` from the CLI, keeping comments; managed keys (`repo`, `backend`, `grants`) point to the command that owns them.

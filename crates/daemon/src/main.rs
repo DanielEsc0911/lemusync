@@ -74,6 +74,10 @@ fn start(headless: bool, t: &I18n) -> Result<(), String> {
     );
     let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(2)
+        // Blocking work (file hashing, SQLite) is short and rare: a small pool that lets idle
+        // threads go quickly keeps each thread's malloc arena out of the resident set.
+        .max_blocking_threads(4)
+        .thread_keep_alive(std::time::Duration::from_secs(2))
         .enable_all()
         .build()
         .map_err(|e| failed(t, &e))?;
