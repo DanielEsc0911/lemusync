@@ -39,9 +39,9 @@ sha2 = "0.11.1"
 keyring = { version = "3.6.3", default-features = false }
 # Linux Secret Service client (crates/engine/src/secret_service.rs); already in the tree via `keyring`.
 dbus = { version = "0.9.12", features = ["vendored"] }
-rusqlite = { version = "0.41.0", features = ["bundled"] }
+rusqlite = { version = "0.43.0", features = ["bundled"] }
 directories = "6.0.0"
-sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
+sysinfo = { version = "0.40.1", default-features = false, features = ["system"] }
 regex = { version = "1.13.1", default-features = false, features = ["std", "unicode-perl"] }
 roxmltree = "0.21.1"
 # Save-folder watcher (crates/engine/src/watch.rs). Only the OS backends; FSEvents on macOS.
@@ -72,8 +72,9 @@ todo = "deny"
 debug = "line-tables-only"
 
 [profile.release]
-lto = "thin"
+lto = "fat"
 codegen-units = 1
+opt-level = "s"
 strip = "symbols"
 
 # `just check` rasterises the brand icons (cargo xtask brand); keep that fast in debug.

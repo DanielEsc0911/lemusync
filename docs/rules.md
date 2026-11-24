@@ -41,6 +41,7 @@
 - Never lose or corrupt a save: invariants I1–I6 in [reliability](specs/reliability.md#invariants).
 - Always on wherever the OS allows: service managers, restart on crash, sleep inhibition during transfers, rescans on resume. Mobile uses every allowed background mechanism and documents its limits honestly.
 - Light: the daemon stays within [reliability §Budgets](specs/reliability.md#budgets).
+- Updates never break a working install. After an update, every existing config file, state database, stored key and credential, service unit, granted folder and repo works as before, and the user does nothing. Formats change by adding optional fields or by an automatic, tested migration that keeps the old copy until the new one is verified. Renames of the app, paths, keystore entries or crypto context strings come with that migration. If an update meets data it can't read, it stops with a clear message and changes nothing. See [D45](decisions.md#d45-updates-never-break-a-working-install-2026-11-01).
 
 ## Product
 - **P1 KISS.** Pick the simplest design that satisfies every rule. No speculative features. A new dependency or component needs a written reason.
