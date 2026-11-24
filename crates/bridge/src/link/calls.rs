@@ -285,6 +285,8 @@ mod tests {
         );
     }
 
+    // The fake daemon listens on a Unix socket; the Windows named-pipe path is Phase 2 Task 11.
+    #[cfg(unix)]
     #[tokio::test]
     async fn a_handshake_refusal_carries_the_message() {
         // A server that answers Hello with an api_version error.

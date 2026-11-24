@@ -67,7 +67,7 @@ pub use remote::only_player;
 pub use remote_play::{PROMPT_TIMEOUT, PlayCall, PlayFrame};
 #[cfg(target_os = "linux")]
 pub use secret_service::{SECRETS_NAME, SecretServiceStore};
-#[cfg(not(target_os = "linux"))]
+#[cfg(any(target_os = "macos", windows))]
 pub use secrets::KeyringSecrets;
 pub use secrets::{DisabledSecrets, MemorySecrets, SecretStore, os_secrets};
 pub use service::{Service, ServiceConfig, ServiceHandle};
