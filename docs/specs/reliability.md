@@ -92,18 +92,18 @@ Measured 2026-10-21 on the Fedora PC (AMD Ryzen AI 7 350), release build, `just 
 | Metric | Target | Measured (engine, 2026-10-21) | Measured (daemon, 2026-10-29) |
 |---|---|---|---|
 | Idle CPU | ≈ 0% (event-driven, no busy polling) | not measured (needs the daemon) | **0.09 %** (2026-11-01, same PC, `cargo xtask budgets 300`): 27 ticks utime+stime over 300 s (`/proc/<pid>/stat`), `lemusyncd --headless`, no repo, one fake Cemu install granted so the 3 s poll looks for its 3 process names. The poll lists `/proc` and inspects only new pids (emulator-profiles §Linux paths): one `running_set` over ≈ 550 processes takes 0.83 ms median (was 23.1 ms with a fresh `sysinfo` walk; 20 runs, release). Was 0.71 % (426 ticks over 600 s) on 2026-10-29 |
-| Idle memory (RSS) | ≤ 30 MB | 23 MiB: whole bench process (criterion included) with an open engine, from `/proc/self/statm` | 12.7 MiB after 10 min idle (`VmRSS`), peak 14.1 MiB (`VmHWM`) |
+| Idle memory (RSS) | ≤ 30 MB | 23 MiB: whole bench process (criterion included) with an open engine, from `/proc/self/statm` | 12.7 MiB after 10 min idle (`VmRSS`), peak 14.1 MiB (`VmHWM`). 2026-11-23 (Task 16 Step 2, `cargo xtask budgets 120`): 11.8 → **10.4 MiB** isolated (blocking pool capped at 4 threads, 2 s keep-alive). The real daemon (22 MiB steady, 29.1 MiB peak over the Linux soak) is under 30 MB; its peak with this change is not yet measured |
 | Cold start to ready | ≤ 300 ms | 0.22 ms: `Engine::open` on a populated state DB, repo unlocked from the keystore, one remote read (local-folder backend) | spawn → IPC socket accepts: median 1.4 ms, max 2.2 ms (5 runs, no repo) |
 | Change detected → upload started | quiet period + ≤ 2 s | not measured (needs the daemon's watcher) | quiet period + 190 ms median, 206 ms max: save write → first `Uploading` progress event through `engine::Service` (the daemon's loop) with default timings and a 1 s quiet period, the 10 001-file folder, local-folder backend (5 writes; in-process, because the daemon binary can only use the OS keystore) |
 | Rescan of 10 000 files (warm) | ≤ 1 s | 21 ms: dry-run sync of one unchanged 10 001-file save folder | 22 ms (same bench) |
-| Binary size (daemon) | ≤ 15 MB | 14.0 MB (14 016 632 bytes): `lemusync` CLI, Linux x86-64 | **18.2 MB (18 230 232 bytes), 3.2 MB (21.5 %) over the target**. The CLI is 17.4 MB, so the daemon-only crates (zbus 0.78 MB + zvariant 0.37 MB, ksni 0.36 MB, notify-rust, tracing) add ≈ 0.8 MB; the rest is the engine stack. Largest in an unstripped build (`nm` sizes by crate; `cargo bloat` is not installed): monomorphised `core`/`alloc`/`std` 2.8 MB, unwind tables 1.2 MB, `lemusync_engine` 0.82 MB, SQLite 0.79 MB, `crc_fast` 0.73 MB (via `opendal-service-s3`), OpenDAL core + gdrive + s3 0.92 MB, `tokio` 0.50 MB, `rustls` + ring 0.77 MB |
+| Binary size (daemon) | ≤ 15 MB | 14.0 MB (14 016 632 bytes): `lemusync` CLI, Linux x86-64 | **12.3 MB (12 271 592 bytes) on 2026-11-23, under the target**: release profile `lto = "fat"` (18.64 → 17.34 MB) and `opt-level = "s"` (→ 12.27 MB); rescan of 10 000 files unchanged (19.3 ms). Was 18.2 MB (18 230 232 bytes), 3.2 MB over, on 2026-10-29. The CLI is 17.4 MB, so the daemon-only crates (zbus 0.78 MB + zvariant 0.37 MB, ksni 0.36 MB, notify-rust, tracing) add ≈ 0.8 MB; the rest is the engine stack. Largest in an unstripped build (`nm` sizes by crate; `cargo bloat` is not installed): monomorphised `core`/`alloc`/`std` 2.8 MB, unwind tables 1.2 MB, `lemusync_engine` 0.82 MB, SQLite 0.79 MB, `crc_fast` 0.73 MB (via `opendal-service-s3`), OpenDAL core + gdrive + s3 0.92 MB, `tokio` 0.50 MB, `rustls` + ring 0.77 MB |
 
 ### CI reference
 Values `cargo xtask budgets-check` compares with (fails above +20 %). `lemusyncd_bytes` was measured on the Fedora PC 2026-10-29 (the binary size matches CI). `rescan_10k_ms` is calibrated for the GitHub `ubuntu-latest` runner, which runs the bench about 2.2× slower than the PC: 49.7 and 47.0 ms in the first two runs (2026-10-30). Update them in the commit that knowingly changes them (W1). The job stays non-blocking until more runs confirm them.
 
 | Key | Reference |
 |---|---|
-| `lemusyncd_bytes` | 18 230 232 |
+| `lemusyncd_bytes` | 12 271 592 |
 | `rescan_10k_ms` | 48.4 |
 
 ## Verify

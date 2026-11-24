@@ -72,6 +72,7 @@ todo = "deny"
 debug = "line-tables-only"
 
 [profile.release]
-lto = "thin"
+lto = "fat"
 codegen-units = 1
+opt-level = "s"
 strip = "symbols"
