@@ -95,7 +95,8 @@ async fn sync_now_at(link: &Link) -> SyncNow {
     calls::sync_now(link).await
 }
 
-#[cfg(test)]
+// These tests reach a daemon socket path; Windows IPC is Phase 2 Task 11.
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
     use crate::link::model::ConnectionState;
