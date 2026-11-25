@@ -49,7 +49,7 @@ Shell built (Task 7): `Destination` enum (`home`, `games`), `AppShell` (bar unde
 - Layout by width: bottom bar, rail or sidebar at 600 dp and 1200 dp (size tokens, not literals).
 
 ## Desktop window
-Planned for Linux first. Ctrl/Cmd+1 and 2 select the visible destinations (one digit per destination, 3d extends them), Ctrl/Cmd+R runs Sync now. A second launch raises the first window (single instance). Closing the window quits the app only; the daemon, the tray and the sync keep running. The tray "Open LemuSync" item and the Windows and macOS window code are Phase 3d.
+As built on Linux (3b). Ctrl/Cmd+1 and 2 select the visible destinations (one digit per destination, 3d extends them), Ctrl/Cmd+R runs Sync now. A second launch raises the first window (single instance: the runner uses `G_APPLICATION_DEFAULT_FLAGS` and presents the active window; under Wayland focus rules it may only flash the taskbar entry). The minimum window is 360 x 480 dp (`gtk_widget_set_size_request`). Ctrl/Cmd+R does nothing unless the daemon is online. Closing the window quits the app only; the daemon, the tray and the sync keep running. The tray "Open LemuSync" item and the Windows and macOS window code are Phase 3d.
 
 ## Verify
 Owner is the plan task that answers it; full text in the [plan](../../progress/plans/phase-3b-shell.md#verify).

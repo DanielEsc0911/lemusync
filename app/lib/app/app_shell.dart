@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../design/tokens/size.g.dart';
 import '../l10n/generated/app_localizations.dart';
+import 'app_scope.dart';
 import 'destination.dart';
 import 'shortcuts.dart';
 
@@ -79,9 +80,17 @@ class AppShell extends StatelessWidget {
     }
 
     return Shortcuts(
-      shortcuts: destinationShortcuts,
+      shortcuts: {...destinationShortcuts, ...syncShortcuts},
       child: Actions(
         actions: {
+          SyncNowIntent: CallbackAction<SyncNowIntent>(
+            onInvoke: (_) {
+              // No-op unless the daemon is up; never an error dialog.
+              final c = AppScope.maybeOf(context);
+              if (c != null && c.state.online) c.syncNow();
+              return null;
+            },
+          ),
           DestinationIntent: CallbackAction<DestinationIntent>(
             onInvoke: (intent) {
               onSelect(intent.destination);

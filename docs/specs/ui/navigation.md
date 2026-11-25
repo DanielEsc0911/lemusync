@@ -57,4 +57,7 @@ Settings → Storage → edit or test → probe → save. Changing provider mean
 
 ## Desktop extras
 - Keyboard shortcuts (⌘/Ctrl+1–5 for destinations, ⌘/Ctrl+, for Settings, ⌘/Ctrl+R to sync now).
+- As built in 3b (Linux): Ctrl/Cmd+1 and 2 (the visible destinations), Ctrl/Cmd+R (sync now, only when the daemon is online, otherwise nothing happens), one window per user (a second launch raises the first) and a 360 x 480 dp minimum window. Ctrl/Cmd+, waits for Settings (3d).
+- "Open LemuSync" in the tray is deferred to 3d: it needs the app's installed path or `.desktop` id and a spawn, which belong with packaging.
+- Closing the window quits the app only. The tray belongs to the daemon ([D35](../../decisions.md)), so the sync and the tray keep running; there is no close-to-tray in the app.
 - The tray menu mirrors Home's quick actions ([status-and-notifications](status-and-notifications.md#desktop-tray-and-menu-bar)).

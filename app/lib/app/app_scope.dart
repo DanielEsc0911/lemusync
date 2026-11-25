@@ -18,6 +18,11 @@ class AppScope extends StatefulWidget {
     return scope!.notifier!;
   }
 
+  /// The controller if there is an [AppScope] above, else null.
+  static AppController? maybeOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<_AppScopeInherited>()
+      ?.notifier;
+
   @override
   State<AppScope> createState() => _AppScopeState();
 }

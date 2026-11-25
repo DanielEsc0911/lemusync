@@ -60,6 +60,9 @@ The SP2 notes ([above](#linux-results-sp2-xfce), [security §Credentials](../sec
 
 **Consequence on XFCE:** `graphical-session.target` stays inactive there (measured in SP2), so the desktop unit doesn't start by itself; `lemusync service start` starts it for the session (V-DESK-6).
 
+## Linux window (app, 3b)
+The Flutter runner (`app/linux/runner/my_application.cc`) is single instance: `G_APPLICATION_DEFAULT_FLAGS` with a fixed application id, and `activate` presents the existing window instead of creating one. Minimum size is 360 x 480 dp. Closing the window quits the app only; the daemon and its tray keep running. Windows and macOS window code waits for 3d ([D40](../../decisions.md)).
+
 ## Verify
 - **V-DESK-6** Starting the desktop unit on XFCE, where `graphical-session.target` stays inactive (SP2). Find out whether XFCE 4.20's session can reach the target, or whether an XDG autostart entry that runs `systemctl --user start lemusyncd.service` is needed. Until then XFCE users run `lemusync service start` after login.
 - **V-DESK-1** Tray + actionable notifications from the daemon on Windows and macOS (SP2). Linux XFCE is done ([above](#linux-results-sp2-xfce)). Windows and macOS deferred by the maintainer on 2026-10-08.

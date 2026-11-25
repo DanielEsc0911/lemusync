@@ -345,10 +345,16 @@ Tasks run one at a time, in order. Task 11 ends with a maintainer review gate: s
 **Interfaces:**
 - Consumes: Task 5 controller, Task 7 shell and shortcuts.
 - Produces: `SyncNowIntent`; `Ctrl/Cmd+R` runs `controller.syncNow()` when online (otherwise no-op, no error dialog); Linux runner (`app/linux/runner/my_application.cc`): in `my_application_new()` replace the `"flags"` value `G_APPLICATION_NON_UNIQUE` with `G_APPLICATION_DEFAULT_FLAGS` (application id unchanged) so a second launch activates the first; at the top of `my_application_activate()` call `gtk_application_get_active_window(GTK_APPLICATION(application))` and, when it is non-null, `gtk_window_present(window)` and return instead of creating another; after `gtk_window_set_default_size(window, 1280, 720)` add `gtk_widget_set_size_request(GTK_WIDGET(window), 360, 480)` for the minimum (V-SHELL-7). Keep the GTK header-bar logic as is.
-- [ ] **Step 1: failing tests (Dart):** Ctrl+R calls `syncNow` once online and not offline; Cmd (meta) variants behave the same; with a text field focused, plain digits don't trigger destinations (only with Ctrl/Cmd). C++: no unit-test harness exists for the runner; the manual check is Step 3.
-- [ ] **Step 2:** FAIL; implement the Dart part; edit the runner.
-- [ ] **Step 3: build and look** (the agent can only build): `flutter build linux --debug`. Maintainer-by-eye items go to Task 11 Step 5: launching the binary twice raises one window, not two (V-SHELL-7, Wayland focus-stealing rules may only flash the taskbar entry).
-- [ ] **Step 4:** docs (navigation §Desktop extras as built, "Open LemuSync" deferred to 3d with the reason; desktop.md); tick; board "Tasks 1–10 done". `just check`. **Commit** `feat(app): add shortcuts and a single window on Linux`.
+- [x] **Step 1: failing tests (Dart):** Ctrl+R calls `syncNow` once online and not offline; Cmd (meta) variants behave the same; with a text field focused, plain digits don't trigger destinations (only with Ctrl/Cmd). C++: no unit-test harness exists for the runner; the manual check is Step 3.
+- [x] **Step 2:** FAIL; implement the Dart part; edit the runner.
+- [x] **Step 3: build and look** (build only; by-eye checks belong to Task 11 Step 5) (the agent can only build): `flutter build linux --debug`. Maintainer-by-eye items go to Task 11 Step 5: launching the binary twice raises one window, not two (V-SHELL-7, Wayland focus-stealing rules may only flash the taskbar entry).
+- [x] **Step 4:** docs (navigation §Desktop extras as built, "Open LemuSync" deferred to 3d with the reason; desktop.md); tick; board "Tasks 1–10 done". `just check`. **Commit** `feat(app): add shortcuts and a single window on Linux`.
+
+**As built (Task 10):**
+- Ctrl/Cmd+R is wired in `AppShell` through `SyncNowIntent`; the shell reads the controller with a new `AppScope.maybeOf` (null means no-op), so `app_shell_test.dart` needed no change.
+- `main.dart` was not edited (no lifecycle change needed).
+- Step 3: only `flutter build linux --debug` ran (it succeeded); the binary was not run. Launching twice is checked by eye in Task 11 Step 5.
+- `docs/progress/README.md` was not edited here (the board is updated by the caller).
 
 ### Task 11: golden, accessibility and performance pass, then maintainer review (gate)
 
