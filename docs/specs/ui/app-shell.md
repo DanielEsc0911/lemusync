@@ -67,3 +67,5 @@ Owner is the plan task that answers it; full text in the [plan](../../progress/p
 - `V-SHELL-12` (Task 3, Task 11): the call timeouts are starting values.
 - `V-SHELL-13` (Task 8): what `lemusync doctor` prints for each error kind.
 - `V-SHELL-14` (Task 3, Task 4): `liblemusync_bridge.so` grew from 2.11 MB to 4.60 MB with the engine reachable (release, measured Task 4). Breakdown 2026-11-01: `crc_fast`, `core`, `lemusync_api` and `rustls` are the largest symbol groups; `lemusync_engine` is 7 KB.
+
+Task 11 results (tests, 2026-11-25): the rebuild budget holds with the fake link (a repeated identical status rebuilds nothing; 200 progress events for one stream rebuild at most one game card on Games and the hero once on Home), Home's semantic order is banner, hero, attention, recent games, and Home syncing runs no animation under reduce motion. V-SHELL-9 (frame times) and the live items stay for the maintainer's review (plan Task 11 Step 5); the performance overlay was not watched.

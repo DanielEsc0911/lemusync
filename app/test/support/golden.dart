@@ -15,8 +15,9 @@ Future<void> goldenMatrix(
   List<ImageProvider> precache = const [],
   List<Locale> locales = const [Locale('en'), Locale('es')],
   Future<void> Function(WidgetTester tester)? settle,
+  Map<String, LsColors>? themes,
 }) async {
-  const themes = {'light': LsColors.light, 'dark': LsColors.dark};
+  themes ??= const {'light': LsColors.light, 'dark': LsColors.dark};
   addTearDown(tester.view.reset);
   for (final MapEntry(key: theme, value: colors) in themes.entries) {
     for (final loc in locales) {

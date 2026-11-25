@@ -18,15 +18,34 @@ import '../home/status_mapper.dart';
 /// as tall as its tallest cell, so cards of one row line up and rows never
 /// leave a fixed-height gap or clip at large text sizes. A sliver, so the
 /// screen can put things above it.
-class GameGridSliver extends StatelessWidget {
+class GameGridSliver extends StatefulWidget {
   const GameGridSliver({super.key, required this.state, required this.now});
 
   final AppState state;
   final DateTime now;
 
   @override
+  State<GameGridSliver> createState() => _GameGridSliverState();
+}
+
+class _GameGridSliverState extends State<GameGridSliver> {
+  /// The last cell built for each game, reused while its inputs are equal.
+  final Map<String, _Cell> _cells = {};
+
+  _Cell _cell(dto.GameEntry game, LsStatus status, String? lastSynced) {
+    final fresh = _Cell(game: game, status: status, lastSynced: lastSynced);
+    final id = '${game.emulator}/${game.key}';
+    final old = _cells[id];
+    if (old != null && old.sameInputs(fresh)) return old;
+    return _cells[id] = fresh;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final now = widget.now;
     final games = state.games;
+    final l = AppLocalizations.of(context);
     return SliverLayoutBuilder(
       builder: (context, constraints) {
         final cols = gameColumns(constraints.crossAxisExtent);
@@ -42,10 +61,10 @@ class GameGridSliver extends StatelessWidget {
                 for (var i = r * cols; i < (r + 1) * cols; i++)
                   Expanded(
                     child: i < games.length
-                        ? _Cell(
-                            game: games[i],
-                            status: state.cardStatus(games[i]),
-                            now: now,
+                        ? _cell(
+                            games[i],
+                            state.cardStatus(games[i]),
+                            _lastSyncedText(l, now, games[i]),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -58,28 +77,41 @@ class GameGridSliver extends StatelessWidget {
   }
 }
 
+/// The relative time of the game's newest version, as text; null when no
+/// stream has one. Text, not [now], is what a cell compares, so a cell whose
+/// text did not change is not rebuilt.
+String? _lastSyncedText(AppLocalizations l, DateTime now, dto.GameEntry game) {
+  int? best;
+  for (final s in game.streams) {
+    final ms = s.lastVersionMs?.toInt();
+    if (ms != null && (best == null || ms > best)) best = ms;
+  }
+  return best == null ? null : relative(l, now, best);
+}
+
+/// One card. [GameGridSliver] hands out the same instance while the inputs
+/// are the same, so Flutter keeps the built cell when something else changed
+/// (a live transfer of another game): the rebuild budget of the perf test.
 class _Cell extends StatelessWidget {
-  const _Cell({required this.game, required this.status, required this.now});
+  const _Cell({
+    required this.game,
+    required this.status,
+    required this.lastSynced,
+  });
 
   final dto.GameEntry game;
   final LsStatus status;
-  final DateTime now;
+  final String? lastSynced;
 
-  /// The newest `last_version_ms` of any stream; null when none has one.
-  int? get _newest {
-    int? best;
-    for (final s in game.streams) {
-      final ms = s.lastVersionMs?.toInt();
-      if (ms != null && (best == null || ms > best)) best = ms;
-    }
-    return best;
-  }
+  bool sameInputs(_Cell other) =>
+      game == other.game &&
+      status == other.status &&
+      lastSynced == other.lastSynced;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final c = Theme.of(context).extension<LsColors>()!;
-    final newest = _newest;
     final players = game.streams.length;
     final emulator = players == 0
         ? game.emulator
@@ -93,7 +125,7 @@ class _Cell extends StatelessWidget {
           title: gameTitle(game.name, game.key),
           emulator: emulator,
           status: status,
-          lastSynced: newest == null ? null : relative(l, now, newest),
+          lastSynced: lastSynced,
         ),
         if (!game.launchable)
           Row(

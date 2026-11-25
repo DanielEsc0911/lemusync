@@ -380,15 +380,15 @@ Tasks run one at a time, in order. Task 11 ends with a maintainer review gate: s
 **Files:** create `app/test/screens/high_contrast_golden_test.dart` (+ `goldens/`), `app/test/perf/shell_perf_test.dart`; modify `app/test/support/golden.dart` (optional `themes` parameter, a `Map<String, LsColors>`; default light and dark, unchanged), `docs/specs/testing.md` §Layers (shell goldens), `docs/specs/ui/app-shell.md` (Verify results), `docs/specs/ui/design-system.md` Status, `docs/progress/README.md`.
 
 **Interfaces:** `goldenMatrix` gains `Map<String, LsColors>? themes` (default light and dark, so every 3a golden keeps its name). The perf test uses `flutter_test`'s `binding.traceAction` only if available in `flutter test` without a device; otherwise it is a widget-count/rebuild test (below). No new package.
-- [ ] **Step 1: tests.**
+- [x] **Step 1: tests.**
   - High-contrast goldens (tagged), for one screen only: Home synced + recent at 390 in `lightHighContrast` and `darkHighContrast`, en (2 PNGs, via the `themes:` parameter). Every other screen and state is covered by non-golden assertions below, in all four themes. The plan's golden total is 30 new PNGs (Task 7: 6, Task 8: 18, Task 9: 4, Task 11: 2); open the two new ones and say so in the commit body.
   - 200 % text and 320 px width, no overflow, for every screen state of Tasks 8–9 (Home synced, syncing, playing, attention, offline daemon, not set up, failed, unsafe; Games grid, empty, offline), in all four themes (non-golden assertions, run everywhere).
   - Rebuild budget: with the fake link, 200 `Progress` events for one stream rebuild at most the hero and the one affected card, not the grid (count builds with a `Builder` probe or `debugPrintRebuildDirtyWidgets` capture); a repeated identical `StatusChanged` triggers zero rebuilds.
   - Semantic traversal order of Home: connection banner, hero, attention, recent games (test with `SemanticsController` or `tester.getSemantics` ordering).
   - Reduce motion: with `disableAnimations`, no running animation on Home syncing.
-- [ ] **Step 2:** `cd app && flutter test`; `flutter test --tags golden`; `cargo xtask i18n-check`; `cargo xtask brand --check`; `just check`.
-- [ ] **Step 3: profile build.** `flutter build linux --profile`. The agent cannot watch the overlay: say so.
-- [ ] **Step 4:** docs; tick Steps 1–4; board "Tasks 1–11 done, Task 11 awaiting maintainer review". **Commit** `test(app): add the shell golden, accessibility and rebuild checks`.
+- [x] **Step 2:** `cd app && flutter test`; `flutter test --tags golden`; `cargo xtask i18n-check`; `cargo xtask brand --check`; `just check`.
+- [x] **Step 3: profile build.** `flutter build linux --profile`. The agent cannot watch the overlay: say so.
+- [x] **Step 4:** docs; tick Steps 1–4; board "Tasks 1–11 done, Task 11 awaiting maintainer review". **Commit** `test(app): add the shell golden, accessibility and rebuild checks`.
 - [ ] **Step 5: maintainer review (stop here).** On the PC, with the real daemon running (`systemctl --user is-active` the lemusync service as usual; nothing in this plan restarts it): `cd app && flutter run -d linux` and `flutter run --profile -d linux`. Check, and record results in this step (V-SHELL-3, -5, -7, -8, -9, -12, -14 below):
   1. Home shows the real status; run `lemusync sync`, `lemusync pause`, `lemusync resume` in a terminal and watch the hero follow within a second; start a game through the tray (3a Task 12's Playing state) and see the "Playing …" line; stop the game.
   2. Recent games and Games match the catalog plus synced streams (`lemusync games` and `lemusync status`) and the tray's Play items in the same order (3a Task 11); a game with no file says so.
@@ -396,6 +396,13 @@ Tasks run one at a time, in order. Task 11 ends with a maintainer review gate: s
   4. Resize from 320 to 1600 wide: bar, rail, sidebar; keyboard: Ctrl+1–2, Ctrl+R, Tab order; launch the binary twice.
   5. Profile overlay, scroll Games with a long list and watch Home while a sync runs: worst UI and raster ms against the 8 ms target (60 fps floor 16.6 ms, [design-system §Performance](../../specs/ui/design-system.md#performance)).
   6. Say what to change; changes go back to the task that made the component. Tick when approved.
+
+**As built (Task 11):**
+- New: `app/test/screens/high_contrast_golden_test.dart` (2 PNGs, opened and reviewed: light HC has black text and a strong outline on the cartridge rows, dark HC has bright outlines and bold text; the status ring, button and "No game file" line stay readable; nothing clipped), `app/test/screens/accessibility_test.dart` (Home 8 states and Games 3 states at 200 % text, 320 px, Spanish, in the four themes: no overflow; semantic order; reduce motion), `app/test/perf/shell_perf_test.dart`. `goldenMatrix` gained `themes`; the test `harness` gained `disableAnimations`. "Failed" and "unsafe" are the two connection states of the same names.
+- Rebuild budget, counted with `debugOnRebuildDirtyWidget`: a repeated identical `StatusChanged` rebuilt nothing already. Home: 200 `Progress` events rebuilt the hero at most once, already within budget. Games: before, the first progress event rebuilt every visible card (28 `GameCard` rebuilds with 40 games); the fix is in `GameGridSliver` (now stateful): it hands out the same `_Cell` instance while that game's entry, card status and relative-time text are unchanged, so Flutter skips the rebuild; after, at most 1. (Overriding `==` on the widget is not allowed, `Widget.==` is non-virtual.)
+- No widget overflowed at 200 % and 320 px, so no layout fix was needed.
+- Step 3: `flutter build linux --profile` succeeded; the binary was not run and the performance overlay was not watched (Step 5 is the maintainer's).
+- `docs/progress/README.md` was not edited here.
 
 ## Verify
 

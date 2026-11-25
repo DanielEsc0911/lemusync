@@ -95,6 +95,7 @@ Widget harness(
   double scale = 1,
   double width = 390,
   double height = 800,
+  bool disableAnimations = false,
 }) => AppScope(
   controller: controller,
   child: MaterialApp(
@@ -111,6 +112,7 @@ Widget harness(
       data: MediaQueryData(
         size: Size(width, height),
         textScaler: TextScaler.linear(scale),
+        disableAnimations: disableAnimations,
       ),
       child: Scaffold(
         body: SizedBox(width: width, height: height, child: child),
