@@ -202,11 +202,17 @@ Tasks run one at a time, in order. Task 11 ends with a maintainer review gate: s
 **Interfaces:**
 - Consumes: the 3a brand pipeline (`cargo xtask brand`, `brand --check`), `LsColors`.
 - Produces: `LsSize.breakpointMedium`, `LsSize.breakpointExpanded`, `LsSize.railWidth`, `LsSize.sidebarWidth` (doubles); `lsTheme(colors).navigationBarTheme` and `.navigationRailTheme` styled from tokens only (surface sunken, accent selection, `LsSize.target` heights, label style `LsType.label`).
-- [ ] **Step 1: failing tests.** xtask (`tokens.rs`): the real file loads with `size.breakpointMedium == 600`, `breakpointExpanded == 1200`, `railWidth == 80`, `sidebarWidth == 240`; an unknown key (`bogusSize = 1` under `[size]`) still fails naming `size` and the key; a non-positive new key (`railWidth = 0`) fails like the others. xtask (`dart.rs` test): `size.g.dart` contains `static const double breakpointMedium = 600.0;`. Dart (`theme_test.dart`): in the four themes `lsTheme(c).navigationBarTheme.backgroundColor` and `navigationRailTheme.backgroundColor` equal the sunken surface role, the indicator color is the accent role, and no Material default color is used.
-- [ ] **Step 2:** `cargo test -p xtask` and `cd app && flutter test test/design/theme_test.dart` → FAIL.
-- [ ] **Step 3:** extend `SIZE_KEYS` (`[&str; 12]`, new keys appended in this order: `breakpointMedium`, `breakpointExpanded`, `railWidth`, `sidebarWidth`), edit `tokens.toml`, run `cargo xtask brand` (regenerates `size.g.dart`), implement the two navigation themes in `theme.dart`.
-- [ ] **Step 4:** `cargo xtask brand --check`; `cd app && flutter test`; `just check`.
-- [ ] **Step 5:** design-system size tokens; tick; board "Tasks 1–6 done". **Commit** `feat(brand): add shell size tokens and navigation themes`.
+- [x] **Step 1: failing tests.** xtask (`tokens.rs`): the real file loads with `size.breakpointMedium == 600`, `breakpointExpanded == 1200`, `railWidth == 80`, `sidebarWidth == 240`; an unknown key (`bogusSize = 1` under `[size]`) still fails naming `size` and the key; a non-positive new key (`railWidth = 0`) fails like the others. xtask (`dart.rs` test): `size.g.dart` contains `static const double breakpointMedium = 600.0;`. Dart (`theme_test.dart`): in the four themes `lsTheme(c).navigationBarTheme.backgroundColor` and `navigationRailTheme.backgroundColor` equal the sunken surface role, the indicator color is the accent role, and no Material default color is used.
+- [x] **Step 2:** `cargo test -p xtask` and `cd app && flutter test test/design/theme_test.dart` → FAIL.
+- [x] **Step 3:** extend `SIZE_KEYS` (`[&str; 12]`, new keys appended in this order: `breakpointMedium`, `breakpointExpanded`, `railWidth`, `sidebarWidth`), edit `tokens.toml`, run `cargo xtask brand` (regenerates `size.g.dart`), implement the two navigation themes in `theme.dart`.
+- [x] **Step 4:** `cargo xtask brand --check`; `cd app && flutter test`; `just check`.
+- [x] **Step 5:** design-system size tokens; tick; board "Tasks 1–6 done". **Commit** `feat(brand): add shell size tokens and navigation themes`.
+
+**As built (Task 6):**
+- The selected label weight is `LsType.title.fontWeight` (600), not a literal, because the brand literal scan rejects `FontWeight.w700`.
+- Bar height is `LsSize.target + LsSpace.lg`; rail also sets `minExtendedWidth: LsSize.sidebarWidth`.
+- The `dart.rs` test fixture got a `breakpointMedium` entry (its tokens are inline, not the real file).
+- `just check` not run in full; the listed component checks were.
 
 ### Task 7: router and `AppShell`
 

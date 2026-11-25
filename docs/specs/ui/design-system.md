@@ -28,7 +28,7 @@ All values live in `brand/tokens.toml` and are generated into `app/lib/design/to
 | Shape | Radius scale |
 | Motion | Durations 100/200/300 ms, standard easing curves. Respects OS "reduce motion" |
 | Elevation | Surface levels (sunken, base, raised) plus the bevel, no shadows |
-| Size | Touch target, icon sizes, bevel, focus ring, ring stroke, mark |
+| Size | Touch target, icon sizes, bevel, focus ring, ring stroke, mark, size-class breakpoints (`breakpointMedium` 600, `breakpointExpanded` 1200 dp) and navigation widths (`railWidth` 80, `sidebarWidth` 240 dp). `lsTheme` also styles `NavigationBar` and `NavigationRail` from tokens: sunken surface, accent indicator, bolder selected label |
 | Opacity | Pressed, hover, disabled |
 
 ## Brand

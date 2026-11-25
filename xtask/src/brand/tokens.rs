@@ -46,7 +46,7 @@ pub const TYPE_STEPS: [&str; 7] = [
 ];
 pub const FAMILIES: [&str; 3] = ["display", "body", "mono"];
 pub const SPACE_KEYS: [&str; 7] = ["xs", "sm", "md", "lg", "xl", "xxl", "xxxl"];
-pub const SIZE_KEYS: [&str; 8] = [
+pub const SIZE_KEYS: [&str; 12] = [
     "target",
     "iconSm",
     "iconMd",
@@ -55,6 +55,10 @@ pub const SIZE_KEYS: [&str; 8] = [
     "focusRing",
     "ringStroke",
     "mark",
+    "breakpointMedium",
+    "breakpointExpanded",
+    "railWidth",
+    "sidebarWidth",
 ];
 pub const SHAPE_KEYS: [&str; 4] = ["radiusSm", "radiusMd", "radiusLg", "radiusPill"];
 pub const DURATION_KEYS: [&str; 3] = ["fast", "medium", "slow"];
@@ -398,6 +402,27 @@ mod tests {
         assert_eq!(t.themes.len(), 4);
         assert_eq!(t.color("light", "surface"), Rgb(0xEC, 0xE9, 0xE3));
         assert_eq!(t.primitive("bone"), Some(Rgb(0xFB, 0xFA, 0xF7)));
+    }
+
+    #[test]
+    fn shell_size_tokens_load() {
+        let t = Tokens::load_str(REAL).unwrap();
+        assert_eq!(t.size["breakpointMedium"], 600.0);
+        assert_eq!(t.size["breakpointExpanded"], 1200.0);
+        assert_eq!(t.size["railWidth"], 80.0);
+        assert_eq!(t.size["sidebarWidth"], 240.0);
+    }
+
+    #[test]
+    fn unknown_size_key_fails() {
+        let e = err_of(&REAL.replacen("[size]\n", "[size]\nbogusSize = 1\n", 1));
+        assert!(e.contains("size") && e.contains("bogusSize"), "{e}");
+    }
+
+    #[test]
+    fn non_positive_size_fails() {
+        let e = err_of(&REAL.replacen("railWidth = 80", "railWidth = 0", 1));
+        assert!(e.contains("size") && e.contains("railWidth"), "{e}");
     }
 
     #[test]
