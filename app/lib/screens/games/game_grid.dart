@@ -46,6 +46,12 @@ class _GameGridSliverState extends State<GameGridSliver> {
     final now = widget.now;
     final games = state.games;
     final l = AppLocalizations.of(context);
+    // Forget cells of games that left the library, so the cache stays the
+    // size of the library.
+    if (_cells.length > games.length) {
+      final ids = {for (final g in games) '${g.emulator}/${g.key}'};
+      _cells.removeWhere((id, _) => !ids.contains(id));
+    }
     return SliverLayoutBuilder(
       builder: (context, constraints) {
         final cols = gameColumns(constraints.crossAxisExtent);
