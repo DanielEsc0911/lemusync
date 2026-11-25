@@ -6,6 +6,7 @@ import 'package:lemusync/design/tokens/colors.g.dart';
 import 'package:lemusync/design/tokens/opacity.g.dart';
 import 'package:lemusync/design/tokens/shape.g.dart';
 import 'package:lemusync/design/tokens/size.g.dart';
+import 'package:lemusync/design/tokens/space.g.dart';
 import 'package:lemusync/design/tokens/type.g.dart';
 
 import '../support/fonts.dart';
@@ -21,6 +22,33 @@ void main() {
   };
 
   for (final MapEntry(key: name, value: c) in all.entries) {
+    test('lsTheme styles the navigation from tokens ($name)', () {
+      final t = lsTheme(c);
+      final bar = t.navigationBarTheme;
+      final rail = t.navigationRailTheme;
+      expect(bar.backgroundColor, c.surfaceSunken);
+      expect(rail.backgroundColor, c.surfaceSunken);
+      expect(bar.indicatorColor, c.accent);
+      expect(rail.indicatorColor, c.accent);
+      expect(bar.height, LsSize.target + LsSpace.lg);
+      expect(bar.surfaceTintColor, Colors.transparent);
+      expect(bar.elevation, 0);
+      expect(rail.elevation, 0);
+      expect(rail.minWidth, LsSize.railWidth);
+      const selected = {WidgetState.selected};
+      expect(bar.iconTheme!.resolve(selected)!.color, c.onAccent);
+      expect(bar.iconTheme!.resolve({})!.color, c.onSurfaceMuted);
+      expect(bar.labelTextStyle!.resolve(selected)!.color, c.onSurface);
+      expect(
+        bar.labelTextStyle!.resolve(selected)!.fontWeight,
+        isNot(bar.labelTextStyle!.resolve({})!.fontWeight),
+      );
+      expect(rail.selectedIconTheme!.color, c.onAccent);
+      expect(rail.unselectedIconTheme!.color, c.onSurfaceMuted);
+      expect(rail.selectedLabelTextStyle!.color, c.onSurface);
+      expect(rail.unselectedLabelTextStyle!.color, c.onSurfaceMuted);
+    });
+
     test('lsTheme maps the tokens ($name)', () {
       final t = lsTheme(c);
       expect(t.scaffoldBackgroundColor, c.surface);

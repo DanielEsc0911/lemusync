@@ -249,6 +249,14 @@ void main() {
     });
   }
 
+  testWidgets('no Play button when onPlay is null', (t) async {
+    await t.pumpWidget(
+      _app(LsColors.light, const GameCard(title: 'Zelda', emulator: 'Cemu')),
+    );
+    expect(find.byType(IconButton), findsNothing);
+    expect(find.byTooltip('Play'), findsNothing);
+  });
+
   testWidgets('Play and tap fire; Play has its tooltip', (t) async {
     var plays = 0;
     var taps = 0;

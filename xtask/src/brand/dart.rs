@@ -236,7 +236,7 @@ mod tests {
                 },
             )]),
             space: n(&[("xs", 4.0)]),
-            size: n(&[("target", 48.0)]),
+            size: n(&[("target", 48.0), ("breakpointMedium", 600.0)]),
             shape: n(&[("radiusSm", 6.0)]),
             opacity: n(&[("pressed", 0.12)]),
             durations: BTreeMap::from([("fast".to_owned(), 100), ("medium".to_owned(), 200)]),
@@ -350,6 +350,9 @@ class LsColors extends ThemeExtension<LsColors> {
         let outs = emit(&tokens());
         assert!(file(&outs, "space.g.dart").contains("static const double xs = 4.0;"));
         assert!(file(&outs, "size.g.dart").contains("static const double target = 48.0;"));
+        assert!(
+            file(&outs, "size.g.dart").contains("static const double breakpointMedium = 600.0;")
+        );
         assert!(file(&outs, "opacity.g.dart").contains("static const double pressed = 0.12;"));
         assert_eq!(outs.len(), 7);
     }

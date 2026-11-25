@@ -10,4 +10,9 @@ abstract final class LsSize {
   static const double focusRing = 2.0;
   static const double ringStroke = 4.0;
   static const double mark = 64.0;
+  static const double breakpointMedium = 600.0;
+  static const double breakpointExpanded = 1200.0;
+  static const double railWidth = 80.0;
+  static const double sidebarWidth = 240.0;
+  static const double cardMaxWidth = 280.0;
 }

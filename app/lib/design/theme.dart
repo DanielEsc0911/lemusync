@@ -106,6 +106,16 @@ ThemeData lsTheme(LsColors c) {
         borderSide: BorderSide(color: color, width: width),
       );
 
+  // Selection never relies on color alone: the selected label is bolder and
+  // the selected icon sits on the accent indicator.
+  final navLabel = LsType.label.copyWith(color: c.onSurfaceMuted);
+  final navLabelSelected = LsType.label.copyWith(
+    color: c.onSurface,
+    fontWeight: LsType.title.fontWeight,
+  );
+  final navIcon = IconThemeData(color: c.onSurfaceMuted, size: LsSize.iconMd);
+  final navIconSelected = IconThemeData(color: c.onAccent, size: LsSize.iconMd);
+
   return ThemeData(
     useMaterial3: true,
     brightness: c.brightness,
@@ -190,6 +200,37 @@ ThemeData lsTheme(LsColors c) {
         horizontal: LsSpace.md,
         vertical: LsSpace.xs,
       ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      height: LsSize.target + LsSpace.lg,
+      backgroundColor: c.surfaceSunken,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      elevation: 0,
+      indicatorColor: c.accent,
+      indicatorShape: shape,
+      overlayColor: overlay(c.onSurface),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) =>
+            states.contains(WidgetState.selected) ? navIconSelected : navIcon,
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) =>
+            states.contains(WidgetState.selected) ? navLabelSelected : navLabel,
+      ),
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: c.surfaceSunken,
+      elevation: 0,
+      indicatorColor: c.accent,
+      indicatorShape: shape,
+      minWidth: LsSize.railWidth,
+      minExtendedWidth: LsSize.sidebarWidth,
+      useIndicator: true,
+      selectedIconTheme: navIconSelected,
+      unselectedIconTheme: navIcon,
+      selectedLabelTextStyle: navLabelSelected,
+      unselectedLabelTextStyle: navLabel,
     ),
     dividerTheme: DividerThemeData(
       color: c.outline,

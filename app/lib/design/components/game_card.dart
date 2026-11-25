@@ -157,16 +157,18 @@ class GameCard extends StatelessWidget {
                                     compact: true,
                                   ),
                                 ),
-                                const Spacer(),
-                                IconButton.outlined(
-                                  onPressed: onPlay,
-                                  tooltip: l.gamePlay,
-                                  icon: const Icon(LsIcons.play),
-                                  color: c.accent,
-                                  style: IconButton.styleFrom(
-                                    side: BorderSide(color: c.outline),
+                                if (onPlay != null) ...[
+                                  const Spacer(),
+                                  IconButton.outlined(
+                                    onPressed: onPlay,
+                                    tooltip: l.gamePlay,
+                                    icon: const Icon(LsIcons.play),
+                                    color: c.accent,
+                                    style: IconButton.styleFrom(
+                                      side: BorderSide(color: c.outline),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
                             const _GripRidges(),

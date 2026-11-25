@@ -19,6 +19,7 @@ class StatusHero extends StatelessWidget {
     this.uploads = 0,
     this.downloads = 0,
     this.onSync,
+    this.syncPending = false,
   });
 
   final LsStatus status;
@@ -26,6 +27,10 @@ class StatusHero extends StatelessWidget {
   final int uploads;
   final int downloads;
   final VoidCallback? onSync;
+
+  /// A sync was requested and has not answered yet: the button is disabled
+  /// and reads "Starting sync…".
+  final bool syncPending;
 
   @override
   Widget build(BuildContext context) {
@@ -90,8 +95,10 @@ class StatusHero extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: LsSpace.sm),
                     child: FilledButton(
-                      onPressed: onSync,
-                      child: Text(l.actionSyncNow),
+                      onPressed: syncPending ? null : onSync,
+                      child: Text(
+                        syncPending ? l.actionSyncStarting : l.actionSyncNow,
+                      ),
                     ),
                   ),
               ],

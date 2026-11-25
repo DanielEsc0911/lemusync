@@ -200,6 +200,11 @@ bevel = 1
 focusRing = 2
 ringStroke = 4
 mark = 64
+breakpointMedium = 600
+breakpointExpanded = 1200
+railWidth = 80
+sidebarWidth = 240
+cardMaxWidth = 280
 
 [shape]
 radiusSm = 6

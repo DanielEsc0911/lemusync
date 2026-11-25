@@ -28,7 +28,7 @@ All values live in `brand/tokens.toml` and are generated into `app/lib/design/to
 | Shape | Radius scale |
 | Motion | Durations 100/200/300 ms, standard easing curves. Respects OS "reduce motion" |
 | Elevation | Surface levels (sunken, base, raised) plus the bevel, no shadows |
-| Size | Touch target, icon sizes, bevel, focus ring, ring stroke, mark |
+| Size | Touch target, icon sizes, bevel, focus ring, ring stroke, mark, size-class breakpoints (`breakpointMedium` 600, `breakpointExpanded` 1200 dp) and navigation widths (`railWidth` 80, `sidebarWidth` 240 dp), the widest a game card grows (`cardMaxWidth` 280 dp). `lsTheme` also styles `NavigationBar` and `NavigationRail` from tokens: sunken surface, accent indicator, bolder selected label |
 | Opacity | Pressed, hover, disabled |
 
 ## Brand
@@ -40,7 +40,7 @@ The inventory grows with the code. Each component gets a widget test and goldens
 
 | Component | Purpose |
 |---|---|
-| `AppShell` | Adaptive container: bottom bar / rail / sidebar ([navigation](navigation.md)) |
+| `AppShell` (`app/lib/app/app_shell.dart`) | Adaptive container: bottom bar / rail / sidebar ([navigation](navigation.md)) |
 | `StatusHero` | Large current status (synced, syncing n changes, attention, offline) |
 | `GameCard` | Game, emulator, tier badge, last synced, lease state, Play button |
 | `PlayerAvatar`, `DeviceChip` | Who and where |
@@ -60,8 +60,8 @@ The inventory grows with the code. Each component gets a widget test and goldens
 - `app/lib/design/components/progress_ring.dart`, `ring_painter.dart`: `ProgressRing` (determinate or indeterminate; seven tail segments painted by `RingPainter`; determinate lights `floor(value * 7)` segments, at least one when `value > 0`; the indeterminate ring repaints from the controller without rebuilding and stands still under reduced motion).
 - `app/lib/design/components/ls_banner.dart`: `LsBanner`, a raised panel with a tone strip, tone icon, message and optional action.
 - `app/lib/design/components/empty_state.dart`, `error_state.dart`: `EmptyState` (mark, title, hint, action) and `ErrorState` (icon, title, hint, retry; default label `actionRetry`).
-- `app/lib/design/components/status_hero.dart`: `StatusHero`, the Home status panel (face-button dot, or an indeterminate `ProgressRing` while scanning or syncing; headline is the status label, or the upload text, else the download text, while syncing; with both, the detail line adds the download text; optional Sync now).
-- `app/lib/design/components/game_card.dart`, `cartridge_border.dart`: `GameCard`, a cartridge (`CartridgeBorder`: `LsShape.radiusSm` top corners, `radiusLg` bottom corners, a grip notch 40 % of the width and `LsSpace.md` deep on the top edge with inner joints rounded at `radiusSm`; the notch is skipped on cards too narrow to fit it; `paint` strokes the `outline` edge line so the shape reads in every theme). Sunken label recess right under the notch for title and emulator, status dot, optional lease line, last-synced caption, an outlined Play button (accent icon) and three grip ridges at the bottom centre. The bevel is the `LsSurface` gradient clipped to the cartridge shape. The card is as tall as its content. Semantics: the card is one node (a button when `onTap` is set) labelled "title, emulator, status[, lease][, synced when]" and Play stays its own node.
+- `app/lib/design/components/status_hero.dart`: `StatusHero`, the Home status panel (face-button dot, or an indeterminate `ProgressRing` while scanning or syncing; headline is the status label, or the upload text, else the download text, while syncing; with both, the detail line adds the download text; optional Sync now; `syncPending` disables the button and relabels it "Starting sync…"). On Home it is bound to live data through `heroFor` in `app/lib/screens/home/status_mapper.dart`.
+- `app/lib/design/components/game_card.dart`, `cartridge_border.dart`: `GameCard`, a cartridge (`CartridgeBorder`: `LsShape.radiusSm` top corners, `radiusLg` bottom corners, a grip notch 40 % of the width and `LsSpace.md` deep on the top edge with inner joints rounded at `radiusSm`; the notch is skipped on cards too narrow to fit it; `paint` strokes the `outline` edge line so the shape reads in every theme). Sunken label recess right under the notch for title and emulator, status dot, optional lease line, last-synced caption, an outlined Play button (accent icon; absent when `onPlay` is null, as in the read-only Games grid of 3b) and three grip ridges at the bottom centre. The bevel is the `LsSurface` gradient clipped to the cartridge shape. The card is as tall as its content. Semantics: the card is one node (a button when `onTap` is set) labelled "title, emulator, status[, lease][, synced when]" and Play stays its own node.
 - `app/lib/gallery/`: the design gallery, a second entry point that shows every token (color roles with hex and `onX` samples, type, space, size, shape, opacity, motion, icons, the mark) and every component in every `LsStatus`. Run it with `cd app && flutter run -d linux -t lib/gallery/main.dart` (add `--profile` to check frame times). The app bar switches the four themes and the two languages, and, outside release builds, toggles the performance overlay. The gallery's own headings are developer-facing English and not localised; the components keep their localised strings. It is not part of the shipped app.
 - `app/lib/design/design.dart`: barrel export. Test harness: `app/test/support/golden.dart` (`goldenMatrix`).
 

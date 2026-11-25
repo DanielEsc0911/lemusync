@@ -3,32 +3,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lemusync/design/tokens/colors.g.dart';
 import 'package:lemusync/main.dart';
 
+import 'support/fake_link.dart';
 import 'support/fonts.dart';
 
 void main() {
   setUpAll(loadBrandFonts);
 
-  testWidgets('shows synced status in English', (tester) async {
-    await tester.pumpWidget(const LemuSyncApp(locale: Locale('en')));
+  testWidgets('opens on Home in English', (tester) async {
+    await tester.pumpWidget(
+      LemuSyncApp(link: FakeDaemonLink(), locale: const Locale('en')),
+    );
     await tester.pumpAndSettle();
-    expect(find.text('All saves synced'), findsOneWidget);
+    expect(find.text('Home'), findsWidgets);
   });
 
-  testWidgets('shows synced status in Spanish', (tester) async {
-    await tester.pumpWidget(const LemuSyncApp(locale: Locale('es')));
+  testWidgets('opens on Inicio in Spanish', (tester) async {
+    await tester.pumpWidget(
+      LemuSyncApp(link: FakeDaemonLink(), locale: const Locale('es')),
+    );
     await tester.pumpAndSettle();
-    expect(find.text('Todas las partidas están sincronizadas'), findsOneWidget);
+    expect(find.text('Inicio'), findsWidgets);
   });
 
   testWidgets('high contrast uses the high-contrast color set', (tester) async {
     await tester.pumpWidget(
-      const MediaQuery(
-        data: MediaQueryData(highContrast: true),
-        child: LemuSyncApp(locale: Locale('en')),
+      MediaQuery(
+        data: const MediaQueryData(highContrast: true),
+        child: LemuSyncApp(link: FakeDaemonLink(), locale: const Locale('en')),
       ),
     );
     await tester.pumpAndSettle();
-    final ctx = tester.element(find.text('All saves synced'));
+    final ctx = tester.element(find.text('Home').first);
     expect(
       Theme.of(ctx).scaffoldBackgroundColor,
       LsColors.lightHighContrast.surface,
