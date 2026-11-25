@@ -31,7 +31,11 @@ With a cached status or games and a connection that is not `online`, the last da
 - The bridge hands Dart bridge-owned DTOs (no wire types, no serde, no secrets). Paths stay in Rust: Dart gets `launchable: bool` only (B2).
 
 ## App state
-Planned. One `AppController` (a `ChangeNotifier`, no new package) holds an immutable `AppState`: connection, status, session, games, recent, live transfers, device, players. It is built from the event stream and tested with a fake link.
+Built (3b Task 5). One `AppController` (a `ChangeNotifier`, no new package; `app/lib/app/app_controller.dart`) holds an immutable `AppState` (`app_state.dart`): connection, status, session, games, recent, live transfers, device, players, `loaded`. It is built from the link's event stream and tested with `FakeDaemonLink` (`test/support/fake_link.dart`).
+
+- A `Snapshot` replaces connection, status, session, device and players and clears live transfers; it carries no games, so the last list stays until a `Games` arrives. `Status` replaces the status and clears live transfers unless the state is `syncing`. `Progress` adds the `emulator/game` key. `Connection` only sets the connection: when it is not online, the last status and games stay (stale beats blank).
+- The controller notifies only when the state changed (value equality), so a repeated `StatusChanged` does not rebuild the tree. A stream error becomes `NotRunning`; nothing throws to the UI. `dispose` cancels the subscription and is safe to call twice.
+- `refresh()` (Retry and app resume) fetches the snapshot and the games; a failed games fetch changes nothing. `AppScope` (`app_scope.dart`) exposes the controller through an `InheritedNotifier` and calls `refresh()` on the `resumed` lifecycle state only.
 
 - `lsStatus` maps the seven daemon states one to one onto the design system's `LsStatus`. `playing` is true when a session is active and the status is synced; any other status keeps its own headline and shows the session as a secondary line.
 - Per-game card status is derived: `syncing` when progress was seen for that game since the last non-syncing status, else the global status when it is offline, paused or error, else synced. `attention` is not attributed to a card in 3b (the wire has no per-game attention). Decided by the maintainer on 2026-11-01.
