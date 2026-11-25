@@ -18,10 +18,12 @@ class AppScope extends StatefulWidget {
     return scope!.notifier!;
   }
 
-  /// The controller if there is an [AppScope] above, else null.
-  static AppController? maybeOf(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<_AppScopeInherited>()
-      ?.notifier;
+  /// The controller if there is an [AppScope] above, else null, without
+  /// subscribing the caller to state changes. For callbacks (shortcuts,
+  /// buttons): reading with [of] there would make the caller rebuild on every
+  /// later change.
+  static AppController? maybeRead(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_AppScopeInherited>()?.notifier;
 
   @override
   State<AppScope> createState() => _AppScopeState();

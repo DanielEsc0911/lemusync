@@ -351,7 +351,7 @@ Tasks run one at a time, in order. Task 11 ends with a maintainer review gate: s
 - [x] **Step 4:** docs (navigation §Desktop extras as built, "Open LemuSync" deferred to 3d with the reason; desktop.md); tick; board "Tasks 1–10 done". `just check`. **Commit** `feat(app): add shortcuts and a single window on Linux`.
 
 **As built (Task 10):**
-- Ctrl/Cmd+R is wired in `AppShell` through `SyncNowIntent`; the shell reads the controller with a new `AppScope.maybeOf` (null means no-op), so `app_shell_test.dart` needed no change.
+- Ctrl/Cmd+R is wired in `AppShell` through `SyncNowIntent`; the shell reads the controller with a new `AppScope.maybeRead` (null means no-op; it uses `getInheritedWidgetOfExactType`, so a shortcut never subscribes the shell to state changes, a review fix), so `app_shell_test.dart` needed no change.
 - `main.dart` was not edited (no lifecycle change needed).
 - Step 3: only `flutter build linux --debug` ran (it succeeded); the binary was not run. Launching twice is checked by eye in Task 11 Step 5.
 - `docs/progress/README.md` was not edited here (the board is updated by the caller).

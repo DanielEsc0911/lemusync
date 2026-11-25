@@ -86,7 +86,7 @@ class AppShell extends StatelessWidget {
           SyncNowIntent: CallbackAction<SyncNowIntent>(
             onInvoke: (_) {
               // No-op unless the daemon is up; never an error dialog.
-              final c = AppScope.maybeOf(context);
+              final c = AppScope.maybeRead(context);
               if (c != null && c.state.online) c.syncNow();
               return null;
             },

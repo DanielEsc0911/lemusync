@@ -98,4 +98,35 @@ void main() {
     expect(picked, isEmpty);
     expect(link.syncNowCalls, 0);
   });
+
+  testWidgets('maybeRead gives the controller without rebuilding on change', (
+    t,
+  ) async {
+    link = FakeDaemonLink();
+    controller = AppController(link)..start();
+    addTearDown(controller.dispose);
+    var builds = 0;
+    AppController? seen;
+    await t.pumpWidget(
+      AppScope(
+        controller: controller,
+        child: Builder(
+          builder: (context) {
+            builds++;
+            seen = AppScope.maybeRead(context);
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    link.emit(
+      const dto.LinkEvent.connection(
+        dto.ConnectionState.online(daemonVersion: '1'),
+      ),
+    );
+    await t.pump();
+    expect(seen, same(controller));
+    expect(controller.state.online, isTrue);
+    expect(builds, 1);
+  });
 }
