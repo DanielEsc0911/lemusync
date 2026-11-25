@@ -42,7 +42,7 @@ Built (3b Task 5). One `AppController` (a `ChangeNotifier`, no new package; `app
 - Missed events are invisible to clients, so the refresh triggers above are the recovery.
 
 ## Destinations as built (3b)
-Planned. Home and Games are real; Activity, Devices and Settings are not shown at all until Phase 3d builds them: no placeholder screen, no "coming soon" (F2). The visible destinations keep [navigation §Destinations](navigation.md#destinations) order on every platform (F3), and 3d inserts the new ones where that table puts them. Decided by the maintainer on 2026-11-01.
+Shell built (Task 7): `Destination` enum (`home`, `games`), `AppShell` (bar under 600 dp, rail under 1200 dp, sidebar above, from size tokens) and Ctrl/Cmd+digit shortcuts; `LemuSyncApp(link:)` owns the `AppController` and the current destination. Home and Games bodies are stubs until their tasks. Home and Games are the destinations; Activity, Devices and Settings are not shown at all until Phase 3d builds them: no placeholder screen, no "coming soon" (F2). The visible destinations keep [navigation §Destinations](navigation.md#destinations) order on every platform (F3), and 3d inserts the new ones where that table puts them. Decided by the maintainer on 2026-11-01.
 
 - **Home:** status hero, play overlay, last-sync line, attention banners with read-only CLI lines, recent games.
 - **Games:** read-only library grid of the catalog games plus synced games the catalog does not know (those without a game file, marked). There is no Play in 3b: Play needs the lease and conflict prompts, which are Phase 3c flows. The one write is **Sync now**.

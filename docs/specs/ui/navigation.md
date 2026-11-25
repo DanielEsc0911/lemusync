@@ -1,6 +1,6 @@
 # Navigation
 
-> **Status:** Draft · **Related:** [rules](../../rules.md) (F3, P5, B2), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [players-and-accounts](../players-and-accounts.md), [sync-model](../sync-model.md), [security](../security.md) · **Code:** `app/lib/app/destination.dart`, `app/lib/app/app_shell.dart` (planned, Phase 3b)
+> **Status:** Draft · **Related:** [rules](../../rules.md) (F3, P5, B2), [design-system](design-system.md), [status-and-notifications](status-and-notifications.md), [players-and-accounts](../players-and-accounts.md), [sync-model](../sync-model.md), [security](../security.md) · **Code:** `app/lib/app/destination.dart`, `app/lib/app/app_shell.dart`, `app/lib/app/shortcuts.dart`
 
 ## Purpose
 The single source of truth for where everything is and how every flow goes, the same on every platform (F3).

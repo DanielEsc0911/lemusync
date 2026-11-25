@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'app/app_controller.dart';
+import 'app/app_scope.dart';
+import 'app/app_shell.dart';
+import 'app/daemon_link.dart';
+import 'app/destination.dart';
 import 'bridge/frb_generated.dart';
+import 'design/components/empty_state.dart';
 import 'design/licenses.dart';
 import 'design/theme.dart';
 import 'design/tokens/colors.g.dart';
@@ -10,43 +16,61 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   registerBrandLicenses();
-  runApp(const LemuSyncApp());
+  runApp(LemuSyncApp(link: FrbDaemonLink()));
 }
 
-/// Root widget. The design system and navigation shell replace the
-/// placeholder home in Phase 3 (docs/specs/ui/).
-class LemuSyncApp extends StatelessWidget {
-  const LemuSyncApp({super.key, this.locale});
+/// Root widget: owns the [AppController] built over [link] and the current
+/// destination.
+class LemuSyncApp extends StatefulWidget {
+  const LemuSyncApp({super.key, required this.link, this.locale});
+
+  final DaemonLink link;
 
   /// Forces a locale (tests, user override). Null follows the OS.
   final Locale? locale;
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      locale: locale,
-      theme: lsTheme(LsColors.light),
-      darkTheme: lsTheme(LsColors.dark),
-      highContrastTheme: lsTheme(LsColors.lightHighContrast),
-      highContrastDarkTheme: lsTheme(LsColors.darkHighContrast),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const _StatusPlaceholder(),
-    );
-  }
+  State<LemuSyncApp> createState() => _LemuSyncAppState();
 }
 
-class _StatusPlaceholder extends StatelessWidget {
-  const _StatusPlaceholder();
+class _LemuSyncAppState extends State<LemuSyncApp> {
+  late final AppController _controller = AppController(widget.link)..start();
+  final ValueNotifier<Destination> _destination = ValueNotifier(
+    Destination.home,
+  );
+
+  @override
+  void dispose() {
+    _destination.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          AppLocalizations.of(context).statusSynced,
-          style: Theme.of(context).textTheme.headlineMedium,
+    return AppScope(
+      controller: _controller,
+      child: MaterialApp(
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+        locale: widget.locale,
+        theme: lsTheme(LsColors.light),
+        darkTheme: lsTheme(LsColors.dark),
+        highContrastTheme: lsTheme(LsColors.lightHighContrast),
+        highContrastDarkTheme: lsTheme(LsColors.darkHighContrast),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ValueListenableBuilder<Destination>(
+          valueListenable: _destination,
+          builder: (context, current, _) => AppShell(
+            current: current,
+            onSelect: (d) => _destination.value = d,
+            // Stubs until the Home and Games screens (Tasks 8 and 9).
+            body: Center(
+              child: EmptyState(
+                title: current.label(AppLocalizations.of(context)),
+              ),
+            ),
+          ),
         ),
       ),
     );

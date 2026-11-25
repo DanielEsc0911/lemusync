@@ -70,5 +70,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "navHome": "Home",
+  "@navHome": {
+    "description": "Name of the Home destination in the navigation."},
+  "navGames": "Games",
+  "@navGames": {
+    "description": "Name of the Games destination in the navigation."}
 }

@@ -13,5 +13,7 @@
   "statusDownloading": "{count, plural, =1{Descargando 1 cambio} other{Descargando {count} cambios}}",
   "actionSyncNow": "Sincronizar ahora",
   "gamePlay": "Jugar",
-  "gameLastSynced": "Sincronizado {when}"
+  "gameLastSynced": "Sincronizado {when}",
+  "navHome": "Inicio",
+  "navGames": "Juegos"
 }

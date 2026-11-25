@@ -40,7 +40,7 @@ The inventory grows with the code. Each component gets a widget test and goldens
 
 | Component | Purpose |
 |---|---|
-| `AppShell` | Adaptive container: bottom bar / rail / sidebar ([navigation](navigation.md)) |
+| `AppShell` (`app/lib/app/app_shell.dart`) | Adaptive container: bottom bar / rail / sidebar ([navigation](navigation.md)) |
 | `StatusHero` | Large current status (synced, syncing n changes, attention, offline) |
 | `GameCard` | Game, emulator, tier badge, last synced, lease state, Play button |
 | `PlayerAvatar`, `DeviceChip` | Who and where |
