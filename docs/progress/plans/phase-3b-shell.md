@@ -197,7 +197,7 @@ Tasks run one at a time, in order. Task 11 ends with a maintainer review gate: s
   - `AppScope` is a `StatefulWidget` taking the `AppController` (it does not own or create it) with a private `InheritedNotifier`; `AppScope.of` registers the dependency. `AppController.start()` is idempotent and `dispose()` is idempotent.
   - `FakeDaemonLink` also has `nextSyncNow` and `emitError`.
   - The resume widget test needs no fonts in practice (it pumps a `SizedBox`); it still calls `loadBrandFonts` as the plan asks.
-  - Not run in this task: the full `just check` (Rust workspace build); see the commit report.
+  - **Review fix:** `refresh()` and `syncNow()` never throw: a failing bridge call reads as `NotRunning` (status and games kept) and `SyncNow.notRunning()`; `refresh()` after `dispose()` does nothing. `FakeDaemonLink.throwOnCall` drives the tests. A re-fetched `GamesDto` always counts as a change (FRB's generated `GameEntry ==` compares `streams` by identity); acceptable, games are fetched only on the triggers in Global constraints.
 
 ### Task 6: shell size tokens and navigation themes
 

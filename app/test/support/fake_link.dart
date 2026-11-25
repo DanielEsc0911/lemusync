@@ -20,6 +20,9 @@ class FakeDaemonLink implements DaemonLink {
   int gamesCalls = 0;
   int syncNowCalls = 0;
 
+  /// When set, `snapshot`, `games` and `syncNow` throw it (a broken bridge).
+  Object? throwOnCall;
+
   bool get hasListener => _events.hasListener;
 
   void emit(dto.LinkEvent event) => _events.add(event);
@@ -31,18 +34,21 @@ class FakeDaemonLink implements DaemonLink {
   @override
   Future<dto.Snapshot> snapshot() async {
     snapshotCalls++;
+    if (throwOnCall case final e?) throw e;
     return next;
   }
 
   @override
   Future<dto.GamesDto?> games() async {
     gamesCalls++;
+    if (throwOnCall case final e?) throw e;
     return nextGames;
   }
 
   @override
   Future<SyncNow> syncNow() async {
     syncNowCalls++;
+    if (throwOnCall case final e?) throw e;
     return nextSyncNow;
   }
 }

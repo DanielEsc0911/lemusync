@@ -31,15 +31,28 @@ class AppController extends ChangeNotifier {
     );
   }
 
-  /// Asks the daemon to sync now.
-  Future<SyncNow> syncNow() => _link.syncNow();
+  /// Asks the daemon to sync now. A failing bridge call reads as
+  /// [SyncNow.notRunning], never as an exception.
+  Future<SyncNow> syncNow() async {
+    try {
+      return await _link.syncNow();
+    } on Object {
+      return const SyncNow.notRunning();
+    }
+  }
 
-  /// Fetches the snapshot and the games again (app resume, Retry).
+  /// Fetches the snapshot and the games again (app resume, Retry). A failing
+  /// bridge call reads as "not running" and keeps the last known state.
   Future<void> refresh() async {
-    final snap = await _link.snapshot();
-    _apply(dto.LinkEvent.snapshot(snap));
-    final games = await _link.games();
-    if (games != null) _apply(dto.LinkEvent.games(games));
+    if (_disposed) return;
+    try {
+      final snap = await _link.snapshot();
+      _apply(dto.LinkEvent.snapshot(snap));
+      final games = await _link.games();
+      if (games != null) _apply(dto.LinkEvent.games(games));
+    } on Object {
+      _set(_state.copyWith(connection: const dto.ConnectionState.notRunning()));
+    }
   }
 
   void _apply(dto.LinkEvent event) {

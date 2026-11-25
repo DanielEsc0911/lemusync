@@ -205,6 +205,22 @@ void main() {
     expect(link.syncNowCalls, 1);
   });
 
+  test('a throwing bridge reads as not running, never an exception', () async {
+    link.emit(dto.LinkEvent.status(st(dto.StateDto.synced)));
+    await pump();
+    link.throwOnCall = StateError('bridge gone');
+    await c.refresh();
+    expect(c.state.online, isFalse);
+    expect(c.state.status, isNotNull);
+    expect(await c.syncNow(), isA<SyncNow_NotRunning>());
+  });
+
+  test('refresh after dispose does nothing and does not throw', () async {
+    c.dispose();
+    await c.refresh();
+    expect(link.snapshotCalls, 0);
+  });
+
   test('dispose cancels the subscription', () async {
     expect(link.hasListener, isTrue);
     c.dispose();
