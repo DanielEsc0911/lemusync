@@ -46,7 +46,7 @@ pub const TYPE_STEPS: [&str; 7] = [
 ];
 pub const FAMILIES: [&str; 3] = ["display", "body", "mono"];
 pub const SPACE_KEYS: [&str; 7] = ["xs", "sm", "md", "lg", "xl", "xxl", "xxxl"];
-pub const SIZE_KEYS: [&str; 12] = [
+pub const SIZE_KEYS: [&str; 13] = [
     "target",
     "iconSm",
     "iconMd",
@@ -59,6 +59,7 @@ pub const SIZE_KEYS: [&str; 12] = [
     "breakpointExpanded",
     "railWidth",
     "sidebarWidth",
+    "cardMaxWidth",
 ];
 pub const SHAPE_KEYS: [&str; 4] = ["radiusSm", "radiusMd", "radiusLg", "radiusPill"];
 pub const DURATION_KEYS: [&str; 3] = ["fast", "medium", "slow"];
@@ -402,6 +403,12 @@ mod tests {
         assert_eq!(t.themes.len(), 4);
         assert_eq!(t.color("light", "surface"), Rgb(0xEC, 0xE9, 0xE3));
         assert_eq!(t.primitive("bone"), Some(Rgb(0xFB, 0xFA, 0xF7)));
+    }
+
+    #[test]
+    fn card_max_width_token_loads() {
+        let t = Tokens::load_str(REAL).unwrap();
+        assert_eq!(t.size["cardMaxWidth"], 280.0);
     }
 
     #[test]

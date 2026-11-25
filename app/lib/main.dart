@@ -6,11 +6,11 @@ import 'app/app_shell.dart';
 import 'app/daemon_link.dart';
 import 'app/destination.dart';
 import 'bridge/frb_generated.dart';
-import 'design/components/empty_state.dart';
 import 'design/licenses.dart';
 import 'design/theme.dart';
 import 'design/tokens/colors.g.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'screens/games/games_screen.dart';
 import 'screens/home/home_screen.dart';
 
 Future<void> main() async {
@@ -67,12 +67,7 @@ class _LemuSyncAppState extends State<LemuSyncApp> {
             onSelect: (d) => _destination.value = d,
             body: switch (current) {
               Destination.home => const HomeScreen(),
-              // Stub until the Games screen (Task 9).
-              Destination.games => Center(
-                child: EmptyState(
-                  title: current.label(AppLocalizations.of(context)),
-                ),
-              ),
+              Destination.games => const GamesScreen(),
             },
           ),
         ),

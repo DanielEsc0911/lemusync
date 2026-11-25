@@ -262,5 +262,22 @@
   "gamesNoFile": "No game file on this device",
   "@gamesNoFile": {
     "description": "Marker on a game that cannot be launched here."
+  },
+  "gamesEmptyTitle": "No games found yet",
+  "@gamesEmptyTitle": {
+    "description": "Title of the empty Games library."
+  },
+  "gamesEmptyBody": "LemuSync lists the games it finds for your emulators. Look for them with:",
+  "@gamesEmptyBody": {
+    "description": "Explains the empty Games library; a CLI command follows."
+  },
+  "gamesPlayers": "{count, plural, =1{1 player} other{{count} players}}",
+  "@gamesPlayers": {
+    "description": "How many players have saves of a game.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

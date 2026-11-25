@@ -51,6 +51,22 @@ class AppState {
   /// line. Any other status keeps its own headline.
   bool get playing => session != null && lsStatus == LsStatus.synced;
 
+  /// The status a game card shows (V-SHELL-4): a live transfer for this game
+  /// wins; otherwise the global offline, paused or error; otherwise synced.
+  /// The wire has no per-game attention, so attention and scanning show
+  /// synced here and the hero carries them.
+  LsStatus cardStatus(dto.GameEntry game) {
+    final id = '${game.emulator}/${game.key}'.toLowerCase();
+    if (liveTransfers.any((k) => k.toLowerCase() == id)) {
+      return LsStatus.syncing;
+    }
+    final global = lsStatus;
+    return switch (global) {
+      LsStatus.offline || LsStatus.paused || LsStatus.error => global!,
+      _ => LsStatus.synced,
+    };
+  }
+
   /// [clearSession] sets the session to null (a null argument means "keep").
   AppState copyWith({
     dto.ConnectionState? connection,

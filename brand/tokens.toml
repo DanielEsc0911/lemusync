@@ -204,6 +204,7 @@ breakpointMedium = 600
 breakpointExpanded = 1200
 railWidth = 80
 sidebarWidth = 240
+cardMaxWidth = 280
 
 [shape]
 radiusSm = 6
