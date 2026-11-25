@@ -189,9 +189,12 @@ void main() {
     await t.pumpWidget(LemuSyncApp(link: link, locale: const Locale('en')));
     await t.pump();
     expect(link.hasListener, isTrue);
-    expect(find.text('Home'), findsNWidgets(2));
+    // Home is the body (waiting for the daemon); Games is still a stub.
+    expect(find.text('Connecting…'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
     await t.tap(find.text('Games'));
     await t.pump();
+    expect(find.text('Connecting…'), findsNothing);
     expect(find.text('Games'), findsNWidgets(2));
     expect(find.text('Home'), findsOneWidget);
     await t.pumpWidget(const SizedBox());

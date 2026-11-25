@@ -11,6 +11,7 @@ import 'design/licenses.dart';
 import 'design/theme.dart';
 import 'design/tokens/colors.g.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'screens/home/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,12 +65,15 @@ class _LemuSyncAppState extends State<LemuSyncApp> {
           builder: (context, current, _) => AppShell(
             current: current,
             onSelect: (d) => _destination.value = d,
-            // Stubs until the Home and Games screens (Tasks 8 and 9).
-            body: Center(
-              child: EmptyState(
-                title: current.label(AppLocalizations.of(context)),
+            body: switch (current) {
+              Destination.home => const HomeScreen(),
+              // Stub until the Games screen (Task 9).
+              Destination.games => Center(
+                child: EmptyState(
+                  title: current.label(AppLocalizations.of(context)),
+                ),
               ),
-            ),
+            },
           ),
         ),
       ),

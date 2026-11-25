@@ -102,6 +102,25 @@ void main() {
     expect(taps, 1);
   });
 
+  testWidgets('syncPending disables the button and relabels it', (t) async {
+    var taps = 0;
+    await t.pumpWidget(
+      _app(
+        LsColors.light,
+        StatusHero(
+          status: LsStatus.synced,
+          syncPending: true,
+          onSync: () => taps++,
+        ),
+      ),
+    );
+    expect(find.text('Starting sync…'), findsOneWidget);
+    expect(find.text('Sync now'), findsNothing);
+    expect(t.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNull);
+    await t.tap(find.byType(FilledButton), warnIfMissed: false);
+    expect(taps, 0);
+  });
+
   for (final loc in ['en', 'es']) {
     testWidgets('200% scale, narrow, no overflow $loc', (t) async {
       final h = t.ensureSemantics();

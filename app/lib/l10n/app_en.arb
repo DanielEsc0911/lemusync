@@ -73,8 +73,194 @@
   },
   "navHome": "Home",
   "@navHome": {
-    "description": "Name of the Home destination in the navigation."},
+    "description": "Name of the Home destination in the navigation."
+  },
   "navGames": "Games",
   "@navGames": {
-    "description": "Name of the Games destination in the navigation."}
+    "description": "Name of the Games destination in the navigation."
+  },
+  "homePlaying": "Playing {game} · {player}",
+  "@homePlaying": {
+    "description": "Hero detail while a game session is active.",
+    "placeholders": {
+      "game": {
+        "type": "String"
+      },
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "homeLastSync": "Last sync {when}",
+  "@homeLastSync": {
+    "description": "Caption under the hero. {when} is a relative time such as \"2 min ago\".",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "actionSyncStarting": "Starting sync…",
+  "@actionSyncStarting": {
+    "description": "Label of the disabled Sync now button while the request is in flight."
+  },
+  "homeOfflineQueued": "{count, plural, =1{Offline · 1 change waiting} other{Offline · {count} changes waiting}}",
+  "@homeOfflineQueued": {
+    "description": "Hero detail when offline with changes waiting to upload.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeConflicts": "{count, plural, =1{1 conflict needs you} other{{count} conflicts need you}}",
+  "@homeConflicts": {
+    "description": "Attention line: saves changed on two devices.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeLeases": "{count, plural, =1{1 game is in use on another device} other{{count} games are in use on other devices}}",
+  "@homeLeases": {
+    "description": "Attention line: games held by another device.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeConflictsCli": "You can review them with:",
+  "@homeConflictsCli": {
+    "description": "Lead-in before a command line that lists conflicts."
+  },
+  "homeLeasesCli": "You can see who has them with:",
+  "@homeLeasesCli": {
+    "description": "Lead-in before a command line that shows leases."
+  },
+  "homeErrorAuth": "Storage sign-in expired",
+  "@homeErrorAuth": {
+    "description": "Error: the storage login is no longer valid."
+  },
+  "homeErrorQuota": "Your storage is full",
+  "@homeErrorQuota": {
+    "description": "Error: the storage has no space left."
+  },
+  "homeErrorPermission": "LemuSync can't read or write a folder",
+  "@homeErrorPermission": {
+    "description": "Error: a folder is not accessible."
+  },
+  "homeErrorConfig": "The configuration isn't valid",
+  "@homeErrorConfig": {
+    "description": "Error: the configuration file is invalid."
+  },
+  "homeErrorCli": "See what is wrong with:",
+  "@homeErrorCli": {
+    "description": "Lead-in before the doctor command line."
+  },
+  "homeRecent": "Recent games",
+  "@homeRecent": {
+    "description": "Heading of the recent games list on Home."
+  },
+  "homeRecentEmpty": "Games you play will show here.",
+  "@homeRecentEmpty": {
+    "description": "Shown when there are no recent games."
+  },
+  "homeNotSetUpTitle": "Set up LemuSync",
+  "@homeNotSetUpTitle": {
+    "description": "Title when this device has no repo."
+  },
+  "homeNotSetUpBody": "This device has no repo yet. Create one, or join one you already have, with:",
+  "@homeNotSetUpBody": {
+    "description": "Body when this device has no repo; command lines follow."
+  },
+  "homeOfflineDaemonTitle": "LemuSync isn't running",
+  "@homeOfflineDaemonTitle": {
+    "description": "Title when the background service is not running."
+  },
+  "homeOfflineDaemonBody": "The app shows what the background service knows. Start it with:",
+  "@homeOfflineDaemonBody": {
+    "description": "Body when the service is not running; a command line follows."
+  },
+  "homeUnsupportedTitle": "Not available on this system yet",
+  "@homeUnsupportedTitle": {
+    "description": "Title on systems without a background service yet."
+  },
+  "homeUnsupportedBody": "The background service for this system comes in a later release.",
+  "@homeUnsupportedBody": {
+    "description": "Body on systems without a background service yet."
+  },
+  "homeRefusedTitle": "This app and the service don't match",
+  "@homeRefusedTitle": {
+    "description": "Title when the service refuses the app's protocol version."
+  },
+  "homeRefusedBody": "Update LemuSync so both are the same version.",
+  "@homeRefusedBody": {
+    "description": "Body when versions do not match."
+  },
+  "homeFailedTitle": "The service returned an error",
+  "@homeFailedTitle": {
+    "description": "Title when the service answered with an error."
+  },
+  "homeFailedBody": "Error code: {code}. See the details with:",
+  "@homeFailedBody": {
+    "description": "Body with the error code; a command line follows.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "homeUnsafeTitle": "LemuSync won't connect to an unsafe socket",
+  "@homeUnsafeTitle": {
+    "description": "Title when the service socket looks unsafe."
+  },
+  "homeUnsafeBody": "The service's socket or its folder is a link or belongs to another user. Check the permissions of your runtime folder.",
+  "@homeUnsafeBody": {
+    "description": "Body when the service socket looks unsafe."
+  },
+  "homeConnecting": "Connecting…",
+  "@homeConnecting": {
+    "description": "Shown while the app looks for the service."
+  },
+  "homeStale": "Showing the last known state",
+  "@homeStale": {
+    "description": "Banner when the service is unreachable but old data is shown."
+  },
+  "timeJustNow": "just now",
+  "@timeJustNow": {
+    "description": "Relative time under one minute."
+  },
+  "timeMinutesAgo": "{count, plural, =1{1 min ago} other{{count} min ago}}",
+  "@timeMinutesAgo": {
+    "description": "Relative time in minutes.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@timeHoursAgo": {
+    "description": "Relative time in hours.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@timeDaysAgo": {
+    "description": "Relative time in days.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gamesNoFile": "No game file on this device",
+  "@gamesNoFile": {
+    "description": "Marker on a game that cannot be launched here."
+  }
 }
