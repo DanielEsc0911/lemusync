@@ -14,7 +14,10 @@ import '../home/status_mapper.dart';
 
 /// The library as a lazy grid of read-only cards, in the order given. Card
 /// width is capped by `LsSize.cardMaxWidth`; the column count follows from
-/// the available width. A sliver, so the screen can put things above it.
+/// the available width ([gameColumns]). Rows are built lazily and each row is
+/// as tall as its tallest cell, so cards of one row line up and rows never
+/// leave a fixed-height gap or clip at large text sizes. A sliver, so the
+/// screen can put things above it.
 class GameGridSliver extends StatelessWidget {
   const GameGridSliver({super.key, required this.state, required this.now});
 
@@ -24,20 +27,33 @@ class GameGridSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final games = state.games;
-    // A card grows with the text size, so the row height follows the scaler.
-    // A cartridge is a little shorter than it is wide.
-    final extent = MediaQuery.textScalerOf(context)
-        .scale(LsSize.cardMaxWidth * 0.9);
-    return SliverGrid.builder(
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: LsSize.cardMaxWidth,
-        mainAxisExtent: extent,
-        crossAxisSpacing: LsSpace.md,
-        mainAxisSpacing: LsSpace.md,
-      ),
-      itemCount: games.length,
-      itemBuilder: (context, i) =>
-          _Cell(game: games[i], status: state.cardStatus(games[i]), now: now),
+    return SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final cols = gameColumns(constraints.crossAxisExtent);
+        final rows = (games.length + cols - 1) ~/ cols;
+        return SliverList.separated(
+          itemCount: rows,
+          separatorBuilder: (_, _) => const SizedBox(height: LsSpace.md),
+          itemBuilder: (context, r) => IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: LsSpace.md,
+              children: [
+                for (var i = r * cols; i < (r + 1) * cols; i++)
+                  Expanded(
+                    child: i < games.length
+                        ? _Cell(
+                            game: games[i],
+                            status: state.cardStatus(games[i]),
+                            now: now,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -68,38 +84,40 @@ class _Cell extends StatelessWidget {
     final emulator = players == 0
         ? game.emulator
         : '${game.emulator} · ${l.gamesPlayers(players)}';
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: LsSpace.xs,
-        children: [
-          GameCard(
-            title: gameTitle(game.name, game.key),
-            emulator: emulator,
-            status: status,
-            lastSynced: newest == null ? null : relative(l, now, newest),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: LsSpace.xs,
+      children: [
+        GameCard(
+          title: gameTitle(game.name, game.key),
+          emulator: emulator,
+          status: status,
+          lastSynced: newest == null ? null : relative(l, now, newest),
+        ),
+        if (!game.launchable)
+          Row(
+            spacing: LsSpace.xs,
+            children: [
+              Icon(
+                LsIcons.folder,
+                size: LsSize.iconSm,
+                color: c.onSurfaceMuted,
+              ),
+              Expanded(
+                child: Text(
+                  l.gamesNoFile,
+                  style: LsType.caption.copyWith(color: c.onSurfaceMuted),
+                ),
+              ),
+            ],
           ),
-          if (!game.launchable)
-            Row(
-              spacing: LsSpace.xs,
-              children: [
-                Icon(
-                  LsIcons.folder,
-                  size: LsSize.iconSm,
-                  color: c.onSurfaceMuted,
-                ),
-                Expanded(
-                  child: Text(
-                    l.gamesNoFile,
-                    style: LsType.caption.copyWith(color: c.onSurfaceMuted),
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
+      ],
     );
   }
 }
+
+/// Columns for [width] under the max-extent rule: every card at most
+/// `LsSize.cardMaxWidth` wide, `LsSpace.md` apart.
+int gameColumns(double width) =>
+    (width / (LsSize.cardMaxWidth + LsSpace.md)).ceil().clamp(1, 1 << 20);

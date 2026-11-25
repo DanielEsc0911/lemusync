@@ -9,6 +9,7 @@ import 'package:lemusync/design/status.dart';
 import 'package:lemusync/design/tokens/size.g.dart';
 import 'package:lemusync/design/tokens/space.g.dart';
 import 'package:lemusync/screens/command_line.dart';
+import 'package:lemusync/screens/games/game_grid.dart';
 import 'package:lemusync/screens/games/games_screen.dart';
 
 import '../../support/fake_link.dart';
@@ -150,17 +151,35 @@ void main() {
         for (final e in find.byType(GameCard).evaluate())
           t.getTopLeft(find.byWidget(e.widget)).dx,
       };
-      final grid = t.widget<SliverGrid>(find.byType(SliverGrid));
-      final d = grid.gridDelegate as SliverGridDelegateWithMaxCrossAxisExtent;
-      expect(d.maxCrossAxisExtent, LsSize.cardMaxWidth);
-      // Max-extent grid: columns = ceil(available / (card max + spacing)).
+      // Max-extent rule: columns = ceil(available / (card max + spacing)).
       final first = t.getTopLeft(find.byType(GameCard).first).dx;
       expect(first, LsSpace.lg);
       final avail = w - 2 * LsSpace.lg;
       final cols = (avail / (LsSize.cardMaxWidth + LsSpace.md)).ceil();
       expect(xs.length, cols);
+      expect(gameColumns(avail), cols);
     });
   }
+
+  testWidgets('a row is as tall as its tallest cell, no fixed extent', (
+    t,
+  ) async {
+    await pump(t, [
+      entry('a', name: 'A very long game title that wraps to two lines'),
+      entry('b', name: 'Short', launchable: false),
+      entry('c', name: 'C'),
+      entry('d', name: 'D'),
+    ], width: 900);
+    final cards = find.byType(GameCard);
+    final row1 = [for (var i = 0; i < 3; i++) t.getRect(cards.at(i))];
+    expect(row1.map((r) => r.top).toSet().length, 1);
+    final noFile = t.getRect(find.text('No game file on this device'));
+    final bottom = [
+      ...row1.map((r) => r.bottom),
+      noFile.bottom,
+    ].reduce((a, b) => a > b ? a : b);
+    expect(t.getRect(cards.at(3)).top, closeTo(bottom + LsSpace.md, 0.5));
+  });
 
   testWidgets('200% text at 390 does not overflow', (t) async {
     await pump(t, [entry('a', name: 'Mario Kart 8 Deluxe')], scale: 2);
