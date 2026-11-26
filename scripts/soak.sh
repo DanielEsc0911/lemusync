@@ -30,7 +30,7 @@ sample() {
   state=$(systemctl --user show -p ActiveState --value lemusyncd.service 2>/dev/null || echo "")
   if [[ -r $log ]]; then
     ok=$(grep -c 'sync finished: .* ok' "$log" || true)
-    failed=$(grep -c 'sync finished: .* failed' "$log" || true)
+    failed=$(grep -c 'sync finished: failed' "$log" || true)
     bad=$(grep -cE ' (WARN|ERROR) ' "$log" || true)
   fi
   echo "$(date -u +%FT%TZ),${pid:-},$ticks,$(getconf CLK_TCK),$rss,$hwm,$restarts,$state,$ok,$failed,$bad" >>"$out"
