@@ -3,18 +3,21 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/daemon.dart';
+import 'api/probe.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
-import 'api/daemon.dart';
-import 'api/probe.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'link/calls.dart';
+import 'link/flow_model.dart';
 import 'link/model.dart';
+import 'link/play.dart';
+
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -69,7 +72,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1924407446;
+  int get rustContentHash => -357736431;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -81,21 +84,71 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  bool crateApiDaemonPlayHandleAnswer({
+    required PlayHandle that,
+    required PlayAnswerDto answer,
+  });
+
+  PlayHandle crateApiDaemonPlayHandleNew();
+
+  Stream<PlayUpdate> crateApiDaemonPlayHandlePlay({
+    required PlayHandle that,
+    required String player,
+    required String emulator,
+    required String game,
+  });
+
+  Future<void> crateApiDaemonPlayHandleStop({required PlayHandle that});
+
   WatchHandle crateApiDaemonWatchHandleNew();
 
   Future<void> crateApiDaemonWatchHandleStop({required WatchHandle that});
 
   Stream<LinkEvent> crateApiDaemonWatchHandleWatch({required WatchHandle that});
 
+  Future<List<ConflictDto>> crateApiDaemonConflicts();
+
   String crateApiProbeCoreVersion();
 
   Future<GamesDto?> crateApiDaemonGames();
 
+  Future<HistoryDto> crateApiDaemonHistory({
+    required String player,
+    required String emulator,
+    required String game,
+  });
+
   Future<String> crateApiProbeHttpsStatus({required String host});
+
+  Future<int> crateApiDaemonLeaseRelease({required String game});
+
+  Future<List<LeaseDto>> crateApiDaemonLeases();
+
+  Future<MovedDto> crateApiDaemonResolve({
+    required String player,
+    required String emulator,
+    required String game,
+    required String keep,
+  });
+
+  Future<MovedDto> crateApiDaemonRestore({
+    required String player,
+    required String emulator,
+    required String game,
+    required String what,
+  });
 
   Future<Snapshot> crateApiDaemonSnapshot();
 
   Future<SyncNow> crateApiDaemonSyncNow();
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PlayHandle;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PlayHandle;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PlayHandlePtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_WatchHandle;
@@ -115,12 +168,146 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  bool crateApiDaemonPlayHandleAnswer({
+    required PlayHandle that,
+    required PlayAnswerDto answer,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_play_answer_dto(answer, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonPlayHandleAnswerConstMeta,
+        argValues: [that, answer],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonPlayHandleAnswerConstMeta =>
+      const TaskConstMeta(
+        debugName: "PlayHandle_answer",
+        argNames: ["that", "answer"],
+      );
+
+  @override
+  PlayHandle crateApiDaemonPlayHandleNew() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonPlayHandleNewConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonPlayHandleNewConstMeta =>
+      const TaskConstMeta(debugName: "PlayHandle_new", argNames: []);
+
+  @override
+  Stream<PlayUpdate> crateApiDaemonPlayHandlePlay({
+    required PlayHandle that,
+    required String player,
+    required String emulator,
+    required String game,
+  }) {
+    final sink = RustStreamSink<PlayUpdate>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+              that,
+              serializer,
+            );
+            sse_encode_String(player, serializer);
+            sse_encode_String(emulator, serializer);
+            sse_encode_String(game, serializer);
+            sse_encode_StreamSink_play_update_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 3,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta: kCrateApiDaemonPlayHandlePlayConstMeta,
+          argValues: [that, player, emulator, game, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta get kCrateApiDaemonPlayHandlePlayConstMeta =>
+      const TaskConstMeta(
+        debugName: "PlayHandle_play",
+        argNames: ["that", "player", "emulator", "game", "sink"],
+      );
+
+  @override
+  Future<void> crateApiDaemonPlayHandleStop({required PlayHandle that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDaemonPlayHandleStopConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonPlayHandleStopConstMeta =>
+      const TaskConstMeta(debugName: "PlayHandle_stop", argNames: ["that"]);
+
+  @override
   WatchHandle crateApiDaemonWatchHandleNew() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
         },
         codec: SseCodec(
           decodeSuccessData:
@@ -150,7 +337,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 6,
             port: port_,
           );
         },
@@ -186,7 +373,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 3,
+              funcId: 7,
               port: port_,
             );
           },
@@ -210,12 +397,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<List<ConflictDto>> crateApiDaemonConflicts() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_conflict_dto,
+          decodeErrorData: sse_decode_connection_state,
+        ),
+        constMeta: kCrateApiDaemonConflictsConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonConflictsConstMeta =>
+      const TaskConstMeta(debugName: "conflicts", argNames: []);
+
+  @override
   String crateApiProbeCoreVersion() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -240,7 +454,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 10,
             port: port_,
           );
         },
@@ -259,6 +473,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "games", argNames: []);
 
   @override
+  Future<HistoryDto> crateApiDaemonHistory({
+    required String player,
+    required String emulator,
+    required String game,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(player, serializer);
+          sse_encode_String(emulator, serializer);
+          sse_encode_String(game, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_history_dto,
+          decodeErrorData: sse_decode_connection_state,
+        ),
+        constMeta: kCrateApiDaemonHistoryConstMeta,
+        argValues: [player, emulator, game],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonHistoryConstMeta => const TaskConstMeta(
+    debugName: "history",
+    argNames: ["player", "emulator", "game"],
+  );
+
+  @override
   Future<String> crateApiProbeHttpsStatus({required String host}) {
     return handler.executeNormal(
       NormalTask(
@@ -268,7 +518,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 12,
             port: port_,
           );
         },
@@ -287,6 +537,137 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "https_status", argNames: ["host"]);
 
   @override
+  Future<int> crateApiDaemonLeaseRelease({required String game}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(game, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 13,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_32,
+          decodeErrorData: sse_decode_connection_state,
+        ),
+        constMeta: kCrateApiDaemonLeaseReleaseConstMeta,
+        argValues: [game],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonLeaseReleaseConstMeta =>
+      const TaskConstMeta(debugName: "lease_release", argNames: ["game"]);
+
+  @override
+  Future<List<LeaseDto>> crateApiDaemonLeases() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_lease_dto,
+          decodeErrorData: sse_decode_connection_state,
+        ),
+        constMeta: kCrateApiDaemonLeasesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonLeasesConstMeta =>
+      const TaskConstMeta(debugName: "leases", argNames: []);
+
+  @override
+  Future<MovedDto> crateApiDaemonResolve({
+    required String player,
+    required String emulator,
+    required String game,
+    required String keep,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(player, serializer);
+          sse_encode_String(emulator, serializer);
+          sse_encode_String(game, serializer);
+          sse_encode_String(keep, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_moved_dto,
+          decodeErrorData: sse_decode_connection_state,
+        ),
+        constMeta: kCrateApiDaemonResolveConstMeta,
+        argValues: [player, emulator, game, keep],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonResolveConstMeta => const TaskConstMeta(
+    debugName: "resolve",
+    argNames: ["player", "emulator", "game", "keep"],
+  );
+
+  @override
+  Future<MovedDto> crateApiDaemonRestore({
+    required String player,
+    required String emulator,
+    required String game,
+    required String what,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(player, serializer);
+          sse_encode_String(emulator, serializer);
+          sse_encode_String(game, serializer);
+          sse_encode_String(what, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 16,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_moved_dto,
+          decodeErrorData: sse_decode_connection_state,
+        ),
+        constMeta: kCrateApiDaemonRestoreConstMeta,
+        argValues: [player, emulator, game, what],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDaemonRestoreConstMeta => const TaskConstMeta(
+    debugName: "restore",
+    argNames: ["player", "emulator", "game", "what"],
+  );
+
+  @override
   Future<Snapshot> crateApiDaemonSnapshot() {
     return handler.executeNormal(
       NormalTask(
@@ -295,7 +676,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 17,
             port: port_,
           );
         },
@@ -322,7 +703,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 18,
             port: port_,
           );
         },
@@ -341,6 +722,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "sync_now", argNames: []);
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PlayHandle => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PlayHandle => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_WatchHandle => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle;
 
@@ -355,6 +744,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlayHandle
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlayHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   WatchHandle
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
     dynamic raw,
@@ -364,12 +762,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlayHandle
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlayHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   WatchHandle
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return WatchHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PlayHandle
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlayHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -388,6 +804,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<PlayUpdate> dco_decode_StreamSink_play_update_Sse(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
@@ -397,6 +821,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
+  }
+
+  @protected
+  ConflictDto dco_decode_box_autoadd_conflict_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_conflict_dto(raw);
   }
 
   @protected
@@ -415,6 +845,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GamesDto dco_decode_box_autoadd_games_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_games_dto(raw);
+  }
+
+  @protected
+  PlayAnswerDto dco_decode_box_autoadd_play_answer_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_play_answer_dto(raw);
+  }
+
+  @protected
+  PlayQuestionDto dco_decode_box_autoadd_play_question_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_play_question_dto(raw);
+  }
+
+  @protected
+  PlayResultDto dco_decode_box_autoadd_play_result_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_play_result_dto(raw);
   }
 
   @protected
@@ -448,19 +896,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ConflictDto dco_decode_conflict_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return ConflictDto(
+      player: dco_decode_String(arr[0]),
+      emulator: dco_decode_String(arr[1]),
+      game: dco_decode_String(arr[2]),
+      name: dco_decode_opt_String(arr[3]),
+      heads: dco_decode_list_head_dto(arr[4]),
+    );
+  }
+
+  @protected
   ConnectionState dco_decode_connection_state(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return const ConnectionState_Connecting();
+        return ConnectionState_Connecting();
       case 1:
         return ConnectionState_Online(daemonVersion: dco_decode_String(raw[1]));
       case 2:
-        return const ConnectionState_NotRunning();
+        return ConnectionState_NotRunning();
       case 3:
-        return const ConnectionState_Unsupported();
+        return ConnectionState_Unsupported();
       case 4:
-        return const ConnectionState_Unsafe();
+        return ConnectionState_Unsafe();
       case 5:
         return ConnectionState_Refused(message: dco_decode_String(raw[1]));
       case 6:
@@ -507,9 +970,61 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  HeadDto dco_decode_head_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return HeadDto(
+      version: dco_decode_String(arr[0]),
+      device: dco_decode_String(arr[1]),
+      createdMs: dco_decode_i_64(arr[2]),
+      files: dco_decode_u_32(arr[3]),
+      bytes: dco_decode_u_64(arr[4]),
+      changedFiles: dco_decode_u_32(arr[5]),
+    );
+  }
+
+  @protected
+  HistoryDto dco_decode_history_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return HistoryDto(
+      name: dco_decode_opt_String(arr[0]),
+      versions: dco_decode_list_version_dto(arr[1]),
+      backups: dco_decode_list_String(arr[2]),
+    );
+  }
+
+  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  LeaseDto dco_decode_lease_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return LeaseDto(
+      player: dco_decode_String(arr[0]),
+      emulator: dco_decode_String(arr[1]),
+      game: dco_decode_String(arr[2]),
+      device: dco_decode_String(arr[3]),
+      renewedMs: dco_decode_i_64(arr[4]),
+      live: dco_decode_bool(arr[5]),
+      ours: dco_decode_bool(arr[6]),
+    );
   }
 
   @protected
@@ -544,9 +1059,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<ConflictDto> dco_decode_list_conflict_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_conflict_dto).toList();
+  }
+
+  @protected
   List<GameEntry> dco_decode_list_game_entry(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_game_entry).toList();
+  }
+
+  @protected
+  List<HeadDto> dco_decode_list_head_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_head_dto).toList();
+  }
+
+  @protected
+  List<LeaseDto> dco_decode_list_lease_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_lease_dto).toList();
   }
 
   @protected
@@ -565,6 +1098,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<RecentDto> dco_decode_list_recent_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_recent_dto).toList();
+  }
+
+  @protected
+  List<VersionDto> dco_decode_list_version_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_version_dto).toList();
+  }
+
+  @protected
+  MovedDto dco_decode_moved_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return MovedDto(
+      version: dco_decode_opt_String(arr[0]),
+      files: dco_decode_u_32(arr[1]),
+      bytes: dco_decode_u_64(arr[2]),
+    );
   }
 
   @protected
@@ -607,6 +1159,91 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PhaseDto dco_decode_phase_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PhaseDto.values[raw as int];
+  }
+
+  @protected
+  PlayAnswerDto dco_decode_play_answer_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return PlayAnswerDto_Wait();
+      case 1:
+        return PlayAnswerDto_PlayAnyway();
+      case 2:
+        return PlayAnswerDto_TakeOver();
+      case 3:
+        return PlayAnswerDto_Keep(version: dco_decode_opt_String(raw[1]));
+      case 4:
+        return PlayAnswerDto_Refuse();
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  PlayLeaseDto dco_decode_play_lease_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlayLeaseDto.values[raw as int];
+  }
+
+  @protected
+  PlayQuestionDto dco_decode_play_question_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return PlayQuestionDto_Lease(
+          by: dco_decode_String(raw[1]),
+          agoS: dco_decode_u_64(raw[2]),
+          stale: dco_decode_bool(raw[3]),
+        );
+      case 1:
+        return PlayQuestionDto_Conflict(
+          conflict: dco_decode_box_autoadd_conflict_dto(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  PlayResultDto dco_decode_play_result_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return PlayResultDto(
+      exitCode: dco_decode_i_32(arr[0]),
+      pulled: dco_decode_moved_dto(arr[1]),
+      uploaded: dco_decode_moved_dto(arr[2]),
+      lease: dco_decode_play_lease_dto(arr[3]),
+    );
+  }
+
+  @protected
+  PlayStepDto dco_decode_play_step_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlayStepDto.values[raw as int];
+  }
+
+  @protected
+  PlayUpdate dco_decode_play_update(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return PlayUpdate_Step(dco_decode_play_step_dto(raw[1]));
+      case 1:
+        return PlayUpdate_Question(
+          dco_decode_box_autoadd_play_question_dto(raw[1]),
+        );
+      case 2:
+        return PlayUpdate_Done(dco_decode_box_autoadd_play_result_dto(raw[1]));
+      case 3:
+        return PlayUpdate_Failed(
+          dco_decode_box_autoadd_connection_state(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   @protected
@@ -717,16 +1354,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return const SyncNow_Done();
+        return SyncNow_Done();
       case 1:
-        return const SyncNow_NotRunning();
+        return SyncNow_NotRunning();
       case 2:
         return SyncNow_Failed(
           code: dco_decode_String(raw[1]),
           message: dco_decode_String(raw[2]),
         );
       case 3:
-        return const SyncNow_TimedOut();
+        return SyncNow_TimedOut();
       default:
         throw Exception("unreachable");
     }
@@ -763,10 +1400,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  VersionDto dco_decode_version_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return VersionDto(
+      id: dco_decode_String(arr[0]),
+      createdMs: dco_decode_u_64(arr[1]),
+      device: dco_decode_String(arr[2]),
+      files: dco_decode_u_32(arr[3]),
+      bytes: dco_decode_u_64(arr[4]),
+      head: dco_decode_bool(arr[5]),
+      tookOver: dco_decode_bool(arr[6]),
+    );
+  }
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_String(deserializer);
+    var inner = sse_decode_String(deserializer);
     return AnyhowException(inner);
+  }
+
+  @protected
+  PlayHandle
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PlayHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
   }
 
   @protected
@@ -782,12 +1448,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlayHandle
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PlayHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   WatchHandle
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return WatchHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  PlayHandle
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PlayHandleImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -814,9 +1504,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<PlayUpdate> sse_decode_StreamSink_play_update_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_list_prim_u_8_strict(deserializer);
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
   }
 
@@ -824,6 +1522,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  ConflictDto sse_decode_box_autoadd_conflict_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_conflict_dto(deserializer));
   }
 
   @protected
@@ -846,6 +1552,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GamesDto sse_decode_box_autoadd_games_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_games_dto(deserializer));
+  }
+
+  @protected
+  PlayAnswerDto sse_decode_box_autoadd_play_answer_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_play_answer_dto(deserializer));
+  }
+
+  @protected
+  PlayQuestionDto sse_decode_box_autoadd_play_question_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_play_question_dto(deserializer));
+  }
+
+  @protected
+  PlayResultDto sse_decode_box_autoadd_play_result_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_play_result_dto(deserializer));
   }
 
   @protected
@@ -881,28 +1611,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ConflictDto sse_decode_conflict_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_player = sse_decode_String(deserializer);
+    var var_emulator = sse_decode_String(deserializer);
+    var var_game = sse_decode_String(deserializer);
+    var var_name = sse_decode_opt_String(deserializer);
+    var var_heads = sse_decode_list_head_dto(deserializer);
+    return ConflictDto(
+      player: var_player,
+      emulator: var_emulator,
+      game: var_game,
+      name: var_name,
+      heads: var_heads,
+    );
+  }
+
+  @protected
   ConnectionState sse_decode_connection_state(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final tag_ = sse_decode_i_32(deserializer);
+    var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        return const ConnectionState_Connecting();
+        return ConnectionState_Connecting();
       case 1:
-        final var_daemonVersion = sse_decode_String(deserializer);
+        var var_daemonVersion = sse_decode_String(deserializer);
         return ConnectionState_Online(daemonVersion: var_daemonVersion);
       case 2:
-        return const ConnectionState_NotRunning();
+        return ConnectionState_NotRunning();
       case 3:
-        return const ConnectionState_Unsupported();
+        return ConnectionState_Unsupported();
       case 4:
-        return const ConnectionState_Unsafe();
+        return ConnectionState_Unsafe();
       case 5:
-        final var_message = sse_decode_String(deserializer);
+        var var_message = sse_decode_String(deserializer);
         return ConnectionState_Refused(message: var_message);
       case 6:
-        final var_code = sse_decode_String(deserializer);
-        final var_message = sse_decode_String(deserializer);
+        var var_code = sse_decode_String(deserializer);
+        var var_message = sse_decode_String(deserializer);
         return ConnectionState_Failed(code: var_code, message: var_message);
       default:
         throw UnimplementedError('');
@@ -912,18 +1659,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ErrorKindDto sse_decode_error_kind_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return ErrorKindDto.values[inner];
   }
 
   @protected
   GameEntry sse_decode_game_entry(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_emulator = sse_decode_String(deserializer);
-    final var_key = sse_decode_String(deserializer);
-    final var_name = sse_decode_opt_String(deserializer);
-    final var_launchable = sse_decode_bool(deserializer);
-    final var_streams = sse_decode_list_player_stream_dto(deserializer);
+    var var_emulator = sse_decode_String(deserializer);
+    var var_key = sse_decode_String(deserializer);
+    var var_name = sse_decode_opt_String(deserializer);
+    var var_launchable = sse_decode_bool(deserializer);
+    var var_streams = sse_decode_list_player_stream_dto(deserializer);
     return GameEntry(
       emulator: var_emulator,
       key: var_key,
@@ -936,9 +1683,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   GamesDto sse_decode_games_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_games = sse_decode_list_game_entry(deserializer);
-    final var_recent = sse_decode_list_recent_dto(deserializer);
+    var var_games = sse_decode_list_game_entry(deserializer);
+    var var_recent = sse_decode_list_recent_dto(deserializer);
     return GamesDto(games: var_games, recent: var_recent);
+  }
+
+  @protected
+  HeadDto sse_decode_head_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_version = sse_decode_String(deserializer);
+    var var_device = sse_decode_String(deserializer);
+    var var_createdMs = sse_decode_i_64(deserializer);
+    var var_files = sse_decode_u_32(deserializer);
+    var var_bytes = sse_decode_u_64(deserializer);
+    var var_changedFiles = sse_decode_u_32(deserializer);
+    return HeadDto(
+      version: var_version,
+      device: var_device,
+      createdMs: var_createdMs,
+      files: var_files,
+      bytes: var_bytes,
+      changedFiles: var_changedFiles,
+    );
+  }
+
+  @protected
+  HistoryDto sse_decode_history_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_opt_String(deserializer);
+    var var_versions = sse_decode_list_version_dto(deserializer);
+    var var_backups = sse_decode_list_String(deserializer);
+    return HistoryDto(
+      name: var_name,
+      versions: var_versions,
+      backups: var_backups,
+    );
   }
 
   @protected
@@ -948,30 +1727,55 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  LeaseDto sse_decode_lease_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_player = sse_decode_String(deserializer);
+    var var_emulator = sse_decode_String(deserializer);
+    var var_game = sse_decode_String(deserializer);
+    var var_device = sse_decode_String(deserializer);
+    var var_renewedMs = sse_decode_i_64(deserializer);
+    var var_live = sse_decode_bool(deserializer);
+    var var_ours = sse_decode_bool(deserializer);
+    return LeaseDto(
+      player: var_player,
+      emulator: var_emulator,
+      game: var_game,
+      device: var_device,
+      renewedMs: var_renewedMs,
+      live: var_live,
+      ours: var_ours,
+    );
+  }
+
+  @protected
   LinkEvent sse_decode_link_event(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final tag_ = sse_decode_i_32(deserializer);
+    var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        final var_field0 = sse_decode_box_autoadd_connection_state(
-          deserializer,
-        );
+        var var_field0 = sse_decode_box_autoadd_connection_state(deserializer);
         return LinkEvent_Connection(var_field0);
       case 1:
-        final var_field0 = sse_decode_box_autoadd_status_dto(deserializer);
+        var var_field0 = sse_decode_box_autoadd_status_dto(deserializer);
         return LinkEvent_Status(var_field0);
       case 2:
-        final var_field0 = sse_decode_opt_box_autoadd_session_dto(deserializer);
+        var var_field0 = sse_decode_opt_box_autoadd_session_dto(deserializer);
         return LinkEvent_Session(var_field0);
       case 3:
-        final var_field0 = sse_decode_box_autoadd_progress_dto(deserializer);
+        var var_field0 = sse_decode_box_autoadd_progress_dto(deserializer);
         return LinkEvent_Progress(var_field0);
       case 4:
-        final var_field0 = sse_decode_box_autoadd_snapshot(deserializer);
+        var var_field0 = sse_decode_box_autoadd_snapshot(deserializer);
         return LinkEvent_Snapshot(var_field0);
       case 5:
-        final var_field0 = sse_decode_box_autoadd_games_dto(deserializer);
+        var var_field0 = sse_decode_box_autoadd_games_dto(deserializer);
         return LinkEvent_Games(var_field0);
       default:
         throw UnimplementedError('');
@@ -982,10 +1786,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <String>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ConflictDto> sse_decode_list_conflict_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ConflictDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_conflict_dto(deserializer));
     }
     return ans_;
   }
@@ -994,10 +1810,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<GameEntry> sse_decode_list_game_entry(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <GameEntry>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <GameEntry>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_game_entry(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<HeadDto> sse_decode_list_head_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <HeadDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_head_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<LeaseDto> sse_decode_list_lease_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LeaseDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_lease_dto(deserializer));
     }
     return ans_;
   }
@@ -1008,8 +1848,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <PlayerStreamDto>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PlayerStreamDto>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_player_stream_dto(deserializer));
     }
@@ -1019,7 +1859,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final len_ = sse_decode_i_32(deserializer);
+    var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
   }
 
@@ -1027,12 +1867,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<RecentDto> sse_decode_list_recent_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <RecentDto>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RecentDto>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_recent_dto(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  List<VersionDto> sse_decode_list_version_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <VersionDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_version_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  MovedDto sse_decode_moved_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_version = sse_decode_opt_String(deserializer);
+    var var_files = sse_decode_u_32(deserializer);
+    var var_bytes = sse_decode_u_64(deserializer);
+    return MovedDto(version: var_version, files: var_files, bytes: var_bytes);
   }
 
   @protected
@@ -1110,15 +1971,112 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   PhaseDto sse_decode_phase_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return PhaseDto.values[inner];
+  }
+
+  @protected
+  PlayAnswerDto sse_decode_play_answer_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return PlayAnswerDto_Wait();
+      case 1:
+        return PlayAnswerDto_PlayAnyway();
+      case 2:
+        return PlayAnswerDto_TakeOver();
+      case 3:
+        var var_version = sse_decode_opt_String(deserializer);
+        return PlayAnswerDto_Keep(version: var_version);
+      case 4:
+        return PlayAnswerDto_Refuse();
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  PlayLeaseDto sse_decode_play_lease_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PlayLeaseDto.values[inner];
+  }
+
+  @protected
+  PlayQuestionDto sse_decode_play_question_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_by = sse_decode_String(deserializer);
+        var var_agoS = sse_decode_u_64(deserializer);
+        var var_stale = sse_decode_bool(deserializer);
+        return PlayQuestionDto_Lease(
+          by: var_by,
+          agoS: var_agoS,
+          stale: var_stale,
+        );
+      case 1:
+        var var_conflict = sse_decode_box_autoadd_conflict_dto(deserializer);
+        return PlayQuestionDto_Conflict(conflict: var_conflict);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  PlayResultDto sse_decode_play_result_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_exitCode = sse_decode_i_32(deserializer);
+    var var_pulled = sse_decode_moved_dto(deserializer);
+    var var_uploaded = sse_decode_moved_dto(deserializer);
+    var var_lease = sse_decode_play_lease_dto(deserializer);
+    return PlayResultDto(
+      exitCode: var_exitCode,
+      pulled: var_pulled,
+      uploaded: var_uploaded,
+      lease: var_lease,
+    );
+  }
+
+  @protected
+  PlayStepDto sse_decode_play_step_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PlayStepDto.values[inner];
+  }
+
+  @protected
+  PlayUpdate sse_decode_play_update(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_field0 = sse_decode_play_step_dto(deserializer);
+        return PlayUpdate_Step(var_field0);
+      case 1:
+        var var_field0 = sse_decode_box_autoadd_play_question_dto(deserializer);
+        return PlayUpdate_Question(var_field0);
+      case 2:
+        var var_field0 = sse_decode_box_autoadd_play_result_dto(deserializer);
+        return PlayUpdate_Done(var_field0);
+      case 3:
+        var var_field0 = sse_decode_box_autoadd_connection_state(deserializer);
+        return PlayUpdate_Failed(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
   PlayerStreamDto sse_decode_player_stream_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_player = sse_decode_String(deserializer);
-    final var_lastVersionMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_player = sse_decode_String(deserializer);
+    var var_lastVersionMs = sse_decode_opt_box_autoadd_u_64(deserializer);
     return PlayerStreamDto(
       player: var_player,
       lastVersionMs: var_lastVersionMs,
@@ -1128,14 +2086,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ProgressDto sse_decode_progress_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_player = sse_decode_String(deserializer);
-    final var_emulator = sse_decode_String(deserializer);
-    final var_game = sse_decode_String(deserializer);
-    final var_phase = sse_decode_phase_dto(deserializer);
-    final var_filesDone = sse_decode_u_32(deserializer);
-    final var_filesTotal = sse_decode_u_32(deserializer);
-    final var_bytesDone = sse_decode_u_64(deserializer);
-    final var_bytesTotal = sse_decode_u_64(deserializer);
+    var var_player = sse_decode_String(deserializer);
+    var var_emulator = sse_decode_String(deserializer);
+    var var_game = sse_decode_String(deserializer);
+    var var_phase = sse_decode_phase_dto(deserializer);
+    var var_filesDone = sse_decode_u_32(deserializer);
+    var var_filesTotal = sse_decode_u_32(deserializer);
+    var var_bytesDone = sse_decode_u_64(deserializer);
+    var var_bytesTotal = sse_decode_u_64(deserializer);
     return ProgressDto(
       player: var_player,
       emulator: var_emulator,
@@ -1151,12 +2109,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   RecentDto sse_decode_recent_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_emulator = sse_decode_String(deserializer);
-    final var_key = sse_decode_String(deserializer);
-    final var_name = sse_decode_opt_String(deserializer);
-    final var_player = sse_decode_String(deserializer);
-    final var_lastVersionMs = sse_decode_opt_box_autoadd_u_64(deserializer);
-    final var_launchable = sse_decode_bool(deserializer);
+    var var_emulator = sse_decode_String(deserializer);
+    var var_key = sse_decode_String(deserializer);
+    var var_name = sse_decode_opt_String(deserializer);
+    var var_player = sse_decode_String(deserializer);
+    var var_lastVersionMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_launchable = sse_decode_bool(deserializer);
     return RecentDto(
       emulator: var_emulator,
       key: var_key,
@@ -1170,12 +2128,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   SessionDto sse_decode_session_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_game = sse_decode_String(deserializer);
-    final var_name = sse_decode_opt_String(deserializer);
-    final var_emulator = sse_decode_String(deserializer);
-    final var_player = sse_decode_String(deserializer);
-    final var_device = sse_decode_String(deserializer);
-    final var_startedMs = sse_decode_u_64(deserializer);
+    var var_game = sse_decode_String(deserializer);
+    var var_name = sse_decode_opt_String(deserializer);
+    var var_emulator = sse_decode_String(deserializer);
+    var var_player = sse_decode_String(deserializer);
+    var var_device = sse_decode_String(deserializer);
+    var var_startedMs = sse_decode_u_64(deserializer);
     return SessionDto(
       game: var_game,
       name: var_name,
@@ -1189,11 +2147,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Snapshot sse_decode_snapshot(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_connection = sse_decode_connection_state(deserializer);
-    final var_status = sse_decode_opt_box_autoadd_status_dto(deserializer);
-    final var_session = sse_decode_opt_box_autoadd_session_dto(deserializer);
-    final var_device = sse_decode_opt_String(deserializer);
-    final var_players = sse_decode_list_String(deserializer);
+    var var_connection = sse_decode_connection_state(deserializer);
+    var var_status = sse_decode_opt_box_autoadd_status_dto(deserializer);
+    var var_session = sse_decode_opt_box_autoadd_session_dto(deserializer);
+    var var_device = sse_decode_opt_String(deserializer);
+    var var_players = sse_decode_list_String(deserializer);
     return Snapshot(
       connection: var_connection,
       status: var_status,
@@ -1206,23 +2164,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   StateDto sse_decode_state_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return StateDto.values[inner];
   }
 
   @protected
   StatusDto sse_decode_status_dto(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_state = sse_decode_state_dto(deserializer);
-    final var_lastSyncMs = sse_decode_opt_box_autoadd_u_64(deserializer);
-    final var_uploads = sse_decode_u_32(deserializer);
-    final var_downloads = sse_decode_u_32(deserializer);
-    final var_bytes = sse_decode_u_64(deserializer);
-    final var_pausedUntilMs = sse_decode_opt_box_autoadd_u_64(deserializer);
-    final var_queued = sse_decode_u_32(deserializer);
-    final var_conflicts = sse_decode_u_32(deserializer);
-    final var_foreignLeases = sse_decode_u_32(deserializer);
-    final var_error = sse_decode_opt_box_autoadd_error_kind_dto(deserializer);
+    var var_state = sse_decode_state_dto(deserializer);
+    var var_lastSyncMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_uploads = sse_decode_u_32(deserializer);
+    var var_downloads = sse_decode_u_32(deserializer);
+    var var_bytes = sse_decode_u_64(deserializer);
+    var var_pausedUntilMs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_queued = sse_decode_u_32(deserializer);
+    var var_conflicts = sse_decode_u_32(deserializer);
+    var var_foreignLeases = sse_decode_u_32(deserializer);
+    var var_error = sse_decode_opt_box_autoadd_error_kind_dto(deserializer);
     return StatusDto(
       state: var_state,
       lastSyncMs: var_lastSyncMs,
@@ -1241,18 +2199,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SyncNow sse_decode_sync_now(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final tag_ = sse_decode_i_32(deserializer);
+    var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        return const SyncNow_Done();
+        return SyncNow_Done();
       case 1:
-        return const SyncNow_NotRunning();
+        return SyncNow_NotRunning();
       case 2:
-        final var_code = sse_decode_String(deserializer);
-        final var_message = sse_decode_String(deserializer);
+        var var_code = sse_decode_String(deserializer);
+        var var_message = sse_decode_String(deserializer);
         return SyncNow_Failed(code: var_code, message: var_message);
       case 3:
-        return const SyncNow_TimedOut();
+        return SyncNow_TimedOut();
       default:
         throw UnimplementedError('');
     }
@@ -1288,12 +2246,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  VersionDto sse_decode_version_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_createdMs = sse_decode_u_64(deserializer);
+    var var_device = sse_decode_String(deserializer);
+    var var_files = sse_decode_u_32(deserializer);
+    var var_bytes = sse_decode_u_64(deserializer);
+    var var_head = sse_decode_bool(deserializer);
+    var var_tookOver = sse_decode_bool(deserializer);
+    return VersionDto(
+      id: var_id,
+      createdMs: var_createdMs,
+      device: var_device,
+      files: var_files,
+      bytes: var_bytes,
+      head: var_head,
+      tookOver: var_tookOver,
+    );
+  }
+
+  @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.message, serializer);
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    PlayHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PlayHandleImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
   }
 
   @protected
@@ -1311,6 +2303,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    PlayHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PlayHandleImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
     WatchHandle self,
     SseSerializer serializer,
@@ -1318,6 +2323,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as WatchHandleImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    PlayHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PlayHandleImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -1353,6 +2371,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_StreamSink_play_update_Sse(
+    RustStreamSink<PlayUpdate> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_play_update,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
@@ -1362,6 +2397,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_conflict_dto(
+    ConflictDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_conflict_dto(self, serializer);
   }
 
   @protected
@@ -1389,6 +2433,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_games_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_play_answer_dto(
+    PlayAnswerDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_play_answer_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_play_question_dto(
+    PlayQuestionDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_play_question_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_play_result_dto(
+    PlayResultDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_play_result_dto(self, serializer);
   }
 
   @protected
@@ -1431,6 +2502,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_conflict_dto(ConflictDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.player, serializer);
+    sse_encode_String(self.emulator, serializer);
+    sse_encode_String(self.game, serializer);
+    sse_encode_opt_String(self.name, serializer);
+    sse_encode_list_head_dto(self.heads, serializer);
   }
 
   @protected
@@ -1485,9 +2566,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_head_dto(HeadDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.version, serializer);
+    sse_encode_String(self.device, serializer);
+    sse_encode_i_64(self.createdMs, serializer);
+    sse_encode_u_32(self.files, serializer);
+    sse_encode_u_64(self.bytes, serializer);
+    sse_encode_u_32(self.changedFiles, serializer);
+  }
+
+  @protected
+  void sse_encode_history_dto(HistoryDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.name, serializer);
+    sse_encode_list_version_dto(self.versions, serializer);
+    sse_encode_list_String(self.backups, serializer);
+  }
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_lease_dto(LeaseDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.player, serializer);
+    sse_encode_String(self.emulator, serializer);
+    sse_encode_String(self.game, serializer);
+    sse_encode_String(self.device, serializer);
+    sse_encode_i_64(self.renewedMs, serializer);
+    sse_encode_bool(self.live, serializer);
+    sse_encode_bool(self.ours, serializer);
   }
 
   @protected
@@ -1525,6 +2643,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_conflict_dto(
+    List<ConflictDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_conflict_dto(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_game_entry(
     List<GameEntry> self,
     SseSerializer serializer,
@@ -1533,6 +2663,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_game_entry(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_head_dto(List<HeadDto> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_head_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_lease_dto(
+    List<LeaseDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_lease_dto(item, serializer);
     }
   }
 
@@ -1568,6 +2719,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     for (final item in self) {
       sse_encode_recent_dto(item, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_list_version_dto(
+    List<VersionDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_version_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_moved_dto(MovedDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.version, serializer);
+    sse_encode_u_32(self.files, serializer);
+    sse_encode_u_64(self.bytes, serializer);
   }
 
   @protected
@@ -1646,6 +2817,92 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_phase_dto(PhaseDto self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_play_answer_dto(
+    PlayAnswerDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case PlayAnswerDto_Wait():
+        sse_encode_i_32(0, serializer);
+      case PlayAnswerDto_PlayAnyway():
+        sse_encode_i_32(1, serializer);
+      case PlayAnswerDto_TakeOver():
+        sse_encode_i_32(2, serializer);
+      case PlayAnswerDto_Keep(version: final version):
+        sse_encode_i_32(3, serializer);
+        sse_encode_opt_String(version, serializer);
+      case PlayAnswerDto_Refuse():
+        sse_encode_i_32(4, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_play_lease_dto(PlayLeaseDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_play_question_dto(
+    PlayQuestionDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case PlayQuestionDto_Lease(
+        by: final by,
+        agoS: final agoS,
+        stale: final stale,
+      ):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(by, serializer);
+        sse_encode_u_64(agoS, serializer);
+        sse_encode_bool(stale, serializer);
+      case PlayQuestionDto_Conflict(conflict: final conflict):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_conflict_dto(conflict, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_play_result_dto(
+    PlayResultDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.exitCode, serializer);
+    sse_encode_moved_dto(self.pulled, serializer);
+    sse_encode_moved_dto(self.uploaded, serializer);
+    sse_encode_play_lease_dto(self.lease, serializer);
+  }
+
+  @protected
+  void sse_encode_play_step_dto(PlayStepDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_play_update(PlayUpdate self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case PlayUpdate_Step(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_play_step_dto(field0, serializer);
+      case PlayUpdate_Question(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_play_question_dto(field0, serializer);
+      case PlayUpdate_Done(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_play_result_dto(field0, serializer);
+      case PlayUpdate_Failed(field0: final field0):
+        sse_encode_i_32(3, serializer);
+        sse_encode_box_autoadd_connection_state(field0, serializer);
+    }
   }
 
   @protected
@@ -1769,6 +3026,59 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
   }
+
+  @protected
+  void sse_encode_version_dto(VersionDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_u_64(self.createdMs, serializer);
+    sse_encode_String(self.device, serializer);
+    sse_encode_u_32(self.files, serializer);
+    sse_encode_u_64(self.bytes, serializer);
+    sse_encode_bool(self.head, serializer);
+    sse_encode_bool(self.tookOver, serializer);
+  }
+}
+
+@sealed
+class PlayHandleImpl extends RustOpaque implements PlayHandle {
+  // Not to be used by end users
+  PlayHandleImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  PlayHandleImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_PlayHandle,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_PlayHandle,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_PlayHandlePtr,
+  );
+
+  /// Answers the question the session is waiting on; `false` when no session runs.
+  bool answer({required PlayAnswerDto answer}) => RustLib.instance.api
+      .crateApiDaemonPlayHandleAnswer(that: this, answer: answer);
+
+  /// Starts the session; updates go to `sink` until it ends, [`PlayHandle::stop`] or the
+  /// listener is gone. Returns at once.
+  Stream<PlayUpdate> play({
+    required String player,
+    required String emulator,
+    required String game,
+  }) => RustLib.instance.api.crateApiDaemonPlayHandlePlay(
+    that: this,
+    player: player,
+    emulator: emulator,
+    game: game,
+  );
+
+  /// Ends the session's link at once (the daemon keeps a running game's session).
+  Future<void> stop() =>
+      RustLib.instance.api.crateApiDaemonPlayHandleStop(that: this);
 }
 
 @sealed

@@ -2,11 +2,6 @@
 //! moved, and a play session's steps, questions and answers. Same rules as `model`: no wire types, no serde, no secrets, no paths (B2). The tests
 //! destructure every struct without `..`, so a new field forces a review.
 
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "reached from the FRB surface in 3c Task 4")
-)]
-
 use lemusync_api::{
     ConflictInfo, HeadInfo, HistoryEntry, HistoryReport, LeaseAnswer, LeaseInfo, PlayAnswer,
     PlayEvent, PlayLease, PlayQuestion, PlayReport, StreamReport,

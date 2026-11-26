@@ -3,11 +3,6 @@
 //! [`ConnectionState`]: `Failed { code, .. }` carries the daemon's error code.
 //! Spec: docs/specs/ui/app-shell.md (Data flow).
 
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "reached from the FRB surface in 3c Task 4")
-)]
-
 use std::time::Duration;
 
 use lemusync_api::{Request, Response};

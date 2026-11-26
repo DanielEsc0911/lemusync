@@ -90,11 +90,13 @@ Tasks 1–4 (spec and bridge) run first and need no UI decision. Tasks 5–8 (ga
 
 **Files:** `crates/bridge/src/api/daemon.rs`, regenerated `app/lib/bridge/`, `app/lib/app/daemon_link.dart`, `app/test/support/fake_link.dart`, tests.
 
-**Interfaces:** `DaemonLink` gains one method per Task 2 call and `Stream<PlayUpdate> play(...)` plus `answer(PlayAnswer)`; `FrbDaemonLink` is still the only importer of `bridge/`; `FakeDaemonLink` scripts results and play sessions and records calls. Cancelling the play stream calls the handle's `stop` once (as 3b's `WatchHandle`).
+**Interfaces:** `DaemonLink` gains one method per Task 2 call, each returning a `CallResult<T>` (`CallOk` / `CallFailed(ConnectionState)`), and `PlaySession play(...)` (`updates`, `answer`); `FrbDaemonLink` is still the only importer of `bridge/`; `FakeDaemonLink` scripts results and play sessions and records calls. Cancelling the play stream calls the handle's `stop` once (as 3b's `WatchHandle`).
 
-- [ ] **Step 1: failing tests** (Dart, fake only): result mapping, play stream cancel → stop once, answer forwarded once. Rust: the new API functions compile through codegen (`flutter_rust_bridge_codegen generate`, no diff after `just fmt`).
-- [ ] **Step 2–4:** FAIL, implement, `flutter test`, `just check`.
-- [ ] **Step 5:** docs; tick; board. **Commit** `feat(app): reach the game flows through the daemon link`.
+- [x] **Step 1: failing tests** (Dart, fake only): result mapping, play stream cancel → stop once, answer forwarded once. Rust: the new API functions compile through codegen (`flutter_rust_bridge_codegen generate`, no diff after `just fmt`).
+- [x] **Step 2–4:** FAIL, implement, `flutter test`, `just check`.
+- [x] **Step 5:** docs; tick; board. **Commit** `feat(app): reach the game flows through the daemon link`.
+
+**As built (Task 4, 2026-11-26):** the Rust flow functions return `Result<_, ConnectionState>`; FRB throws the state in Dart and `guard` (`app/lib/app/call_result.dart`) turns it back into a value. `PlayHandle` (`api/daemon.rs`) starts `play::start` inside `link::runtime()` and forwards updates to the sink until the session ends or `stop`; then it drops the answerer, so a late `answer` returns false. Rust tests: a play without a daemon fails and takes no answer; `stop` on a question makes the fake daemon see the hang-up. Dart tests: `guard` mapping, the session starts only on listen, answers reach the handle, cancel stops it once (removing the stop turns that test red). `link::fake` became `pub(crate)` for the API test. The three `expect(dead_code)` from Tasks 2–3 are gone. Regenerating also reordered imports in three unchanged generated files; those were restored.
 
 ### Task 5: components for the game flows
 

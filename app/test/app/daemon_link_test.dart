@@ -6,9 +6,12 @@ import 'package:lemusync/bridge/api/daemon.dart';
 import 'package:lemusync/bridge/link/calls.dart';
 import 'package:lemusync/bridge/link/model.dart' as dto;
 
-/// The contract Task 5's fake must satisfy: it compiles only while the
-/// interface keeps these four members.
+/// The 3b contract: it compiles only while the interface keeps these four
+/// members (the 3c flow members are reached through [noSuchMethod]).
 class _FakeLink implements DaemonLink {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
   @override
   Stream<dto.LinkEvent> events() => const Stream.empty();
 

@@ -5,11 +5,6 @@
 //! later question while the emulator session itself still uploads and releases its lease
 //! (architecture §Process model). Spec: docs/specs/ui/app-shell.md (Data flow).
 
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "reached from the FRB surface in 3c Task 4")
-)]
-
 use lemusync_api::{PlayAnswer, Request, Response};
 use lemusync_ipc::{Client, IpcError};
 use tokio::sync::mpsc;
