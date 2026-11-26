@@ -1,5 +1,5 @@
-//! DTOs for the game flows (3c): history, conflicts, leases and what a restore or resolve
-//! moved. Same rules as `model`: no wire types, no serde, no secrets, no paths (B2). The tests
+//! DTOs for the game flows (3c): history, conflicts, leases, what a restore or resolve
+//! moved, and a play session's steps, questions and answers. Same rules as `model`: no wire types, no serde, no secrets, no paths (B2). The tests
 //! destructure every struct without `..`, so a new field forces a review.
 
 #![cfg_attr(
@@ -7,7 +7,10 @@
     expect(dead_code, reason = "reached from the FRB surface in 3c Task 4")
 )]
 
-use lemusync_api::{ConflictInfo, HeadInfo, HistoryEntry, HistoryReport, LeaseInfo, StreamReport};
+use lemusync_api::{
+    ConflictInfo, HeadInfo, HistoryEntry, HistoryReport, LeaseAnswer, LeaseInfo, PlayAnswer,
+    PlayEvent, PlayLease, PlayQuestion, PlayReport, StreamReport,
+};
 
 /// One version of a stream, newest first in [`HistoryDto::versions`].
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -156,6 +159,121 @@ impl From<&StreamReport> for MovedDto {
     }
 }
 
+/// A step of a play session (sync-model §Launcher mode).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PlayStepDto {
+    Pulling,
+    WaitingForLease,
+    Playing,
+    Uploading,
+}
+
+impl From<PlayEvent> for PlayStepDto {
+    fn from(e: PlayEvent) -> Self {
+        match e {
+            PlayEvent::Pulling => PlayStepDto::Pulling,
+            PlayEvent::WaitingForLease => PlayStepDto::WaitingForLease,
+            PlayEvent::Playing => PlayStepDto::Playing,
+            PlayEvent::Uploading => PlayStepDto::Uploading,
+        }
+    }
+}
+
+/// A question the daemon asks before launch.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PlayQuestionDto {
+    /// Another device holds the lease.
+    Lease {
+        by: String,
+        ago_s: u64,
+        /// Expired: only then may the player take it over.
+        stale: bool,
+    },
+    /// The stream has a conflict.
+    Conflict { conflict: ConflictDto },
+}
+
+impl From<&PlayQuestion> for PlayQuestionDto {
+    fn from(q: &PlayQuestion) -> Self {
+        match q {
+            PlayQuestion::Lease { by, ago_s, stale } => PlayQuestionDto::Lease {
+                by: by.clone(),
+                ago_s: *ago_s,
+                stale: *stale,
+            },
+            PlayQuestion::Conflict { conflict } => PlayQuestionDto::Conflict {
+                conflict: ConflictDto::from(conflict),
+            },
+        }
+    }
+}
+
+/// The player's answer.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PlayAnswerDto {
+    Wait,
+    PlayAnyway,
+    TakeOver,
+    /// For a conflict: the head to keep, or `None` to play this device's copy.
+    Keep {
+        version: Option<String>,
+    },
+    /// No answer: the daemon stops before launch.
+    Refuse,
+}
+
+impl From<PlayAnswerDto> for PlayAnswer {
+    fn from(a: PlayAnswerDto) -> Self {
+        let lease = |choice| PlayAnswer::Lease { choice };
+        match a {
+            PlayAnswerDto::Wait => lease(LeaseAnswer::Wait),
+            PlayAnswerDto::PlayAnyway => lease(LeaseAnswer::PlayAnyway),
+            PlayAnswerDto::TakeOver => lease(LeaseAnswer::TakeOver),
+            PlayAnswerDto::Keep { version } => PlayAnswer::Keep { version },
+            PlayAnswerDto::Refuse => PlayAnswer::Refuse,
+        }
+    }
+}
+
+/// How the session used the lease.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PlayLeaseDto {
+    Held,
+    TookOver,
+    PlayedAnyway,
+}
+
+impl From<PlayLease> for PlayLeaseDto {
+    fn from(l: PlayLease) -> Self {
+        match l {
+            PlayLease::Held => PlayLeaseDto::Held,
+            PlayLease::TookOver => PlayLeaseDto::TookOver,
+            PlayLease::PlayedAnyway => PlayLeaseDto::PlayedAnyway,
+        }
+    }
+}
+
+/// How a play session ended.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PlayResultDto {
+    /// The emulator's exit code (-1 when killed by a signal).
+    pub exit_code: i32,
+    pub pulled: MovedDto,
+    pub uploaded: MovedDto,
+    pub lease: PlayLeaseDto,
+}
+
+impl From<&PlayReport> for PlayResultDto {
+    fn from(r: &PlayReport) -> Self {
+        PlayResultDto {
+            exit_code: r.exit_code,
+            pulled: MovedDto::from(&r.pulled),
+            uploaded: MovedDto::from(&r.uploaded),
+            lease: r.lease.into(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -289,6 +407,94 @@ mod tests {
         assert_eq!(
             (device.as_str(), renewed_ms, live, ours),
             ("pc", 5, false, false)
+        );
+    }
+
+    #[test]
+    fn every_answer_maps_to_its_wire_answer() {
+        let rows = [
+            (
+                PlayAnswerDto::Wait,
+                PlayAnswer::Lease {
+                    choice: LeaseAnswer::Wait,
+                },
+            ),
+            (
+                PlayAnswerDto::PlayAnyway,
+                PlayAnswer::Lease {
+                    choice: LeaseAnswer::PlayAnyway,
+                },
+            ),
+            (
+                PlayAnswerDto::TakeOver,
+                PlayAnswer::Lease {
+                    choice: LeaseAnswer::TakeOver,
+                },
+            ),
+            (
+                PlayAnswerDto::Keep {
+                    version: Some("h1".into()),
+                },
+                PlayAnswer::Keep {
+                    version: Some("h1".into()),
+                },
+            ),
+            (
+                PlayAnswerDto::Keep { version: None },
+                PlayAnswer::Keep { version: None },
+            ),
+            (PlayAnswerDto::Refuse, PlayAnswer::Refuse),
+        ];
+        for (dto, wire) in rows {
+            assert_eq!(PlayAnswer::from(dto), wire);
+        }
+    }
+
+    #[test]
+    fn steps_and_lease_outcomes_map_one_to_one() {
+        assert_eq!(
+            [
+                PlayEvent::Pulling,
+                PlayEvent::WaitingForLease,
+                PlayEvent::Playing,
+                PlayEvent::Uploading
+            ]
+            .map(PlayStepDto::from),
+            [
+                PlayStepDto::Pulling,
+                PlayStepDto::WaitingForLease,
+                PlayStepDto::Playing,
+                PlayStepDto::Uploading
+            ]
+        );
+        assert_eq!(
+            [
+                PlayLease::Held,
+                PlayLease::TookOver,
+                PlayLease::PlayedAnyway
+            ]
+            .map(PlayLeaseDto::from),
+            [
+                PlayLeaseDto::Held,
+                PlayLeaseDto::TookOver,
+                PlayLeaseDto::PlayedAnyway
+            ]
+        );
+    }
+
+    #[test]
+    fn a_lease_question_keeps_who_how_long_and_stale() {
+        assert_eq!(
+            PlayQuestionDto::from(&PlayQuestion::Lease {
+                by: "pc".into(),
+                ago_s: 30,
+                stale: true
+            }),
+            PlayQuestionDto::Lease {
+                by: "pc".into(),
+                ago_s: 30,
+                stale: true
+            }
         );
     }
 

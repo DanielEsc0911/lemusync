@@ -17,6 +17,7 @@ pub(crate) mod flows;
 #[cfg(all(test, unix))]
 mod fake;
 pub(crate) mod model;
+pub(crate) mod play;
 pub(crate) mod watch;
 
 /// The client name the daemon sees in its logs.

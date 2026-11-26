@@ -76,7 +76,7 @@ pub(crate) fn failed_from(body: ErrorBody) -> ConnectionState {
 }
 
 /// Maps an error from a call on an open connection.
-fn call_error_from(err: IpcError) -> ConnectionState {
+pub(crate) fn call_error_from(err: IpcError) -> ConnectionState {
     match err {
         IpcError::Rejected(body) => failed_from(body),
         other => connection_from(other),

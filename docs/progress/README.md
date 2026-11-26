@@ -19,6 +19,6 @@
 | [phase-2-daemon](plans/phase-2-daemon.md) | 2 | In progress (Tasks 1–7, 9, 10, 14, 15 and 16 (budgets) done; Task 8 Step 3 and Task 15 Step 3 are the maintainer's; Task 11 deferred until the UI (D40); Task 12 decided: document portal (D41), spike SP11; Task 13 Linux soak running (2026-11-26, Task 16 build: 0.08–0.13 % CPU, peak RSS 21.0 MiB, 0 restarts, longest run 22.2 h; failed syncs only while offline; a 72 h run is still needed); Linux first, D36) | 2026-11-26 |
 | [phase-3a-brand](plans/phase-3a-brand.md) | 3 | In progress (Tasks 1–12 done, Task 9 awaiting maintainer review; V-BRAND-2 pending) | 2026-11-01 |
 | [phase-3b-shell](plans/phase-3b-shell.md) | 3 | In progress (Tasks 1–11 done, Task 11 awaiting maintainer review) | 2026-11-25 |
-| [phase-3c-flows](plans/phase-3c-flows.md) | 3 | In progress (Tasks 1–2 done: plan, D46–D49, bridge game-flow calls; next Task 3, the play session; UI tasks after the 3b review) | 2026-11-26 |
+| [phase-3c-flows](plans/phase-3c-flows.md) | 3 | In progress (Tasks 1–3 done: plan, D46–D49, bridge game-flow calls and play session; next Task 4, the FRB surface; UI tasks after the 3b review) | 2026-11-26 |
 
 Status values: Not started · In progress · Blocked (reason) · Done (awaiting cleanup).

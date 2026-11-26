@@ -36,6 +36,20 @@ pub(crate) struct Script {
     /// Answers to every other request, by its `cmd` name (`history`, `restore`, …); a request
     /// with no entry gets the error `unexpected`.
     pub replies: Vec<(&'static str, Answer<Response>)>,
+    /// What the fake does after a `play` request, in order.
+    pub play: Vec<PlayStep>,
+}
+
+/// One step of a scripted `play`.
+#[derive(Clone)]
+pub(crate) enum PlayStep {
+    /// Sends this frame.
+    Send(Box<Response>),
+    /// Reads the client's next request (an `answer`); logs "answer", or "eof" and stops when
+    /// the client hung up.
+    Read,
+    /// Hangs up.
+    Close,
 }
 
 pub(crate) fn status_report() -> StatusReport {
@@ -137,6 +151,7 @@ impl Default for Script {
             sync: Answer::Ok(sync_report()),
             on_subscribe: vec![],
             replies: vec![],
+            play: vec![],
         }
     }
 }
@@ -311,6 +326,28 @@ async fn serve(
                     }
                 }
                 return;
+            }
+            Request::Play { .. } => {
+                note("play");
+                for step in &script.play {
+                    match step {
+                        PlayStep::Send(r) => {
+                            if conn.send(r).await.is_err() {
+                                return;
+                            }
+                        }
+                        PlayStep::Read => {
+                            let Some(req) = conn.recv().await else {
+                                note("eof");
+                                return;
+                            };
+                            note("answer");
+                            rec.requests.lock().expect("requests").push(req);
+                        }
+                        PlayStep::Close => return,
+                    }
+                }
+                None
             }
             other => {
                 let name = cmd(&other);

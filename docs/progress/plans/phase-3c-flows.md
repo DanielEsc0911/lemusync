@@ -68,7 +68,7 @@ Tasks 1–4 (spec and bridge) run first and need no UI decision. Tasks 5–8 (ga
 
 **Interfaces:** `history(player, emulator, game) → Result<HistoryDto, ConnectionState>`, `conflicts() → Result<Vec<ConflictDto>, ConnectionState>`, `leases() → Result<Vec<LeaseDto>, ConnectionState>`, `restore(player, emulator, game, what)`, `resolve(player, emulator, game, keep)` → `Result<MovedDto, ConnectionState>`, `lease_release(game) → Result<u32, ConnectionState>` (the wire takes the game id only). Errors reuse 3b's `ConnectionState` (`Failed { code, message }` for a daemon error or a timeout), no new error type. No `players()` call: the snapshot already carries the players. Timeouts: reads 30 s (they queue behind a sync), restore and resolve 120 s (V-FLOW-1). DTOs carry ids, names, times, sizes, device names; no paths.
 
-- [x] **Step 1: failing tests** against a real `lemusync_ipc::Server` (the `link/fake.rs` pattern): each call sends the right `Request`, maps the matching `Response`, maps `Response::Error` to `CallError` with its code, maps no listener to `NotRunning`, times out with paused time; DTO conversion keeps every field the screens need and drops paths (destructuring test, as 3b).
+- [x] **Step 1: failing tests** against a real `lemusync_ipc::Server` (the `link/fake.rs` pattern): each call sends the right `Request`, maps the matching `Response`, maps `Response::Error` to `Failed` with its code, maps no listener to `NotRunning`, times out with paused time; DTO conversion keeps every field the screens need and drops paths (destructuring test, as 3b).
 - [x] **Step 2:** FAIL. **Step 3:** implement. **Step 4:** `cargo test -p lemusync-bridge`, `cargo xtask layers`, `just check`.
 - [x] **Step 5:** docs; tick; board. **Commit** `feat(bridge): add history, restore, conflict and lease calls`.
 
@@ -76,13 +76,15 @@ Tasks 1–4 (spec and bridge) run first and need no UI decision. Tasks 5–8 (ga
 
 ### Task 3: bridge play session
 
-**Files:** `crates/bridge/src/link/play.rs`, `model.rs` (`PlayUpdate`, `PlayQuestionDto`, `PlayAnswerDto`, `PlayResultDto`), tests, `docs/specs/ui/app-shell.md` §Data flow.
+**Files:** `crates/bridge/src/link/play.rs` (`PlayUpdate`, `start`, `Answerer`), `flow_model.rs` (`PlayStepDto`, `PlayQuestionDto`, `PlayAnswerDto`, `PlayLeaseDto`, `PlayResultDto`), `fake.rs` (scripted `play`), tests, `docs/specs/ui/app-shell.md` §Data flow.
 
-**Interfaces:** `PlaySession::start(path, game, emu, player) → (Stream<PlayUpdate>, Answerer)`. `PlayUpdate` is `Step(Pulling | WaitingForLease | Playing | Uploading)`, `Question(PlayQuestionDto)`, `Done(PlayResultDto)` or `Failed(CallError)`. `Answerer::answer(PlayAnswerDto)` sends `Request::Answer` on the session's connection; a second answer to the same question is ignored; dropping the `Answerer` or the stream ends the session (the daemon then answers `Refuse` itself). No timeout on the session as a whole (a game runs for hours); a 10 s timeout on connect and handshake only.
+**Interfaces:** `play::start(link, player, emulator, game) → (mpsc::Receiver<PlayUpdate>, Answerer)` (no extra emulator arguments from the app). `PlayUpdate` is `Step(Pulling | WaitingForLease | Playing | Uploading)`, `Question(PlayQuestionDto)`, `Done(PlayResultDto)` or `Failed(ConnectionState)`. `Answerer::answer(PlayAnswerDto)` sends `Request::Answer` on the session's connection; a second answer to the same question is ignored; dropping the `Answerer` or the stream ends the session (the daemon then answers `Refuse` itself). No timeout on the session as a whole (a game runs for hours); a 10 s timeout on connect and handshake only.
 
-- [ ] **Step 1: failing tests** with a scripted server: steps arrive in order; a lease question then `Wait`/`PlayAnyway`/`TakeOver` sends the matching `Answer`; a conflict question then `Keep { version }` and `Keep { None }`; dropping the stream mid-question closes the connection and the server sees EOF; `Done` carries the report; a `Response::Error` becomes `Failed`; a daemon that disappears mid-game becomes `Failed` with `not_running`.
-- [ ] **Step 2:** FAIL. **Step 3:** implement on the watcher's runtime (`link::runtime()`, V-SHELL-1). **Step 4:** `just check`.
-- [ ] **Step 5:** docs; tick; board. **Commit** `feat(bridge): run a play session over the daemon link`.
+- [x] **Step 1: failing tests** with a scripted server: steps arrive in order; a lease question then `Wait`/`PlayAnyway`/`TakeOver` sends the matching `Answer`; a conflict question then `Keep { version }` (`Keep { None }` and every other answer mapped in `flow_model`'s tests); dropping the stream mid-question, or while playing, or dropping the answerer, closes the connection and the server sees EOF; `Done` carries the report; a `Response::Error` becomes `Failed`; a daemon that disappears mid-game becomes `Failed` with `not_running`.
+- [x] **Step 2:** FAIL. **Step 3:** implement on the watcher's runtime (`link::runtime()`, V-SHELL-1). **Step 4:** `just check`.
+- [x] **Step 5:** docs; tick; board. **Commit** `feat(bridge): run a play session over the daemon link`.
+
+**As built (Task 3, 2026-11-26):** the session runs on the caller's tokio runtime (`tokio::spawn`); Task 4 starts it on `link::runtime()`. A `select!` on the update channel's `closed()` ends the task as soon as the app stops listening, including while the emulator runs. A conflict question carries the whole `ConflictDto`. Tests and code were written in one pass, then checked by breaking the code: without the drain of early answers, and without the stop on `closed()`, three tests turned red. The report's `renewals` and `warnings` are not passed on.
 
 ### Task 4: FRB surface and Dart link
 
@@ -136,9 +138,9 @@ Tasks 1–4 (spec and bridge) run first and need no UI decision. Tasks 5–8 (ga
 
 **Files:** `link/calls/setup.rs`, `model.rs` (`ScanDto`, `InstallDto`, `AccountDto`, `SetupResult`), `api/daemon.rs`, Dart link and fake, tests, security §Local IPC (decision 1 as built).
 
-**Interfaces:** `init(passphrase) → Result<InitDto { device, recovery_key }, CallError>`, `join_passphrase(p)`, `join_recovery(k)`, `backend_add_fs(path)`, `backend_add_s3(endpoint, bucket, region, access_key_id, secret)`, `grant_add(path)`, `scan() → ScanDto`, `players_add(name)`, `accounts_map(player, emu, id, choice)`, `confirm_first_sync()`. Secret parameters become `Secret` at the FRB function's first line; `InitDto.recovery_key` is the only secret sent to Dart. Timeouts: 120 s for `init`, `join` and `backend_add_s3` (they probe the storage).
+**Interfaces:** `init(passphrase) → Result<InitDto { device, recovery_key }, ConnectionState>`, `join_passphrase(p)`, `join_recovery(k)`, `backend_add_fs(path)`, `backend_add_s3(endpoint, bucket, region, access_key_id, secret)`, `grant_add(path)`, `scan() → ScanDto`, `players_add(name)`, `accounts_map(player, emu, id, choice)`, `confirm_first_sync()`. Secret parameters become `Secret` at the FRB function's first line; `InitDto.recovery_key` is the only secret sent to Dart. Timeouts: 120 s for `init`, `join` and `backend_add_s3` (they probe the storage).
 
-- [ ] **Step 1: failing tests:** each request shape; a secret never appears in `Debug` of any DTO or error; `CallError.message` from a server that echoes the request does not contain the secret (redaction test); scan maps installs, needed grants and accounts.
+- [ ] **Step 1: failing tests:** each request shape; a secret never appears in `Debug` of any DTO or error; `Failed.message` from a server that echoes the request does not contain the secret (redaction test); scan maps installs, needed grants and accounts.
 - [ ] **Step 2–4, Step 5:** as above. **Commit** `feat(bridge): add the setup calls`.
 
 ### Task 10: setup components
