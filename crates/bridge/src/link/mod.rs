@@ -11,10 +11,13 @@ use tokio::runtime::Runtime;
 
 pub(crate) mod backoff;
 pub(crate) mod calls;
+pub(crate) mod flow_model;
+pub(crate) mod flows;
 // The link tests drive a fake daemon over a Unix socket; Windows IPC is Phase 2 Task 11.
 #[cfg(all(test, unix))]
-mod fake;
+pub(crate) mod fake;
 pub(crate) mod model;
+pub(crate) mod play;
 pub(crate) mod watch;
 
 /// The client name the daemon sees in its logs.

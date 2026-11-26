@@ -3,13 +3,15 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
 import '../frb_generated.dart';
 import '../link/calls.dart';
+import '../link/flow_model.dart';
 import '../link/model.dart';
+import '../link/play.dart';
 
-// These functions are ignored because they are not marked as `pub`: `games_at`, `snapshot_at`, `sync_now_at`, `watch_at`
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+
+// These functions are ignored because they are not marked as `pub`: `games_at`, `play_at`, `snapshot_at`, `sync_now_at`, `watch_at`
 
 /// The daemon's state right now. Never fails: "not running" is a value.
 Future<Snapshot> snapshot() => RustLib.instance.api.crateApiDaemonSnapshot();
@@ -19,6 +21,91 @@ Future<GamesDto?> games() => RustLib.instance.api.crateApiDaemonGames();
 
 /// Asks the daemon to sync now.
 Future<SyncNow> syncNow() => RustLib.instance.api.crateApiDaemonSyncNow();
+
+/// The versions of one player's stream of a game.
+///
+/// # Errors
+/// The connection state when the call could not be answered (`Failed` with the daemon's code).
+Future<HistoryDto> history({
+  required String player,
+  required String emulator,
+  required String game,
+}) => RustLib.instance.api.crateApiDaemonHistory(
+  player: player,
+  emulator: emulator,
+  game: game,
+);
+
+/// Every conflicted stream.
+///
+/// # Errors
+/// As [`history`].
+Future<List<ConflictDto>> conflicts() =>
+    RustLib.instance.api.crateApiDaemonConflicts();
+
+/// Every lease in the repo.
+///
+/// # Errors
+/// As [`history`].
+Future<List<LeaseDto>> leases() => RustLib.instance.api.crateApiDaemonLeases();
+
+/// Restores a version or a local backup; the current save is backed up first.
+///
+/// # Errors
+/// As [`history`].
+Future<MovedDto> restore({
+  required String player,
+  required String emulator,
+  required String game,
+  required String what,
+}) => RustLib.instance.api.crateApiDaemonRestore(
+  player: player,
+  emulator: emulator,
+  game: game,
+  what: what,
+);
+
+/// Resolves a conflict by keeping one head.
+///
+/// # Errors
+/// As [`history`].
+Future<MovedDto> resolve({
+  required String player,
+  required String emulator,
+  required String game,
+  required String keep,
+}) => RustLib.instance.api.crateApiDaemonResolve(
+  player: player,
+  emulator: emulator,
+  game: game,
+  keep: keep,
+);
+
+/// Releases this device's leases on a game; how many.
+///
+/// # Errors
+/// As [`history`].
+Future<int> leaseRelease({required String game}) =>
+    RustLib.instance.api.crateApiDaemonLeaseRelease(game: game);
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PlayHandle>>
+abstract class PlayHandle implements RustOpaqueInterface {
+  /// Answers the question the session is waiting on; `false` when no session runs.
+  bool answer({required PlayAnswerDto answer});
+
+  factory PlayHandle() => RustLib.instance.api.crateApiDaemonPlayHandleNew();
+
+  /// Starts the session; updates go to `sink` until it ends, [`PlayHandle::stop`] or the
+  /// listener is gone. Returns at once.
+  Stream<PlayUpdate> play({
+    required String player,
+    required String emulator,
+    required String game,
+  });
+
+  /// Ends the session's link at once (the daemon keeps a running game's session).
+  Future<void> stop();
+}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<WatchHandle>>
 abstract class WatchHandle implements RustOpaqueInterface {

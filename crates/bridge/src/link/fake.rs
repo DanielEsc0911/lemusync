@@ -33,6 +33,23 @@ pub(crate) struct Script {
     pub sync: Answer<SyncReport>,
     /// Sent to every subscriber right after `Subscribed`.
     pub on_subscribe: Vec<Event>,
+    /// Answers to every other request, by its `cmd` name (`history`, `restore`, …); a request
+    /// with no entry gets the error `unexpected`.
+    pub replies: Vec<(&'static str, Answer<Response>)>,
+    /// What the fake does after a `play` request, in order.
+    pub play: Vec<PlayStep>,
+}
+
+/// One step of a scripted `play`.
+#[derive(Clone)]
+pub(crate) enum PlayStep {
+    /// Sends this frame.
+    Send(Box<Response>),
+    /// Reads the client's next request (an `answer`); logs "answer", or "eof" and stops when
+    /// the client hung up.
+    Read,
+    /// Hangs up.
+    Close,
 }
 
 pub(crate) fn status_report() -> StatusReport {
@@ -133,6 +150,8 @@ impl Default for Script {
             games: Answer::Ok(games_report()),
             sync: Answer::Ok(sync_report()),
             on_subscribe: vec![],
+            replies: vec![],
+            play: vec![],
         }
     }
 }
@@ -141,6 +160,7 @@ impl Default for Script {
 pub(crate) struct Fake {
     pub link: Link,
     log: Arc<Mutex<Vec<&'static str>>>,
+    requests: Arc<Mutex<Vec<Request>>>,
     feed: broadcast::Sender<Option<Event>>,
     task: tokio::task::JoinHandle<()>,
     _dir: Option<tempfile::TempDir>,
@@ -162,11 +182,21 @@ impl Fake {
         let server = Server::bind(path).expect("bind");
         let link = Link::at(server.path().to_path_buf());
         let log = Arc::new(Mutex::new(Vec::new()));
+        let requests = Arc::new(Mutex::new(Vec::new()));
         let (feed, _) = broadcast::channel(64);
-        let task = tokio::spawn(accept_loop(server, script, Arc::clone(&log), feed.clone()));
+        let task = tokio::spawn(accept_loop(
+            server,
+            script,
+            Recorder {
+                log: Arc::clone(&log),
+                requests: Arc::clone(&requests),
+            },
+            feed.clone(),
+        ));
         Fake {
             link,
             log,
+            requests,
             feed,
             task,
             _dir: dir,
@@ -176,6 +206,11 @@ impl Fake {
     /// Requests seen so far, in arrival order: "subscribe", "status", "games", "sync".
     pub(crate) fn log(&self) -> Vec<&'static str> {
         self.log.lock().expect("log").clone()
+    }
+
+    /// Every request that arrived, in full, in arrival order.
+    pub(crate) fn requests(&self) -> Vec<Request> {
+        self.requests.lock().expect("requests").clone()
     }
 
     pub(crate) fn count(&self, what: &str) -> usize {
@@ -199,19 +234,39 @@ impl Drop for Fake {
     }
 }
 
+/// What the fake saw: request names and the requests themselves.
+#[derive(Clone)]
+struct Recorder {
+    log: Arc<Mutex<Vec<&'static str>>>,
+    requests: Arc<Mutex<Vec<Request>>>,
+}
+
 async fn accept_loop(
     server: Server,
     script: Script,
-    log: Arc<Mutex<Vec<&'static str>>>,
+    rec: Recorder,
     feed: broadcast::Sender<Option<Event>>,
 ) {
     while let Ok(incoming) = server.accept().await {
-        let (script, log, rx) = (script.clone(), Arc::clone(&log), feed.subscribe());
+        let (script, rec, rx) = (script.clone(), rec.clone(), feed.subscribe());
         tokio::spawn(async move {
             if let Ok(Some(conn)) = incoming.handshake().await {
-                serve(conn, script, log, rx).await;
+                serve(conn, script, rec, rx).await;
             }
         });
+    }
+}
+
+/// The `cmd` name of the requests the flow tests use.
+fn cmd(r: &Request) -> &'static str {
+    match r {
+        Request::History { .. } => "history",
+        Request::Conflicts => "conflicts",
+        Request::LeaseStatus => "lease_status",
+        Request::Restore { .. } => "restore",
+        Request::Resolve { .. } => "resolve",
+        Request::LeaseRelease { .. } => "lease_release",
+        _ => "other",
     }
 }
 
@@ -240,11 +295,12 @@ async fn answer<T: Clone>(a: &Answer<T>, ok: impl FnOnce(T) -> Response) -> Opti
 async fn serve(
     mut conn: lemusync_ipc::Connection,
     script: Script,
-    log: Arc<Mutex<Vec<&'static str>>>,
+    rec: Recorder,
     mut rx: broadcast::Receiver<Option<Event>>,
 ) {
-    let note = |w: &'static str| log.lock().expect("log").push(w);
+    let note = |w: &'static str| rec.log.lock().expect("log").push(w);
     while let Some(req) = conn.recv().await {
+        rec.requests.lock().expect("requests").push(req.clone());
         let reply = match req {
             Request::Status => {
                 note("status");
@@ -271,7 +327,36 @@ async fn serve(
                 }
                 return;
             }
-            _ => Some(Response::Error(error_body("unexpected"))),
+            Request::Play { .. } => {
+                note("play");
+                for step in &script.play {
+                    match step {
+                        PlayStep::Send(r) => {
+                            if conn.send(r).await.is_err() {
+                                return;
+                            }
+                        }
+                        PlayStep::Read => {
+                            let Some(req) = conn.recv().await else {
+                                note("eof");
+                                return;
+                            };
+                            note("answer");
+                            rec.requests.lock().expect("requests").push(req);
+                        }
+                        PlayStep::Close => return,
+                    }
+                }
+                None
+            }
+            other => {
+                let name = cmd(&other);
+                note(name);
+                match script.replies.iter().find(|(n, _)| *n == name) {
+                    Some((_, a)) => answer(a, |r| r).await,
+                    None => Some(Response::Error(error_body("unexpected"))),
+                }
+            }
         };
         if let Some(r) = reply
             && conn.send(&r).await.is_err()

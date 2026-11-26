@@ -3,17 +3,20 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/daemon.dart';
+import 'api/probe.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
-
-import 'api/daemon.dart';
-import 'api/probe.dart';
 import 'frb_generated.dart';
 import 'link/calls.dart';
+import 'link/flow_model.dart';
 import 'link/model.dart';
+import 'link/play.dart';
+
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -24,11 +27,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   });
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PlayHandlePtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandlePtr;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_WatchHandlePtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandlePtr;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
+  PlayHandle
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    dynamic raw,
+  );
 
   @protected
   WatchHandle
@@ -37,8 +50,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlayHandle
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    dynamic raw,
+  );
+
+  @protected
   WatchHandle
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    dynamic raw,
+  );
+
+  @protected
+  PlayHandle
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
     dynamic raw,
   );
 
@@ -52,10 +77,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustStreamSink<LinkEvent> dco_decode_StreamSink_link_event_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<PlayUpdate> dco_decode_StreamSink_play_update_Sse(dynamic raw);
+
+  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  ConflictDto dco_decode_box_autoadd_conflict_dto(dynamic raw);
 
   @protected
   ConnectionState dco_decode_box_autoadd_connection_state(dynamic raw);
@@ -65,6 +96,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   GamesDto dco_decode_box_autoadd_games_dto(dynamic raw);
+
+  @protected
+  PlayAnswerDto dco_decode_box_autoadd_play_answer_dto(dynamic raw);
+
+  @protected
+  PlayQuestionDto dco_decode_box_autoadd_play_question_dto(dynamic raw);
+
+  @protected
+  PlayResultDto dco_decode_box_autoadd_play_result_dto(dynamic raw);
 
   @protected
   ProgressDto dco_decode_box_autoadd_progress_dto(dynamic raw);
@@ -82,6 +122,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
+  ConflictDto dco_decode_conflict_dto(dynamic raw);
+
+  @protected
   ConnectionState dco_decode_connection_state(dynamic raw);
 
   @protected
@@ -94,7 +137,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   GamesDto dco_decode_games_dto(dynamic raw);
 
   @protected
+  HeadDto dco_decode_head_dto(dynamic raw);
+
+  @protected
+  HistoryDto dco_decode_history_dto(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  LeaseDto dco_decode_lease_dto(dynamic raw);
 
   @protected
   LinkEvent dco_decode_link_event(dynamic raw);
@@ -103,7 +158,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<ConflictDto> dco_decode_list_conflict_dto(dynamic raw);
+
+  @protected
   List<GameEntry> dco_decode_list_game_entry(dynamic raw);
+
+  @protected
+  List<HeadDto> dco_decode_list_head_dto(dynamic raw);
+
+  @protected
+  List<LeaseDto> dco_decode_list_lease_dto(dynamic raw);
 
   @protected
   List<PlayerStreamDto> dco_decode_list_player_stream_dto(dynamic raw);
@@ -113,6 +177,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RecentDto> dco_decode_list_recent_dto(dynamic raw);
+
+  @protected
+  List<VersionDto> dco_decode_list_version_dto(dynamic raw);
+
+  @protected
+  MovedDto dco_decode_moved_dto(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -134,6 +204,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PhaseDto dco_decode_phase_dto(dynamic raw);
+
+  @protected
+  PlayAnswerDto dco_decode_play_answer_dto(dynamic raw);
+
+  @protected
+  PlayLeaseDto dco_decode_play_lease_dto(dynamic raw);
+
+  @protected
+  PlayQuestionDto dco_decode_play_question_dto(dynamic raw);
+
+  @protected
+  PlayResultDto dco_decode_play_result_dto(dynamic raw);
+
+  @protected
+  PlayStepDto dco_decode_play_step_dto(dynamic raw);
+
+  @protected
+  PlayUpdate dco_decode_play_update(dynamic raw);
 
   @protected
   PlayerStreamDto dco_decode_player_stream_dto(dynamic raw);
@@ -175,7 +263,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
+  VersionDto dco_decode_version_dto(dynamic raw);
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
+  PlayHandle
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    SseDeserializer deserializer,
+  );
 
   @protected
   WatchHandle
@@ -184,8 +281,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlayHandle
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   WatchHandle
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PlayHandle
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
     SseDeserializer deserializer,
   );
 
@@ -201,10 +310,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<PlayUpdate> sse_decode_StreamSink_play_update_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  ConflictDto sse_decode_box_autoadd_conflict_dto(SseDeserializer deserializer);
 
   @protected
   ConnectionState sse_decode_box_autoadd_connection_state(
@@ -218,6 +335,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   GamesDto sse_decode_box_autoadd_games_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayAnswerDto sse_decode_box_autoadd_play_answer_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PlayQuestionDto sse_decode_box_autoadd_play_question_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PlayResultDto sse_decode_box_autoadd_play_result_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   ProgressDto sse_decode_box_autoadd_progress_dto(SseDeserializer deserializer);
@@ -235,6 +367,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
+  ConflictDto sse_decode_conflict_dto(SseDeserializer deserializer);
+
+  @protected
   ConnectionState sse_decode_connection_state(SseDeserializer deserializer);
 
   @protected
@@ -247,7 +382,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   GamesDto sse_decode_games_dto(SseDeserializer deserializer);
 
   @protected
+  HeadDto sse_decode_head_dto(SseDeserializer deserializer);
+
+  @protected
+  HistoryDto sse_decode_history_dto(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  LeaseDto sse_decode_lease_dto(SseDeserializer deserializer);
 
   @protected
   LinkEvent sse_decode_link_event(SseDeserializer deserializer);
@@ -256,7 +403,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<ConflictDto> sse_decode_list_conflict_dto(SseDeserializer deserializer);
+
+  @protected
   List<GameEntry> sse_decode_list_game_entry(SseDeserializer deserializer);
+
+  @protected
+  List<HeadDto> sse_decode_list_head_dto(SseDeserializer deserializer);
+
+  @protected
+  List<LeaseDto> sse_decode_list_lease_dto(SseDeserializer deserializer);
 
   @protected
   List<PlayerStreamDto> sse_decode_list_player_stream_dto(
@@ -268,6 +424,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RecentDto> sse_decode_list_recent_dto(SseDeserializer deserializer);
+
+  @protected
+  List<VersionDto> sse_decode_list_version_dto(SseDeserializer deserializer);
+
+  @protected
+  MovedDto sse_decode_moved_dto(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -295,6 +457,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PhaseDto sse_decode_phase_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayAnswerDto sse_decode_play_answer_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayLeaseDto sse_decode_play_lease_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayQuestionDto sse_decode_play_question_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayResultDto sse_decode_play_result_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayStepDto sse_decode_play_step_dto(SseDeserializer deserializer);
+
+  @protected
+  PlayUpdate sse_decode_play_update(SseDeserializer deserializer);
 
   @protected
   PlayerStreamDto sse_decode_player_stream_dto(SseDeserializer deserializer);
@@ -336,8 +516,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
+  VersionDto sse_decode_version_dto(SseDeserializer deserializer);
+
+  @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    PlayHandle self,
     SseSerializer serializer,
   );
 
@@ -350,8 +540,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    PlayHandle self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
     WatchHandle self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    PlayHandle self,
     SseSerializer serializer,
   );
 
@@ -369,10 +573,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_play_update_Sse(
+    RustStreamSink<PlayUpdate> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_conflict_dto(
+    ConflictDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_connection_state(
@@ -389,6 +605,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_games_dto(
     GamesDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_play_answer_dto(
+    PlayAnswerDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_play_question_dto(
+    PlayQuestionDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_play_result_dto(
+    PlayResultDto self,
     SseSerializer serializer,
   );
 
@@ -417,6 +651,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
+  void sse_encode_conflict_dto(ConflictDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_connection_state(
     ConnectionState self,
     SseSerializer serializer,
@@ -432,7 +669,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_games_dto(GamesDto self, SseSerializer serializer);
 
   @protected
+  void sse_encode_head_dto(HeadDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_history_dto(HistoryDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_lease_dto(LeaseDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_link_event(LinkEvent self, SseSerializer serializer);
@@ -441,10 +690,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_conflict_dto(
+    List<ConflictDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_game_entry(
     List<GameEntry> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_head_dto(List<HeadDto> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_lease_dto(List<LeaseDto> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_player_stream_dto(
@@ -463,6 +724,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     List<RecentDto> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_version_dto(
+    List<VersionDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_moved_dto(MovedDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
@@ -496,6 +766,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_phase_dto(PhaseDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_play_answer_dto(PlayAnswerDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_play_lease_dto(PlayLeaseDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_play_question_dto(
+    PlayQuestionDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_play_result_dto(PlayResultDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_play_step_dto(PlayStepDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_play_update(PlayUpdate self, SseSerializer serializer);
 
   @protected
   void sse_encode_player_stream_dto(
@@ -538,6 +829,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_version_dto(VersionDto self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -553,6 +847,40 @@ class RustLibWire implements BaseWire {
   /// The symbols are looked up in [dynamicLibrary].
   RustLibWire(ffi.DynamicLibrary dynamicLibrary)
     : _lookup = dynamicLibrary.lookup;
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandlePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_lemusync_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandlePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandlePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_lemusync_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandle =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlayHandlePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWatchHandle(
