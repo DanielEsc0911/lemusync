@@ -41,8 +41,8 @@ Tasks 1–4 (spec and bridge) run first and need no UI decision. Tasks 5–8 (ga
 |---|---|---|
 | `docs/specs/ui/app-shell.md` §Flows as built (3c), `docs/specs/ui/navigation.md` §Flows | Spec of the flows as the app runs them | 1, each task |
 | `docs/decisions.md` | D46 (secrets typed in the app), and whatever decisions 2–4 need | 1 |
-| `crates/bridge/src/link/model.rs` | New DTOs: `HistoryDto`, `VersionDto`, `ConflictDto`, `HeadDto`, `LeaseDto`, `PlayUpdate`, `PlayQuestionDto`, `PlayAnswerDto`, `ScanDto`, `InstallDto`, `SetupResult`, `CallError` | 2, 3, 9 |
-| `crates/bridge/src/link/calls.rs` → `link/calls/{read,write,setup}.rs` | One function per request, one short connection each, with a timeout (split when it passes one responsibility, B1) | 2, 9 |
+| `crates/bridge/src/link/model.rs` | New DTOs: `HistoryDto`, `VersionDto`, `ConflictDto`, `HeadDto`, `LeaseDto`, `PlayUpdate`, `PlayQuestionDto`, `PlayAnswerDto`, `ScanDto`, `InstallDto`, `SetupResult`, | 2, 3, 9 |
+| `crates/bridge/src/link/flows.rs` (Task 2), `link/setup.rs` (Task 9) | One function per request, one short connection each, with a timeout; `calls.rs` keeps 3b's calls and shares `connect` and `exchange` | 2, 9 |
 | `crates/bridge/src/link/play.rs` | `PlaySession`: one connection, events and prompts out, answers in, `Refuse` on drop | 3 |
 | `crates/bridge/src/api/daemon.rs` | FRB surface for the new calls and `PlayHandle` | 4, 9 |
 | `app/lib/app/daemon_link.dart`, `app/test/support/fake_link.dart` | `DaemonLink` gains the calls and `play`; the fake scripts them | 4, 9 |
@@ -64,13 +64,15 @@ Tasks 1–4 (spec and bridge) run first and need no UI decision. Tasks 5–8 (ga
 
 ### Task 2: bridge read and write calls for the game flows
 
-**Files:** `crates/bridge/src/link/{model,calls}.rs` (split `calls` by responsibility), tests next to them, `docs/specs/ui/app-shell.md` §Data flow, `docs/specs/architecture.md` §Bridge (surface list).
+**Files:** `crates/bridge/src/link/{flows,flow_model}.rs` (new), `calls.rs` (`connect`, `exchange` shared), `fake.rs` (scripted replies by `cmd`, full request log), tests next to them, `docs/specs/ui/app-shell.md` §Data flow, `docs/specs/architecture.md` §Bridge (surface list).
 
-**Interfaces:** `history(game, emu, player) → Result<HistoryDto, CallError>`, `conflicts() → Result<Vec<ConflictDto>, CallError>`, `lease_status() → Result<Vec<LeaseDto>, CallError>`, `players() → Result<Vec<String>, CallError>`, `restore(game, emu, player, version)`, `resolve(game, emu, player, version)`, `lease_release(game)` → `Result<WriteDto, CallError>` (the wire takes the game id only). `CallError { connection: Option<ConnectionState>, code: String, message: String }` (no connection → the 3b state; a `Response::Error` → its code). Timeouts: reads 10 s, `history` 30 s and writes 120 s (restore and resolve move files; V-FLOW-1). DTOs carry ids, names, times, sizes, device names; no paths.
+**Interfaces:** `history(player, emulator, game) → Result<HistoryDto, ConnectionState>`, `conflicts() → Result<Vec<ConflictDto>, ConnectionState>`, `leases() → Result<Vec<LeaseDto>, ConnectionState>`, `restore(player, emulator, game, what)`, `resolve(player, emulator, game, keep)` → `Result<MovedDto, ConnectionState>`, `lease_release(game) → Result<u32, ConnectionState>` (the wire takes the game id only). Errors reuse 3b's `ConnectionState` (`Failed { code, message }` for a daemon error or a timeout), no new error type. No `players()` call: the snapshot already carries the players. Timeouts: reads 30 s (they queue behind a sync), restore and resolve 120 s (V-FLOW-1). DTOs carry ids, names, times, sizes, device names; no paths.
 
-- [ ] **Step 1: failing tests** against a real `lemusync_ipc::Server` (the `link/fake.rs` pattern): each call sends the right `Request`, maps the matching `Response`, maps `Response::Error` to `CallError` with its code, maps no listener to `NotRunning`, times out with paused time; DTO conversion keeps every field the screens need and drops paths (destructuring test, as 3b).
-- [ ] **Step 2:** FAIL. **Step 3:** implement. **Step 4:** `cargo test -p lemusync-bridge`, `cargo xtask layers`, `just check`.
-- [ ] **Step 5:** docs; tick; board. **Commit** `feat(bridge): add history, restore, conflict and lease calls`.
+- [x] **Step 1: failing tests** against a real `lemusync_ipc::Server` (the `link/fake.rs` pattern): each call sends the right `Request`, maps the matching `Response`, maps `Response::Error` to `CallError` with its code, maps no listener to `NotRunning`, times out with paused time; DTO conversion keeps every field the screens need and drops paths (destructuring test, as 3b).
+- [x] **Step 2:** FAIL. **Step 3:** implement. **Step 4:** `cargo test -p lemusync-bridge`, `cargo xtask layers`, `just check`.
+- [x] **Step 5:** docs; tick; board. **Commit** `feat(bridge): add history, restore, conflict and lease calls`.
+
+**As built (Task 2, 2026-11-26):** `link/flows.rs` and `link/flow_model.rs`. The tests and the code were written in one pass, then checked by breaking the code: dropping `emu` from `history`, keeping seconds in `created_ms` and returning 0 from `lease_release` each turned a test red. Both modules `expect(dead_code)` outside tests until Task 4 reaches them. The reports' `warnings` are not mapped (`WarningCode` has no string form without serde, which the bridge doesn't use); Task 6 adds them if a screen needs them.
 
 ### Task 3: bridge play session
 

@@ -29,13 +29,13 @@ pub enum SyncNow {
 }
 
 /// A failed call on an open connection.
-enum CallError {
+pub(crate) enum CallError {
     Timeout,
     State(ConnectionState),
 }
 
 impl CallError {
-    fn into_state(self) -> ConnectionState {
+    pub(crate) fn into_state(self) -> ConnectionState {
         match self {
             CallError::Timeout => ConnectionState::Failed {
                 code: "timeout".into(),
@@ -83,7 +83,7 @@ fn call_error_from(err: IpcError) -> ConnectionState {
     }
 }
 
-async fn connect(link: &Link) -> Result<Client, ConnectionState> {
+pub(crate) async fn connect(link: &Link) -> Result<Client, ConnectionState> {
     let Some(path) = &link.path else {
         return Err(ConnectionState::NotRunning);
     };
@@ -106,7 +106,7 @@ pub(crate) async fn subscribe(
     }
 }
 
-async fn exchange(
+pub(crate) async fn exchange(
     client: &mut Client,
     request: Request,
     limit: Duration,
