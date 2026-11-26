@@ -60,6 +60,8 @@ The own uid comes from `rustix::process::geteuid` (safe API); peers are compared
 
 Secrets over the socket (Phase 2 Task 9): the passphrase, the recovery key and the S3 secret key are collected by the CLI at a no-echo prompt and sent in `init`, `join` and `backend_add_s3` as `lemusync_api::Secret` (a `Zeroizing<String>`; `Debug` prints `Secret(..)`). Frame buffers on both sides are `Zeroizing` too (`crates/ipc/src/frame.rs`), so neither the JSON nor the value outlives the call; the daemon logs only the client name per connection, never a request body.
 
+The desktop app (Phase 3c) collects the same secrets in an obscured Flutter field and hands them to the bridge, which wraps them in `Secret` at once; the Dart `String` can't be wiped, and that window is accepted ([D46](../decisions.md#d46-secrets-typed-in-the-desktop-app-cross-the-bridge-once-dart-to-rust-2026-11-26)). The recovery key from `init` is the only secret the bridge returns to Dart, to be shown once.
+
 ## File-system confinement
 - The engine reads and writes only inside **grants**: folders the user approved, which are canonicalised when stored.
 - One read-only exception: game folders listed in the emulator's granted config or in the user's `game_dirs` are read for game metadata (one listing of each listed folder, at most 5,000 entries, and one XML file under 1 MiB per game), never written or created, with no symlink followed below a listed folder; a `DOCTYPE` is rejected ([D34](../decisions.md#d34-game-names-are-found-on-each-device-never-stored-in-the-repo-2026-10-27), [emulator-profiles §Game discovery](emulator-profiles.md#game-discovery)).
