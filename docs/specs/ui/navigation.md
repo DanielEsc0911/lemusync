@@ -29,10 +29,12 @@ The flow steps are identical in every container. Only the presentation changes.
 
 ## Flows
 ### First run (create)
-Welcome (language auto-detected, changeable) → Create or Join → **Storage** (pick provider → details → probe) → **Passphrase** → **Recovery key** (show, confirm saved) → **You** (player name) → **This device** (name) → **Find emulators** (scan → grant folders) → **Pick games** → Initial sync → Home.
+Welcome (language auto-detected, changeable) → Create or Join → **Storage** (pick provider → details → probe) → **Passphrase** → **Recovery key** (show, confirm saved) → **You** (player name) → **This device** (name, read-only) → **Find emulators** (scan → grant folders) → **Games found** (read-only list) → Initial sync → Home.
+
+The device name is the one `init`/`join` gives; there is no game picking: every save a profile finds is synced ([D49](../../decisions.md#d49-first-run-has-no-game-picking-and-no-device-naming-for-now-2026-11-26)). The desktop app's storage step offers S3-compatible and a local folder; Google Drive appears once its login works in the app ([D47](../../decisions.md#d47-the-apps-first-run-offers-s3-compatible-storage-and-a-local-folder-google-drive-waits-for-its-login-in-the-app-2026-11-26)). Planned in [phase-3c](../../progress/plans/phase-3c-flows.md).
 
 ### Join existing
-Welcome → Join → Storage → Passphrase *or* recovery key → This device → **Map accounts** (proposed by name, confirm) → Find emulators → Initial sync (pull) → Home.
+Welcome → Join → Storage → Passphrase *or* recovery key → This device (read-only) → **Map accounts** (proposed by name, confirm) → Find emulators → Initial sync (pull) → Home.
 
 ### Play (launcher mode)
 Games → game → **Play** (as default player; "Play as…" to choose) → pulling (live status) → lease check (if held elsewhere: Wait / Play anyway / Take over if stale) → emulator runs (session status) → on return: uploading → done.
